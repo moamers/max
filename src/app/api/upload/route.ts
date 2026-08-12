@@ -44,13 +44,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const saved = periods.map((p) => ({
-    label: p.label,
-    periodId: savePeriod(p, file.name),
-    lineItemCount: p.lineItems.length,
-    budgetCount: p.budgets.length,
-    income: p.income,
-  }));
+  const saved = await Promise.all(
+    periods.map(async (p) => ({
+      label: p.label,
+      periodId: await savePeriod(p, file.name),
+      lineItemCount: p.lineItems.length,
+      budgetCount: p.budgets.length,
+      income: p.income,
+    }))
+  );
 
   const debug = req.nextUrl.searchParams.get("debug") === "1";
 

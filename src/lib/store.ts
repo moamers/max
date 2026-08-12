@@ -1,88 +1,122 @@
+import { eq, sql, desc, asc } from "drizzle-orm";
 import { getDb } from "./db";
+import { periods, lineItems, budgets, periodSummaries } from "./schema";
 import { ParsedPeriod, summarizePeriod } from "./parser";
 
-export function savePeriod(parsed: ParsedPeriod, sourceFilename: string) {
+export async function savePeriod(parsed: ParsedPeriod, sourceFilename: string): Promise<number> {
   const db = getDb();
 
-  const upsertPeriod = db.prepare(`
-    INSERT INTO periods (label, income, source, source_filename, source_sheet_name, sheet_order)
-    VALUES (@label, @income, 'sheet', @sourceFilename, @sheetName, @sheetOrder)
-    ON CONFLICT(label) DO UPDATE SET
-      income = excluded.income,
-      source_filename = excluded.source_filename,
-      source_sheet_name = excluded.source_sheet_name,
-      sheet_order = excluded.sheet_order
-    RETURNING id
-  `);
+  return db.transaction(async (tx) => {
+    const incomeStr = parsed.income !== null ? parsed.income.toString() : null;
 
-  const { id: periodId } = upsertPeriod.get({
-    label: parsed.label,
-    income: parsed.income,
-    sourceFilename,
-    sheetName: parsed.sheetName,
-    sheetOrder: parsed.sheetOrder,
-  }) as { id: number };
+    const [{ id: periodId }] = await tx
+      .insert(periods)
+      .values({
+        label: parsed.label,
+        income: incomeStr,
+        source: "sheet",
+        sourceFilename,
+        sourceSheetName: parsed.sheetName,
+        sheetOrder: parsed.sheetOrder,
+      })
+      .onConflictDoUpdate({
+        target: periods.label,
+        set: {
+          income: incomeStr,
+          sourceFilename,
+          sourceSheetName: parsed.sheetName,
+          sheetOrder: parsed.sheetOrder,
+        },
+      })
+      .returning({ id: periods.id });
 
-  db.prepare(`DELETE FROM line_items WHERE period_id = ?`).run(periodId);
-  db.prepare(`DELETE FROM budgets WHERE period_id = ?`).run(periodId);
-  db.prepare(`DELETE FROM period_summaries WHERE period_id = ?`).run(periodId);
+    await tx.delete(lineItems).where(eq(lineItems.periodId, periodId));
+    await tx.delete(budgets).where(eq(budgets.periodId, periodId));
 
-  const insertItem = db.prepare(`
-    INSERT INTO line_items (period_id, section, week_number, description, note, amount, tag)
-    VALUES (@periodId, @section, @weekNumber, @description, @note, @amount, @tag)
-  `);
-  const insertBudget = db.prepare(`
-    INSERT INTO budgets (period_id, section, week_number, budgeted_amount)
-    VALUES (@periodId, @section, @weekNumber, @budgetedAmount)
-  `);
-
-  const tx = db.transaction(() => {
-    for (const item of parsed.lineItems) {
-      insertItem.run({ periodId, ...item });
+    if (parsed.lineItems.length > 0) {
+      await tx.insert(lineItems).values(
+        parsed.lineItems.map((item) => ({
+          periodId,
+          section: item.section,
+          weekNumber: item.weekNumber,
+          description: item.description,
+          note: item.note,
+          amount: item.amount.toString(),
+          tag: item.tag,
+        }))
+      );
     }
-    for (const budget of parsed.budgets) {
-      insertBudget.run({ periodId, ...budget });
+
+    if (parsed.budgets.length > 0) {
+      await tx.insert(budgets).values(
+        parsed.budgets.map((b) => ({
+          periodId,
+          section: b.section,
+          weekNumber: b.weekNumber,
+          budgetedAmount: b.budgetedAmount.toString(),
+        }))
+      );
     }
 
     const { totalFixed, totalVariable, totalWeekly } = summarizePeriod(parsed.lineItems);
     const income = parsed.income ?? 0;
     const finalPosition = income - totalFixed - totalVariable - totalWeekly;
 
-    db.prepare(`
-      INSERT INTO period_summaries (period_id, total_fixed, total_variable, total_weekly, income, final_position)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(periodId, totalFixed, totalVariable, totalWeekly, income, finalPosition);
+    const summaryValues = {
+      totalFixed: totalFixed.toString(),
+      totalVariable: totalVariable.toString(),
+      totalWeekly: totalWeekly.toString(),
+      income: income.toString(),
+      finalPosition: finalPosition.toString(),
+    };
+
+    await tx
+      .insert(periodSummaries)
+      .values({ periodId, ...summaryValues })
+      .onConflictDoUpdate({ target: periodSummaries.periodId, set: summaryValues });
+
+    return periodId;
   });
-
-  tx();
-
-  return periodId;
 }
 
 export interface PeriodSummaryRow {
-  period_id: number;
+  periodId: number;
   label: string;
-  total_fixed: number;
-  total_variable: number;
-  total_weekly: number;
+  createdAt: string;
+  totalFixed: number;
+  totalVariable: number;
+  totalWeekly: number;
   income: number;
-  final_position: number;
-  created_at: string;
+  finalPosition: number;
 }
 
-export function listPeriodSummaries(): PeriodSummaryRow[] {
+export async function listPeriodSummaries(): Promise<PeriodSummaryRow[]> {
   const db = getDb();
-  return db
-    .prepare(
-      `
-    SELECT p.id as period_id, p.label, p.created_at,
-           s.total_fixed, s.total_variable, s.total_weekly, s.income, s.final_position
-    FROM periods p
-    JOIN period_summaries s ON s.period_id = p.id
-    ORDER BY p.sheet_order ASC, p.id ASC
-  `
-    )
-    .all() as PeriodSummaryRow[];
+  const rows = await db
+    .select({
+      periodId: periods.id,
+      label: periods.label,
+      createdAt: periods.createdAt,
+      totalFixed: periodSummaries.totalFixed,
+      totalVariable: periodSummaries.totalVariable,
+      totalWeekly: periodSummaries.totalWeekly,
+      income: periodSummaries.income,
+      finalPosition: periodSummaries.finalPosition,
+    })
+    .from(periods)
+    .innerJoin(periodSummaries, eq(periodSummaries.periodId, periods.id))
+    .orderBy(asc(periods.sheetOrder), asc(periods.id));
+
+  return rows.map((r) => ({
+    periodId: r.periodId,
+    label: r.label,
+    createdAt: r.createdAt.toISOString(),
+    totalFixed: Number(r.totalFixed ?? 0),
+    totalVariable: Number(r.totalVariable ?? 0),
+    totalWeekly: Number(r.totalWeekly ?? 0),
+    income: Number(r.income ?? 0),
+    finalPosition: Number(r.finalPosition ?? 0),
+  }));
 }
 
 export interface TagBreakdown {
@@ -92,24 +126,36 @@ export interface TagBreakdown {
   count: number;
 }
 
-export function tagBreakdownForPeriod(periodId: number): TagBreakdown[] {
+export async function tagBreakdownForPeriod(periodId: number): Promise<TagBreakdown[]> {
   const db = getDb();
-  return db
-    .prepare(
-      `
-    SELECT COALESCE(tag, '(untagged)') as tag, section, SUM(amount) as total, COUNT(*) as count
-    FROM line_items
-    WHERE period_id = ?
-    GROUP BY tag, section
-    ORDER BY total DESC
-  `
-    )
-    .all(periodId) as TagBreakdown[];
+  const tagExpr = sql<string>`coalesce(${lineItems.tag}, '(untagged)')`;
+  const totalExpr = sql<string>`sum(${lineItems.amount})`;
+
+  const rows = await db
+    .select({
+      tag: tagExpr,
+      section: lineItems.section,
+      total: totalExpr,
+      count: sql<number>`count(*)`,
+    })
+    .from(lineItems)
+    .where(eq(lineItems.periodId, periodId))
+    .groupBy(tagExpr, lineItems.section)
+    .orderBy(desc(totalExpr));
+
+  return rows.map((r) => ({
+    tag: r.tag,
+    section: r.section,
+    total: Number(r.total),
+    count: Number(r.count),
+  }));
 }
 
-export function getPeriodByLabel(label: string) {
+export async function getPeriodByLabel(label: string) {
   const db = getDb();
-  return db.prepare(`SELECT * FROM periods WHERE label = ?`).get(label) as
-    | { id: number; label: string }
-    | undefined;
+  const [row] = await db
+    .select({ id: periods.id, label: periods.label })
+    .from(periods)
+    .where(eq(periods.label, label));
+  return row;
 }
