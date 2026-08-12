@@ -23,6 +23,19 @@
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e3cf40a1-1ec6-4bac-9975-dc66f0f6d0a6"
+      }
+    },
+    "owner": "mamer",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e3cf40a1-1ec6-4bac-9975-dc66f0f6d0a6"
+    }
   }
 }
