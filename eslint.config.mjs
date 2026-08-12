@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Separate workspaces with their own lint setup — not web/Next.js code.
+    "mobile/**",
+    "packages/**",
   ]),
 ]);
 

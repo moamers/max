@@ -69,6 +69,9 @@ export const darkTheme: ThemeTokens = {
   goodText: "#0ca30c",
 };
 
-export function themeFor(colorScheme: "light" | "dark" | null | undefined): ThemeTokens {
+/** Accepts a loose string since color-scheme APIs vary by platform (e.g. React
+ * Native's ColorSchemeName includes "unspecified" on Android) — anything that
+ * isn't exactly "dark" falls back to light. */
+export function themeFor(colorScheme: string | null | undefined): ThemeTokens {
   return colorScheme === "dark" ? darkTheme : lightTheme;
 }
