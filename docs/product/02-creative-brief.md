@@ -1,6 +1,8 @@
 # Max — Creative Design Brief
 
-*See also: [Product Vision](./01-product-vision.md) · [Competitive Analysis](./03-competitive-analysis.md) · [Roadmap](./04-roadmap.md)*
+*See also: [Product Vision](./01-product-vision.md) · [Agent Behaviour Principles](../principles/01-agent-behaviour.md) · [Competitive Analysis](./03-competitive-analysis.md) · [Roadmap](./04-roadmap.md)*
+
+> **Note:** this brief covers brand, tone and visual direction. The *behavioural* doctrine — how Max coaches, when it escalates, what it does in a crisis — is a separate and more constrained document: [Agent Behaviour Principles](../principles/01-agent-behaviour.md). Read both before writing any user-facing copy.
 
 For handing to a designer (human or agent). Extracted from the founder's own language and framing — the goal is to keep the tone that came through in conversation, not sand it down into generic fintech polish.
 
@@ -36,6 +38,22 @@ If Max were a person, they'd be the friend who's genuinely good with money but n
 | "Complete your profile to get personalized insights." | (never asked directly — inferred from conversation over time) |
 | "Congratulations! You've achieved a savings milestone!" | "That's £600 you didn't spend this year without even trying. Here's what it could grow into." |
 | "Please categorize the following 14 uncategorized transactions." | (never happens) |
+
+## Hard constraints on copy and layout
+
+These come from research into financial avoidance and are non-negotiable, because they're the difference between an avoidant user opening the app again or not. Full reasoning in [Agent Behaviour §8](../principles/01-agent-behaviour.md).
+
+**Banned vocabulary:** "wasting", "should have", "overspending", "bad habit", "you failed", "you're behind". Any word that converts information into a verdict.
+
+**Banned layouts:**
+- A red or negative total as the first thing on screen. The opening view must never be a judgement.
+- Unrequested "you spent £X this month" aggregates — the classic avoidance trigger.
+- Streaks, progress bars that break, or any mechanic that punishes a missed day.
+- Leaderboards or "you spend more than N% of users" ranking.
+
+**Required:** a visible, easy way to say *"not now"* or *"don't mention that again"* — and the design must make clear it will be honoured. For this persona, the ability to turn Max down is what makes Max safe to turn on.
+
+**On comparison UI:** comparison is always **calibration**, never **ranking**. "That's normal for a household like yours" is the design target; anything that resembles a scoreboard is prohibited.
 
 ## Visual direction
 

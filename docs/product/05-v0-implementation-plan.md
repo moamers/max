@@ -19,7 +19,17 @@ It would be tempting to jump straight to V2's conversational layer — it's the 
 
 **2. Redesign the dashboard around the sentences, not the chart.** Headline sentences become the primary, first-seen content — large, readable, close to how a text message reads. The existing stat tiles and stacked-bar chart move below as supporting detail for someone who wants to dig in, not the thing you see first. The tag breakdown table becomes the natural backing detail for "your biggest spend was X."
 
-**3. Keep everything else as-is.** Upload flow, backend, data model, deployment — all already working and don't need to change for this step. This is deliberately scoped tight.
+**3. Add free-text capture.** A single input where the user can type "spent about 80 on the shop this week, 40 on petrol" and have it land in the model. Parsed deterministically at this stage (simple patterns — amount + envelope keyword + optional week), *not* via an LLM, keeping V0 free of model dependencies. This is the smallest possible test of the [data model's](../architecture/01-data-model.md) central claim that adding data should feel like texting a friend rather than filling in a form — and it's the difference between a spreadsheet viewer and something a person could actually use weekly.
+
+**4. Keep everything else as-is.** Upload flow, backend, data model, deployment — all already working and don't need to change for this step. This is deliberately scoped tight.
+
+## Tone constraints that apply even here
+
+The sentences are templates, not model output, but they are still the first thing Max ever says to anyone. From [Agent Behaviour §8](../principles/01-agent-behaviour.md):
+- No moralising vocabulary — never "overspending", "wasting", "should have".
+- No verdict on open, no red totals, no unrequested "you spent £X this month".
+- Prefer trade-off framing ("the weekends have been bigger lately") over deficit framing ("you're over budget").
+- Where a comparison to the user's own history is flat or noise-level, say nothing rather than manufacturing an observation.
 
 ## Explicitly not in V0
 
@@ -34,8 +44,13 @@ Not a unit test — a real one: get the founder's actual spreadsheet (or a close
 
 ## Rough sequence
 
-1. Draft 4-6 sentence templates covering the metrics already available (fixed/variable/weekly spend delta, net position delta, top tag by spend) and check them against the Creative Brief's voice table (warm/direct, not clinical).
-2. Implement `narrative.ts`, picking the top 2-3 sentences by notability rather than rendering all of them.
+1. Draft 4-6 sentence templates covering the metrics already available (fixed/variable/weekly spend delta, net position delta, top tag by spend) and check them against the Creative Brief's voice table and the tone constraints above.
+2. Implement `narrative.ts`, picking the top 2-3 sentences by notability rather than rendering all of them — and saying nothing when there's nothing notable.
 3. Rework the dashboard page layout: sentences first, tiles/chart demoted below.
-4. Deploy, verify with real data (not just synthetic test data) — this is the point where the founder's own spreadsheet should go through the real flow.
-5. Revisit against the Roadmap's V1 exit test before starting any V2 work.
+4. Add the free-text capture input and a `POST /api/entry` route that maps parsed input into the existing period/envelope model.
+5. Deploy, verify with real data (not just synthetic test data) — this is the point where the founder's own spreadsheet should go through the real flow.
+6. Revisit against the Roadmap's V1 exit test before starting any V2 work.
+
+## Housekeeping
+
+Two synthetic test periods ("Jul 6th - Aug 2nd", "Aug 3rd - Aug 30th") are currently sitting in the live Supabase database from verification runs and should be deleted before real data goes in.

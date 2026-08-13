@@ -10,16 +10,39 @@ Max exists to remove that first job entirely, and to replace it with something a
 
 ## Who this is for
 
-**Primary persona — "the reluctant tracker."** Financially unexceptional, not struggling, not the FIRE-blog type either. Dual-income household, kids, a life that's busy enough that finance sits in the "I should really deal with this" pile indefinitely. Has tried a budgeting app before (maybe more than one) and stopped within weeks — not because it didn't work, but because keeping it fed with categorized, clean data felt like homework. Doesn't know if £2,000/month on a family of four's groceries in London is normal or alarming, and has no easy way to find out beyond guessing or asking a friend. Wants reassurance and small, concrete actions — not a spreadsheet, not a lecture, not twelve pie charts.
+### The reframe that matters
 
-**Secondary persona — the household, not just the individual.** Several of the founder's own use cases (a spouse, kids, family budget lines) are inherently *household* finance, not one person's. Max should treat shared context — a child's birthday, a family holiday, a joint spending category — as something the app understands at the household level, not something duplicated per user. This has real data-model implications and should be a first-class decision, not a retrofit (see Roadmap and Open Risks).
+The industry calls this problem "financial literacy," and that framing is wrong — or at least, wrong for our user. **The primary barrier is not a knowledge deficit. It is avoidance.** Plenty of people who would score perfectly well on a financial-literacy test still do not look at their own money, and they don't look precisely *because* looking feels bad: it invites judgement, guilt, and a sense of being behind. Treating that person as under-informed and shipping them more information makes it worse.
+
+The belief we're arguing against, held by the user themselves, is: **"the less I know, the better."** That's not laziness — it's a rational defence against an experience that has historically felt like being told off. The entire product exists to invert it into "the more I know, the better," and the only way that inversion works is if knowing is genuinely painless and genuinely non-judgemental. Every design decision downstream serves that.
+
+### Persona 1 — The Avoider
+
+*Modelled on the founder's wife.* May well be numerate, capable, and perfectly good with money in practice — and still chooses not to look. Financially **avoidant, not illiterate** (though the persona also covers those who are both; the difference between them is tone and vocabulary, not product). Doesn't want anyone on her case. Responds badly to being tracked, corrected, or nagged. Has probably tried a budgeting app and abandoned it, not because it failed but because it turned money into homework and made her feel monitored.
+
+What she needs: to find out where she stands without a confrontation, and to be left alone unless there's something genuinely worth saying.
+
+### Persona 2 — The Pressured Provider
+
+*Modelled on the founder himself.* Dependents, real financial pressure, but not in crisis — not burning cash, not in debt. Needs **rigour**, not rescue. Actually likes the idea of budgeting, maintains a spreadsheet, and *still* won't do the labeling ritual, which tells you something important: the labeling tax repels even motivated users. His question isn't "am I in trouble," it's *"I have kids, I'm spending this much, and I don't know where to squeeze."*
+
+What he needs: to see where the slack actually is, and help sequencing decisions across months.
+
+### What separates the personas — and what doesn't
+
+The **product** is the same for both. The **tone and vocabulary** differ, and Max should infer which register to use from how the person talks and behaves — never from an onboarding quiz. Both personas share the two things that define the market opportunity: neither will do data-entry work, and both want to know how they compare to people like them.
+
+### Household, not just individual
+
+Several core use cases (a spouse, kids, a family holiday, a child's birthday) are inherently *household* finance. Shared context should be understood at the household level, not duplicated per user. This needs deciding before memory data accumulates in a shape that's painful to migrate (see Roadmap V2).
 
 ## The four pain points
 
 1. **The labeling tax.** Every mainstream budgeting app's core loop is "connect bank → categorize → maintain." That's a data-cleaning pipeline disguised as a personal-finance feature, and it's the user's problem to run, forever. People don't want to be obsessed with their data; they want to know what it means.
 2. **Small-payment blindness.** A £4 coffee, a £12 subscription, a £30 impulse buy — none of these register as consequential in the moment, but in aggregate over a year they're real money. Nobody naturally does that math for themselves.
-3. **No comparative context.** "I spent £X" is a fact. "Is £X normal for a family of four in Zone 2 London" is the actual question, and no raw-numbers dashboard answers it. This is the single question the founder personally keeps asking ChatGPT by hand today.
+3. **No comparative context.** "I spent £X" is a fact. "Is £X normal for a family of four in Zone 2 London" is the actual question, and no raw-numbers dashboard answers it. This is the single question the founder personally keeps asking ChatGPT by hand today. It extends past benchmarks into **local savvy**: someone new to a city doesn't know which shops, areas, or providers are the good-value ones, and that knowledge is worth more than another chart.
 4. **No bridge from insight to action.** Even when someone sees a leak, they don't know what it *means* for their future — a vague "spend less" isn't motivating. Showing that a recurring £50/month leak, redirected into a savings pot, compounds into a specific number a year from now is what turns awareness into action.
+5. **No help with sequencing decisions over time.** Real financial life is a scheduling problem, and no budgeting app treats it as one. The founder's own example: *deciding which month to make a purchase*, given a holiday in August, credit-card clearing in September, and a child's birthday in October — concluding October, and wanting to log the intention months ahead so the money is already being set aside. Every mainstream app is **retrospective**: it tells you what you did. Almost none help you decide **when** to do the next thing. This is a distinct, under-served capability and it depends on the memory layer (knowing the birthday exists) plus a forward-looking data model (periods that haven't happened yet).
 
 ## The promise
 
@@ -27,9 +50,9 @@ Max exists to remove that first job entirely, and to replace it with something a
 
 ## The four pillars
 
-**1. A dynamic, forgiving data model.** Doesn't require a fixed category taxonomy or complete data to be useful (the existing spreadsheet model this was bootstrapped from already proves this instinct: free-text tags instead of a rigid category list, works with whatever detail the user happens to record). The more data it has, the sharper it gets — but it produces a useful answer from day one with partial, messy input, using approximation rather than demanding completeness.
+**1. A dynamic, forgiving data model — and effortless capture into it.** The model is time-boxed rather than transaction-boxed: the atom is *a week of living and what it cost*, not a classified purchase. That single inversion is what removes the labeling tax structurally rather than cosmetically, and it's why the model survives estimated, partial, or remembered input. **Capture is half of this pillar and is currently missing from what's built:** the interface must accept a spreadsheet, a statement, a screenshot, typed text, or speech, and Max maps it into the model itself — asking a short question when genuinely unsure, never handing back a queue of things to classify. Adding a week of data should feel like texting a friend. This is important enough to have its own document: see [The Data Model](../architecture/01-data-model.md).
 
-**2. Connections — bank and web.** Bank/Open Banking integration for real transaction data over time (later phase; see Roadmap). Web access for the qualitative, comparative layer: cost-of-living data, local pricing, what "normal" looks like for someone in this situation and this place — the thing a dashboard of your own numbers alone can never tell you.
+**2. Connections — bank and web.** Bank/Open Banking integration for real transaction data over time (later phase; see Roadmap). Web access for the qualitative, comparative layer: cost-of-living data, local pricing, what "normal" looks like for someone in this situation and this place — the thing a dashboard of your own numbers alone can never tell you. Note that multi-source ingestion (statement, screenshot, text) is deliberately *not* gated behind a bank connection — competitive research found every major rival, including Cleo and ChatGPT's finance tools, is Open-Banking-gated, which makes this the cheapest way in for anyone unwilling to hand over bank credentials to a new app.
 
 **3. A financial-context layer.** An analyst-style layer that takes the raw numbers — however small — and puts them in context: how they compare, what they're trending toward, what they could become if redirected. This is what turns "you spent £50 on X" into something a non-expert can act on.
 

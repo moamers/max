@@ -16,7 +16,9 @@ There's already a working, deployed foundation: a flexible parser and data model
 
 - Upload flow stays as-is (already low-friction: one file, no setup).
 - Replace the chart-first dashboard with a narrative-first one: a small number of plain-language sentences ("You spent about £X more on groceries than your usual month"), with numbers and any chart as supporting detail underneath, not the headline.
+- **Add a second capture surface: free-text entry.** ("spent about 80 on the shop this week, 40 on petrol"). Capture is half the data-model pillar and currently doesn't exist beyond file upload — see [The Data Model](../architecture/01-data-model.md). Text is the cheapest surface to add and it validates the "adding data feels like texting a friend" test before any of the harder ones (screenshot, voice) are built.
 - Self-benchmarking (this period vs. your own history) already exists — keep it, but express it as sentences first, tiles/chart second.
+- Apply the tone rules from [Agent Behaviour §8](../principles/01-agent-behaviour.md) even to template-generated sentences: no moralising vocabulary, no verdict-on-open, no unrequested monthly totals. These constraints apply from the very first sentence Max ever says.
 - No accounts, no login, no onboarding form. This can still work as a "drop a file, see a result" tool at this stage.
 - **Explicitly out of scope for V1:** bank connections, conversational chat, memory, cohort comparison against other people (still self-comparison only at this stage), proactive nudges.
 
@@ -29,6 +31,9 @@ There's already a working, deployed foundation: a flexible parser and data model
 - Add a persistent conversational surface (Payhawk-style: normal UI plus an always-available chat input, not a chat *replacing* the UI).
 - Wire in an LLM to answer questions about the user's own data ("how much did I spend on takeout last month?").
 - Build the memory middleware: a lightweight extraction step that looks at every message and decides what's worth persisting (a fact about the household, a date, a goal) *before* generating the reply — this is the mechanism, not just a nice-to-have, that makes the next phase's proactive nudges possible.
+- **The memory layer must ship with its safety architecture already in place, not added later:** the Article 9 special-category suppression list enforced at write time, structured (not free-text) records, default TTLs, and deletion that reaches raw logs, embeddings and derived inferences. Retrofitting deletion into a vector store is painful and the special-category inference risk is the single largest legal exposure in the whole design. See [Ethics §3](../principles/02-ethics-and-red-lines.md) and [Technical Principles §6](../principles/03-technical-principles.md).
+- Add the remaining capture surfaces — screenshot and voice — now that there's an LLM in the stack to do the mapping.
+- Disclose pattern-noticing once, early and lightly, so later recall reads as memory rather than surveillance ([Agent Behaviour §3](../principles/01-agent-behaviour.md)).
 - Add the web-context layer: let the LLM pull in real, cited external information (cost-of-living data, "is this normal") rather than only reasoning over the user's own numbers. Ground every comparative claim in a real source — this is the feature most likely to fail expensively if it hallucinates (see Product Vision's open risks).
 - Decide the household-vs-individual data model question now, before memory data accumulates in a shape that's painful to migrate later.
 
@@ -40,6 +45,10 @@ There's already a working, deployed foundation: a flexible parser and data model
 
 - Scheduled/triggered insight checks — not a single daily digest, but small, specific, single-action nudges ("one thing worth £30/month" — not a wall of five suggestions at once).
 - Use the accumulated memory from V2 to make nudges anticipatory, not just reactive ("your son's birthday is next month — start setting aside £10/week now?").
+- **Build the escalation ladder properly ([Agent Behaviour §10](../principles/01-agent-behaviour.md)): escalation is gated on evidence of readiness, never on elapsed time or engagement targets.** Stage-mismatched prompting to an avoidant user causes permanent churn, not a wasted message.
+- **Crisis mode is a prerequisite for shipping proactive nudges, not a follow-up.** The moment Max initiates contact, it can initiate contact with someone in genuine hardship — at which point coaching must stop entirely and signposting begins ([Agent Behaviour §9](../principles/01-agent-behaviour.md)).
+- **Weight the effort toward defaults and automation over messages.** Real-world nudge effects average ~1.4pp against the ~8.7pp reported in academic literature; defaults, implementation intentions and labelled pots do far more work than well-timed copy ([Agent Behaviour §6](../principles/01-agent-behaviour.md)).
+- Forward planning (the "which month should I buy this" capability) belongs here too — it needs V2's memory plus future-dated periods in the model.
 - Introduce the compound-growth framing here, carefully: "this recurring leak, redirected, becomes £X in a year" — written and reviewed against the FCA guidance/targeted-support boundary from day one (see Product Vision and Competitive Analysis), not bolted on later.
 - This is also where the cohort-comparison differentiator (validated as genuine white space in the Competitive Analysis) should get built out properly, since it's the feature no competitor — including Cleo — currently has.
 
