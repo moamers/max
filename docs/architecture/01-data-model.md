@@ -2,6 +2,8 @@
 
 *See also: [Product Vision](../product/01-product-vision.md) · [Technical Principles](../principles/03-technical-principles.md) · [Agent Behaviour](../principles/01-agent-behaviour.md)*
 
+> **Doctrines `D-1` … `D-8` are at the foot of this document.** The prose explains why; the doctrines are what gets executed.
+
 This is the most distinctive thing about Max and the least obvious. Everything else — the tone, the coaching, the comparisons — sits on top of it. It deserves its own document because if this is copied wrong, the product becomes another budgeting app.
 
 ## The core inversion
@@ -93,6 +95,19 @@ The last option is the most philosophically consistent and should be the default
 > *"Roughly speaking, your food spending looks like it's around £X a month. For a family of four in London, the ONS figure is about £Y. I'm estimating your side from weekly totals, so treat it as a ballpark."*
 
 That sentence is honest, useful, and requires zero work from the user. It is the correct shape for every comparison Max makes.
+
+## The doctrines
+
+| ID | RULE | TEST |
+|---|---|---|
+| **D-1** | The atom of the model is **a period of living and what it cost**, never a classified transaction. Schema changes that make the transaction the primary unit are prohibited. | Can a period exist and be useful with no transaction-level detail at all? If not → violation. |
+| **D-2** | Envelopes are **behavioural modes** (an ordinary week; a weekend; the fixed floor; everything else), not merchant categories. New envelopes MUST describe a mode of living, not a class of goods. | Does the proposed envelope name a way of living or a type of purchase? Purchase type → violation. |
+| **D-3** | Tags are **exception markers**, not a taxonomy. Untagged is the healthy default and MUST be treated as complete. | Does any logic treat an untagged item as missing, incomplete, or needing attention? → violation. |
+| **D-4** | The product MUST NOT surface an uncategorised count, a review queue, a tagging prompt, or any badge that grows with unprocessed data. | Search the UI for counters that increase with user data volume. Any hit → violation. *(mirrors [T-8](../principles/03-technical-principles.md))* |
+| **D-5** | Capture MUST accept spreadsheet, statement, screenshot, typed text and speech, and Max MUST perform the mapping. The user MUST NOT be asked to pre-format anything. | Can a week be added by typing one sentence? If not → the pillar is unbuilt. |
+| **D-6** | Partial input MUST produce useful output. There is no minimum completeness threshold. | Feed four numbers. Useful, honest output? If not → violation. *(mirrors [T-7](../principles/03-technical-principles.md))* |
+| **D-7** | Envelope assignment derived from a bank feed is an **inference** and MUST be tagged `inference`, never `fact`. | Any envelope split derived from transactions rendered without a hedge → violation. *(see Tension 1)* |
+| **D-8** | Mapping from envelopes to external benchmark taxonomies is **internal, probabilistic, and never the user's job**, and its output is always `inference`. | Is the user ever asked to reconcile their data to a benchmark category? → violation. *(see Tension 2)* |
 
 ## Implications for what's built today
 

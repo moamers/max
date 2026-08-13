@@ -17,21 +17,29 @@ They're living documents. When a decision changes, the document changes.
 | 5 | **[V0 Implementation Plan](./product/05-v0-implementation-plan.md)** | The concrete next engineering step. |
 | 6 | **[Commercial Strategy](./product/06-commercial-strategy.md)** | The honest moat assessment, the UK timing window, ranked mitigants, and monetisation. |
 
-## Principles
+## Doctrine
 
-Constraints that outlive any single feature. If a feature conflicts with these, the feature is wrong.
+Executable constraints that outlive any single feature. Written so an agent — or an engineer — can apply them without interpretation: every doctrine has a **RULE**, a mechanical **TEST**, a compliant and a violating example, and a rationale. If a feature conflicts with a doctrine, the feature is wrong.
 
-| Document | What it governs |
-|---|---|
-| **[Agent Behaviour](./principles/01-agent-behaviour.md)** | How Max talks to people. Grounded in Motivational Interviewing, Stages of Change, and habit-formation evidence. Includes the crisis protocol. |
-| **[Ethics & Red Lines](./principles/02-ethics-and-red-lines.md)** | Values, hard prohibitions, data/memory/trust rules, and where a real professional is required. |
-| **[Technical Principles](./principles/03-technical-principles.md)** | Architectural constraints aimed at the target state, so V1 decisions don't make V3 impossible. |
+| Document | Prefix | What it governs |
+|---|---|---|
+| **[Precedence](./principles/00-precedence.md)** | — | **Read first.** How doctrines are written, and the tier lattice that resolves every conflict. |
+| **[Agent Behaviour](./principles/01-agent-behaviour.md)** | `B-` | How Max talks. Grounded in Motivational Interviewing, Stages of Change and habit-formation evidence. Includes escalation gating and the crisis protocol. |
+| **[Ethics & Red Lines](./principles/02-ethics-and-red-lines.md)** | `R-` | Values, hard prohibitions, memory/trust rules, and where a real professional is required. |
+| **[Technical Principles](./principles/03-technical-principles.md)** | `T-` | Architectural constraints aimed at the target state, so V1 decisions don't make V3 impossible. |
+| **[Global Agent Instructions](./principles/04-global-agent-instructions.md)** | — | The compiled system prompt embedded in every Max agent. Copy-pasteable. |
 
 ## Architecture
 
-| Document | What it covers |
-|---|---|
-| **[The Data Model](./architecture/01-data-model.md)** | The most distinctive thing about Max: time-boxed rather than transaction-boxed. Read before touching the schema. |
+| Document | Prefix | What it covers |
+|---|---|---|
+| **[The Data Model](./architecture/01-data-model.md)** | `D-` | The most distinctive thing about Max: time-boxed rather than transaction-boxed. Read before touching the schema. |
+
+## Reading the doctrine IDs
+
+`B-25` means Agent Behaviour doctrine 25, and always will — IDs are permanent, never renumbered, and superseded doctrines are kept and marked rather than deleted. Code implementing a doctrine cites its ID in a comment ([T-14](./principles/03-technical-principles.md)), so the link is auditable in both directions.
+
+**The tier lattice, in one line:** `SAFETY > LEGAL > TRUTH > USER AUTHORITY > TONE > METHOD > HELPFULNESS`. Higher always wins outright; tiers are never balanced against each other.
 
 ---
 
