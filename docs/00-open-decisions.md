@@ -4,6 +4,9 @@
 
 **Convention.** Every item has an owner, a trigger (when it must be resolved by), and a consequence (what breaks if it isn't). Items move to [Resolved](#resolved) with a date and the decision, never deleted.
 
+> 🔴 **Open now, highest priority:** [`F-1`](#-f--live-defects) — the parser mis-reads the real spreadsheet structure, making the dashboard meaningless on real data. Fix before any other build work.
+> 🔑 **Needs the founder:** [`C-2`](#c--housekeeping) — rotate the Supabase password and Expo token, both exposed in a chat transcript.
+
 ---
 
 ## A · Decisions only the founder can make
@@ -43,29 +46,6 @@ Small pieces of work that gate a feature. Cheap now, expensive as surprises.
 
 ---
 
-## 🔴 F · Live defects
-
-| # | Defect | Impact |
-|---|---|---|
-| **F-1** | **The parser treats every worksheet as a separate pay period.** The real file (`Jun 30th - Aug 3rd.xlsx`) is **one pay period per file**, with a `Month summary` tab (bills + extras) plus one tab per week (`Week 1`…`Week 5`, each holding grocery/transport/weekend). The parser produced **six periods from one**. | **Critical — the dashboard output is meaningless on real data.** Income (£2,285) attaches only to the summary tab, so all five week-tabs show £0 income and a negative net position. Self-benchmarking compares weeks against a month summary. |
-| **F-2** | `week_number` is always `1` on weekly tabs. It's derived from counting repeated section headers *within* a sheet; a per-week tab has only one `Grocery` block, so every week is week 1. | Weekly rhythm and leak detection (the core diagnostic in [D-1](./architecture/01-data-model.md)) cannot work. |
-
-**What is NOT broken — verified against real data:** label-anchored line-item parsing works well. Descriptions, notes (including split amounts like `"12.99 + 34.29 + 16.5"`), values and free-text tags all came through correctly. The `fam-uk` tag spanning a family visit is exactly the exception-marker pattern [D-3](./architecture/01-data-model.md) describes — the data model's central bet is validated by the founder's own real file.
-
-**Required fix.** The model needs the two-level hierarchy the real spreadsheet already uses:
-
-```
-FILE  = one pay period          (e.g. Jun 30th – Aug 3rd)
-  ├── Month summary tab         → period-level bills + extras + income
-  └── Week N tab  × 5           → that week's grocery / weekend / transport
-```
-
-Today's schema is flat (one `periods` row, with `week_number` on line items), which *can* express this — the parser simply has to map a **workbook** to one period and **tabs** to weeks, rather than mapping each tab to its own period. Tab-name parsing (`Week (\d+)`, `Month summary`) is the obvious route, with a fallback for files that don't follow the convention.
-
-> **This outranks everything in the V0 plan.** It is the first contact between the product and real data, and the product got it wrong. Fix before any narrative-sentence work — the sentences would otherwise describe a fiction.
-
----
-
 ## D · Professional review triggers
 
 **Nothing here needs a lawyer today.** These are trigger points, not a backlog. Each names the event that starts the clock.
@@ -91,6 +71,29 @@ Things that could change underneath us. Reviewed periodically, not acted on now.
 | **E-3** | **ICO guidance on agentic AI.** Early thinking published Jan 2026 (explicitly not formal guidance); flags opaque multi-agent data flows as the core risk. | Formal guidance would likely bear directly on the memory layer. |
 | **E-4** | **Cleo's UK monetisation.** Relaunched 5 Feb 2026, waitlisted, currently selling nothing in the UK. | The clearest measurable signal that the timing window is closing. |
 | **E-5** | **ChatGPT Finances / Lloyds assistant rollout.** | Platform-level commoditisation risk — the Jasper failure mode. |
+
+---
+
+## 🔴 F · Live defects
+
+| # | Defect | Impact |
+|---|---|---|
+| **F-1** | **The parser treats every worksheet as a separate pay period.** The real file (`Jun 30th - Aug 3rd.xlsx`) is **one pay period per file**, with a `Month summary` tab (bills + extras) plus one tab per week (`Week 1`…`Week 5`, each holding grocery/transport/weekend). The parser produced **six periods from one**. | **Critical — the dashboard output is meaningless on real data.** Income (£2,285) attaches only to the summary tab, so all five week-tabs show £0 income and a negative net position. Self-benchmarking compares weeks against a month summary. |
+| **F-2** | `week_number` is always `1` on weekly tabs. It's derived from counting repeated section headers *within* a sheet; a per-week tab has only one `Grocery` block, so every week is week 1. | Weekly rhythm and leak detection (the core diagnostic in [D-1](./architecture/01-data-model.md)) cannot work. |
+
+**What is NOT broken — verified against real data:** label-anchored line-item parsing works well. Descriptions, notes (including split amounts like `"12.99 + 34.29 + 16.5"`), values and free-text tags all came through correctly. The `fam-uk` tag spanning a family visit is exactly the exception-marker pattern [D-3](./architecture/01-data-model.md) describes — the data model's central bet is validated by the founder's own real file.
+
+**Required fix.** The model needs the two-level hierarchy the real spreadsheet already uses:
+
+```
+FILE  = one pay period          (e.g. Jun 30th – Aug 3rd)
+  ├── Month summary tab         → period-level bills + extras + income
+  └── Week N tab  × 5           → that week's grocery / weekend / transport
+```
+
+Today's schema is flat (one `periods` row, with `week_number` on line items), which *can* express this — the parser simply has to map a **workbook** to one period and **tabs** to weeks, rather than mapping each tab to its own period. Tab-name parsing (`Week (\d+)`, `Month summary`) is the obvious route, with a fallback for files that don't follow the convention.
+
+> **This outranks everything in the V0 plan.** It is the first contact between the product and real data, and the product got it wrong. Fix before any narrative-sentence work — the sentences would otherwise describe a fiction.
 
 ---
 
