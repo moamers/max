@@ -35,11 +35,23 @@ SURFACES           chat + widgets — web today, native later, one shared core (
 **TEST.** Grep the schema for vendor nouns (`plaid_`, `openai_`, provider transaction IDs, framework types). Any hit → violation.
 **WHY.** Sources, models and frameworks will all churn — this project has already switched frontend frameworks once. The model is where accumulated user value lives and it must not churn with them.
 
-### T-2 · Arithmetic is code; language is the LLM
-**RULE.** Every number Max states MUST be computed by deterministic code and passed to the LLM for phrasing. The LLM MUST NOT compute, derive, or infer a figure it then states.
-**TEST.** Trace every emitted numeral to a value produced by a pure function under test. Numeral originating inside a model completion → violation.
-**WHY.** The core promise is trustworthy calibration for someone who cannot easily check the maths. An LLM doing in-context arithmetic will be wrong occasionally and confidently, and one wrong number told to an anxious user costs more trust than ten good insights earn.
-**STATUS.** Already followed by `src/lib/insights.ts`. Now doctrine.
+### T-2 · The LLM is a compiler, not an interpreter
+**RULE.** The LLM MAY make judgements about *structure and meaning* — reading an unfamiliar file, deciding what a sheet represents, mapping "spent about 80 on the shop" onto an envelope. It MUST NOT compute, derive, or infer any **figure it then states**.
+**RULE.** Where the LLM makes a structural judgement, that judgement MUST be emitted as an **inspectable, serialisable plan** which is then applied by deterministic code. The plan is produced once and reused; it MUST NOT be re-derived on every read of the same input.
+**TEST.** (a) Trace every emitted numeral to a value produced by a pure function under test — a numeral originating inside a model completion is a violation. (b) Does the same input produce the same numbers on every run? If not → violation.
+
+**COMPLIANT.** The model looks at a workbook once and emits `{strategy: "workbook-is-period", sheets: [{sheet: "Week 3", role: {kind: "week", weekNumber: 3}}, …]}`. Pure code applies that plan and does the arithmetic. Same file next month → same plan, no model call, identical numbers.
+**VIOLATION.** Handing the model a spreadsheet and asking it what the totals are.
+
+**WHY — this is not blanket distrust of models.** It's an asymmetry about which mistakes the user can catch:
+- **Structural mistakes are visible and recoverable.** If a sheet is misread, something looks wrong on screen and the user can say so.
+- **Arithmetic mistakes are silent and authoritative.** If Max says "£312" and it was "£412", the user has no way to know — *not having to check is the entire reason they're here*. For an avoidant user a wrong number is worse than no number.
+
+Three further reasons the boundary sits exactly here: **reproducibility** (a finance app that says £312 today and £310 tomorrow is corrosive), **testability** (you can unit-test "was the leak detected"; you cannot regression-test free-form output, which is what stops the product degrading as it grows), and **honesty** ([B-8](./01-agent-behaviour.md) lets Max tag a number `fact` — if a model computed it, that tag is a lie).
+
+**Put the model where mistakes are recoverable. Put code where mistakes are silent.**
+
+**STATUS.** `src/lib/insights.ts` follows the arithmetic half. `src/lib/workbook-mapping.ts` implements the compiler seam — a `WorkbookMapping` plan, derived by rules today, with an LLM detector swappable in behind the same interface. It returns a plan; it never returns numbers.
 
 ### T-3 · Provenance is a type, not a prompt instruction
 **RULE.** `fact` / `sourced` / `inference` MUST be carried in the data structures and enforced by the rendering layer. Hedging and citation MUST NOT depend on the model remembering to apply them.

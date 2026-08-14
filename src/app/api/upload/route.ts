@@ -26,12 +26,12 @@ export async function POST(req: NextRequest) {
 
   let parsedResult;
   try {
-    parsedResult = await parseWorkbook(buffer);
+    parsedResult = await parseWorkbook(buffer, file.name);
   } catch {
     return NextResponse.json({ error: "Could not read this file as a valid .xlsx workbook" }, { status: 400 });
   }
 
-  const { periods, rawGrids } = parsedResult;
+  const { periods, rawGrids, mapping } = parsedResult;
 
   if (periods.length === 0) {
     return NextResponse.json(
@@ -59,6 +59,15 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     saved,
     sheetNames: rawGrids.map((g) => g.sheetName),
+    // How the workbook was understood — surfaced so a wrong reading is visible
+    // rather than silent, which is how F-1 went unnoticed.
+    mapping: {
+      strategy: mapping.strategy,
+      confidence: mapping.confidence,
+      derivedBy: mapping.derivedBy,
+      notes: mapping.notes,
+      sheets: mapping.sheets.map((s) => ({ sheet: s.sheetName, role: s.role })),
+    },
     ...(debug ? { rawGrids, parsedPeriods: periods } : {}),
   });
 }

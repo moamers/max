@@ -1,4 +1,9 @@
 import ExcelJS from "exceljs";
+import {
+  detectWorkbookMapping,
+  labelFromFileName,
+  type WorkbookMapping,
+} from "./workbook-mapping";
 
 export type Section = "bills" | "extras" | "grocery" | "weekend" | "transport";
 
@@ -205,31 +210,80 @@ export function isAggregatesSheet(sheetName: string): boolean {
   return /aggregate/i.test(sheetName);
 }
 
-export async function parseWorkbook(buffer: Buffer): Promise<{
+/**
+ * Applies a WorkbookMapping to the parsed sheets. Pure and deterministic —
+ * all judgement about structure already happened in the mapping (T-2).
+ */
+export async function parseWorkbook(
+  buffer: Buffer,
+  fileName = "upload.xlsx"
+): Promise<{
   periods: ParsedPeriod[];
   rawGrids: RawGrid[];
+  mapping: WorkbookMapping;
 }> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
 
-  const periods: ParsedPeriod[] = [];
   const rawGrids: RawGrid[] = [];
-  let sheetOrder = 0;
-
+  const sheetNames: string[] = [];
   workbook.eachSheet((worksheet) => {
-    const grid = sheetToGrid(worksheet);
-    rawGrids.push({ sheetName: worksheet.name, rows: grid });
-
-    if (isAggregatesSheet(worksheet.name)) return;
-
-    const parsed = parsePeriodSheet(worksheet.name, grid, sheetOrder);
-    sheetOrder += 1;
-    if (parsed.lineItems.length > 0) {
-      periods.push(parsed);
-    }
+    sheetNames.push(worksheet.name);
+    rawGrids.push({ sheetName: worksheet.name, rows: sheetToGrid(worksheet) });
   });
 
-  return { periods, rawGrids };
+  const mapping = detectWorkbookMapping(sheetNames, fileName);
+  const gridFor = (name: string) => rawGrids.find((g) => g.sheetName === name)?.rows ?? [];
+
+  if (mapping.strategy === "sheet-is-period") {
+    const periods: ParsedPeriod[] = [];
+    let sheetOrder = 0;
+    for (const plan of mapping.sheets) {
+      if (plan.role.kind === "ignore") continue;
+      const parsed = parsePeriodSheet(plan.sheetName, gridFor(plan.sheetName), sheetOrder);
+      sheetOrder += 1;
+      if (parsed.lineItems.length > 0) periods.push(parsed);
+    }
+    return { periods, rawGrids, mapping };
+  }
+
+  // workbook-is-period: every non-ignored sheet contributes to ONE period.
+  const lineItems: ParsedLineItem[] = [];
+  const budgets: ParsedBudget[] = [];
+  let income: number | null = null;
+
+  for (const plan of mapping.sheets) {
+    if (plan.role.kind === "ignore") continue;
+    const parsed = parsePeriodSheet(plan.sheetName, gridFor(plan.sheetName), 0);
+
+    // Income can appear on any sheet; the summary sheet is the usual home.
+    if (income === null && parsed.income !== null) income = parsed.income;
+
+    if (plan.role.kind === "week") {
+      // F-2: the week number comes from the sheet's identity, not from counting
+      // repeated section headers inside it (a per-week sheet has only one of each).
+      const weekNumber = plan.role.weekNumber;
+      for (const item of parsed.lineItems) {
+        lineItems.push(
+          WEEKLY_SECTIONS.includes(item.section) ? { ...item, weekNumber } : item
+        );
+      }
+      for (const b of parsed.budgets) {
+        budgets.push(WEEKLY_SECTIONS.includes(b.section) ? { ...b, weekNumber } : b);
+      }
+    } else {
+      lineItems.push(...parsed.lineItems);
+      budgets.push(...parsed.budgets);
+    }
+  }
+
+  const label = mapping.periodLabel ?? labelFromFileName(fileName);
+  const periods: ParsedPeriod[] =
+    lineItems.length > 0
+      ? [{ label, sheetName: label, sheetOrder: 0, income, lineItems, budgets }]
+      : [];
+
+  return { periods, rawGrids, mapping };
 }
 
 export function summarizePeriod(lineItems: ParsedLineItem[]) {
