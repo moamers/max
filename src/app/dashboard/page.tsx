@@ -1,5 +1,12 @@
-import { listPeriodSummaries, tagBreakdownForPeriod } from "@/lib/store";
+import {
+  listPeriodSummaries,
+  tagBreakdownForPeriod,
+  weeklyTotalsForPeriod,
+  sectionTotalsForPeriod,
+} from "@/lib/store";
 import { computeInsights, type MetricInsight } from "@/lib/insights";
+import { buildNarrative, type NarrativeSentence, type SectionTotals } from "@/lib/narrative";
+import { DeletePeriodButton } from "./DeletePeriodButton";
 import type { PeriodSummary } from "@max/shared";
 
 export const dynamic = "force-dynamic";
@@ -162,6 +169,32 @@ function StatTile({
   );
 }
 
+const EMPTY_SECTIONS: SectionTotals = { bills: 0, extras: 0, grocery: 0, weekend: 0, transport: 0 };
+
+/** B-8: an inference is visually distinguished, never rendered as flat fact. */
+function Narrative({ sentences }: { sentences: NarrativeSentence[] }) {
+  if (sentences.length === 0) {
+    return (
+      <p className="text-xl sm:text-2xl leading-relaxed" style={{ color: "var(--text-primary)" }}>
+        Nothing much stands out this period.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-4">
+      {sentences.map((s) => (
+        <p
+          key={s.id}
+          className="text-xl sm:text-2xl leading-relaxed"
+          style={{ color: s.provenance === "inference" ? "var(--text-secondary)" : "var(--text-primary)" }}
+        >
+          {s.text}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   const rows = await listPeriodSummaries();
 
@@ -178,17 +211,43 @@ export default async function DashboardPage() {
 
   const insights = computeInsights(rows);
   const latest = insights.latest!;
-  const tagBreakdown = (await tagBreakdownForPeriod(latest.periodId)).slice(0, 10);
+  const [tagRows, weeks, sectionRows] = await Promise.all([
+    tagBreakdownForPeriod(latest.periodId),
+    weeklyTotalsForPeriod(latest.periodId),
+    sectionTotalsForPeriod(latest.periodId),
+  ]);
+  const tagBreakdown = tagRows.slice(0, 10);
+  const sections = sectionRows.reduce<SectionTotals>(
+    (acc, r) => (r.section in acc ? { ...acc, [r.section]: r.total } : acc),
+    { ...EMPTY_SECTIONS }
+  );
+
+  const narrative = buildNarrative({
+    periodLabel: latest.label,
+    income: latest.income,
+    sections,
+    weeks,
+    tags: tagRows,
+    insights,
+  });
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <h1 className="text-2xl font-semibold mb-1">Your budget dashboard</h1>
-      <p className="mb-8" style={{ color: "var(--text-secondary)" }}>
-        Latest period: <strong>{latest.label}</strong>
-        {insights.historyCount > 0
-          ? ` — compared against your average across ${insights.historyCount} prior period${insights.historyCount === 1 ? "" : "s"}.`
-          : " — upload more periods to unlock the self-benchmark comparison."}
+      {/* B-24: the first thing on screen is a plain sentence, never a total or a verdict. */}
+      <p className="text-sm mb-3" style={{ color: "var(--text-muted)" }}>
+        {latest.label}
       </p>
+      <Narrative sentences={narrative} />
+
+      <p className="text-sm mt-8 mb-10" style={{ color: "var(--text-muted)" }}>
+        {insights.historyCount > 0
+          ? `Compared against your average across ${insights.historyCount} earlier period${insights.historyCount === 1 ? "" : "s"}.`
+          : "Add another period and Max can start comparing this one to your usual."}
+      </p>
+
+      <h2 className="text-sm font-medium mb-3" style={{ color: "var(--text-secondary)" }}>
+        The detail
+      </h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10">
         <StatTile
@@ -243,6 +302,10 @@ export default async function DashboardPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-8">
+        <DeletePeriodButton periodId={latest.periodId} label={latest.label} />
       </div>
     </div>
   );

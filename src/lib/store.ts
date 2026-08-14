@@ -151,6 +151,51 @@ export async function tagBreakdownForPeriod(periodId: number): Promise<TagBreakd
   }));
 }
 
+export interface WeeklyTotalRow {
+  weekNumber: number;
+  total: number;
+}
+
+/** Within-period rhythm — the signal the time-boxed model exists to expose. */
+export async function weeklyTotalsForPeriod(periodId: number): Promise<WeeklyTotalRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      weekNumber: lineItems.weekNumber,
+      total: sql<string>`sum(${lineItems.amount})`,
+    })
+    .from(lineItems)
+    .where(eq(lineItems.periodId, periodId))
+    .groupBy(lineItems.weekNumber)
+    .orderBy(asc(lineItems.weekNumber));
+
+  return rows
+    .filter((r) => r.weekNumber !== null)
+    .map((r) => ({ weekNumber: Number(r.weekNumber), total: Number(r.total) }));
+}
+
+export interface SectionTotalRow {
+  section: string;
+  total: number;
+}
+
+export async function sectionTotalsForPeriod(periodId: number): Promise<SectionTotalRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ section: lineItems.section, total: sql<string>`sum(${lineItems.amount})` })
+    .from(lineItems)
+    .where(eq(lineItems.periodId, periodId))
+    .groupBy(lineItems.section);
+  return rows.map((r) => ({ section: r.section, total: Number(r.total) }));
+}
+
+/** R-19: the user must be able to delete their own records without a console. */
+export async function deletePeriod(periodId: number): Promise<boolean> {
+  const db = getDb();
+  const deleted = await db.delete(periods).where(eq(periods.id, periodId)).returning({ id: periods.id });
+  return deleted.length > 0;
+}
+
 export async function getPeriodByLabel(label: string) {
   const db = getDb();
   const [row] = await db
