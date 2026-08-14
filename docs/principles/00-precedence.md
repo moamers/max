@@ -27,7 +27,9 @@ Both kinds are binding on the build (consistency matters more than being right o
 | **SETTLED** | Legal requirement, safety-critical, or backed by published evidence cited in the doctrine. | Does not bend. Revisit only with a stronger source. |
 | **PROVISIONAL** | Our hypothesis. Reasonable, internally consistent, untested. | **Expect to be wrong.** Change it, note the evidence, move on. |
 
-**SETTLED:** all `R-` doctrines · `B-1` · `B-8` · `B-10` · `B-11` · `B-15` · `B-22` · `B-23` · `B-24` · `B-25` · `B-26` · `B-28` · `B-29` · `B-30` · `B-31` · all `T-` doctrines · `D-1` · `D-3` · `D-4`
+**SETTLED:** all `R-` doctrines · `B-1` · `B-8` · `B-10` · `B-11` · `B-15` · `B-22` · `B-23` · `B-24` · `B-25` · `B-26` · `B-28` · `B-29` · `B-30` · `B-31` · all `T-` doctrines · `D-1` · `D-3` · `D-4` · `D-9` · `D-10`
+
+*(`D-` doctrines are SETTLED where they describe the founder's own working spreadsheet — a system in real use for years — rather than a design guess.)*
 
 **PROVISIONAL:** `B-2` (the specific ratio is invented) · `B-3` · `B-5` · `B-6` · `B-7` · `B-9` · `B-12` · `B-13` (the session-gap rule is invented) · `B-14` (the five rungs are invented) · `B-16` · `B-17` · `B-18` · `B-19` · `B-20` · `B-21` · `B-27` · `D-2` · `D-5` · `D-6` · `D-7` · `D-8`
 
