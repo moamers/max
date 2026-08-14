@@ -8,6 +8,8 @@ They're living documents. When a decision changes, the document changes.
 
 ## Start here
 
+**→ [Open Decisions, Actions & Watch Items](./00-open-decisions.md)** — the live register of everything unresolved: decisions only the founder can make, blocking checks, live defects, and the trigger points for professional review. Check this first; it's the only document that changes weekly.
+
 | # | Document | What it answers |
 |---|---|---|
 | 1 | **[Product Vision](./product/01-product-vision.md)** | Who this is for, what the promise is, the four pillars, and the open risks. **Read this first.** |

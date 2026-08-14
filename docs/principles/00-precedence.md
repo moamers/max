@@ -16,6 +16,23 @@ Every doctrine in this directory has the same shape, so it can be executed witho
 
 **Doctrine IDs are permanent.** `B-4` never means anything other than what `B-4` means today. Superseded doctrines are marked `SUPERSEDED BY <id>` and kept, never deleted or renumbered.
 
+## Confidence status — read this before treating any doctrine as settled
+
+**Max has zero users.** Roughly half the doctrines in this directory are grounded in published evidence or legal requirement; the other half are *our best current hypothesis*, written in imperative form so they can be executed consistently — not because they've been validated.
+
+Both kinds are binding on the build (consistency matters more than being right on any single rule). But only one kind should be defended when a real user contradicts it.
+
+| Status | Meaning | On contact with a real user |
+|---|---|---|
+| **SETTLED** | Legal requirement, safety-critical, or backed by published evidence cited in the doctrine. | Does not bend. Revisit only with a stronger source. |
+| **PROVISIONAL** | Our hypothesis. Reasonable, internally consistent, untested. | **Expect to be wrong.** Change it, note the evidence, move on. |
+
+**SETTLED:** all `R-` doctrines · `B-1` · `B-8` · `B-10` · `B-11` · `B-15` · `B-22` · `B-23` · `B-24` · `B-25` · `B-26` · `B-28` · `B-29` · `B-30` · `B-31` · all `T-` doctrines · `D-1` · `D-3` · `D-4`
+
+**PROVISIONAL:** `B-2` (the specific ratio is invented) · `B-3` · `B-5` · `B-6` · `B-7` · `B-9` · `B-12` · `B-13` (the session-gap rule is invented) · `B-14` (the five rungs are invented) · `B-16` · `B-17` · `B-18` · `B-19` · `B-20` · `B-21` · `B-27` · `D-2` · `D-5` · `D-6` · `D-7` · `D-8`
+
+> The danger this table exists to prevent: a written doctrine feels like a decided question. Most of these are open questions in imperative clothing, and the fastest way to resolve them is one real user, not another research pass.
+
 ## The precedence lattice
 
 When two doctrines conflict, the **higher tier always wins**, without exception and without balancing. An agent does not weigh tiers against each other; it applies the highest applicable one and stops.
