@@ -4,7 +4,7 @@
 
 **Convention.** Every item has an owner, a trigger (when it must be resolved by), and a consequence (what breaks if it isn't). Items move to [Resolved](#resolved) with a date and the decision, never deleted.
 
-> 🔴 **Open now, highest priority:** [`F-1`](#-f--live-defects) — the parser mis-reads the real spreadsheet structure, making the dashboard meaningless on real data. Fix before any other build work.
+> ✅ **`F-1` / `F-2` fixed** (2026-08-14) — see [Resolved](#resolved). The mis-parsed rows from the original upload are still in the database and need replacing with a fresh upload.
 > 🔑 **Needs the founder:** [`C-2`](#c--housekeeping) — rotate the Supabase password and Expo token, both exposed in a chat transcript.
 
 ---
@@ -106,3 +106,6 @@ Today's schema is flat (one `periods` row, with `week_number` on line items), wh
 | 2026-08 | **Backend hosting: Railway.** Persistent process, so no serverless connection-pooling constraints. |
 | 2026-08 | **No credit, no referral revenue** ([R-4](./principles/02-ethics-and-red-lines.md), [R-5](./principles/02-ethics-and-red-lines.md)) — closes the industry-standard monetisation path by choice, which is why A-3 matters. |
 | 2026-08 | **"Coaching without them knowing" split:** unobtrusive retained ([B-5](./principles/01-agent-behaviour.md)), covert rejected ([R-9](./principles/02-ethics-and-red-lines.md)). Transparent nudges perform no worse, so concealment buys nothing. |
+| 2026-08-14 | **`F-1` / `F-2` fixed** via a workbook mapping layer (`src/lib/workbook-mapping.ts`) rather than a hardcoded rule for one layout. Structure detection emits an inspectable plan; deterministic code applies it. Verified: one period instead of six, week numbers 1–5 instead of all 1, weekly totals matching the real file exactly. Legacy sheet-per-period files still parse via the fallback strategy. |
+| 2026-08-14 | **`T-2` amended to "LLM as compiler, not interpreter."** The model may judge structure and meaning; it must not compute a figure it then states, and structural judgement must be emitted as a reusable plan rather than re-derived per read. Rationale is the asymmetry between recoverable structural errors and silent arithmetic ones, plus reproducibility and testability. |
+| 2026-08-14 | **Transactions clarified as constituents, not irrelevant** — the week is the atom, transactions are the particles. Detail is never required to supply, never wasted when supplied. Merchant identity is load-bearing for the savvy pillar ([D-9](./architecture/01-data-model.md)); user labels are their vocabulary and must not be normalised ([D-10](./architecture/01-data-model.md)). |
