@@ -7,6 +7,7 @@ import { findToneViolations, isToneCompliant, assertToneCompliant } from "../ton
 import { buildNarrative, type NarrativeInput } from "../narrative";
 import { computeInsights } from "../insights";
 import { detectByRules, labelFromFileName } from "../workbook-mapping";
+import { parsePeriodLabel, describePeriod, formatPeriodLength } from "../period-dates";
 
 // ---------------------------------------------------------------- B-23 tone
 
@@ -148,5 +149,50 @@ describe("F-1 · workbook mapping", () => {
 
   it("strips the extension when deriving a period label", () => {
     expect(labelFromFileName("Jun 30th - Aug 3rd.xlsx")).toBe("Jun 30th - Aug 3rd");
+  });
+});
+
+// ---------------------------------------------- period legibility (T-2 pure)
+
+describe("period dates · a label the user wrote becomes dates they can read", () => {
+  const ref = new Date(Date.UTC(2026, 7, 14)); // 14 Aug 2026, when the sheet was uploaded
+
+  it("reads 'Jun 30th - Aug 3rd' as a real range", () => {
+    const d = parsePeriodLabel("Jun 30th - Aug 3rd", ref)!;
+    expect(d.start.toISOString().slice(0, 10)).toBe("2026-06-30");
+    expect(d.end.toISOString().slice(0, 10)).toBe("2026-08-03");
+    expect(d.days).toBe(35);
+  });
+
+  it("formats the range with the year stated once", () => {
+    expect(describePeriod("Jun 30th - Aug 3rd", ref, 5)).toEqual({
+      range: "30 June – 3 August 2026",
+      length: "5 weeks",
+    });
+  });
+
+  it("rolls a December→January period into the next year", () => {
+    const d = parsePeriodLabel("Dec 29th - Jan 25th", new Date(Date.UTC(2027, 0, 30)))!;
+    expect(d.start.getUTCFullYear()).toBe(2026);
+    expect(d.end.getUTCFullYear()).toBe(2027);
+  });
+
+  it("puts a period back a year rather than dating it in the future", () => {
+    const d = parsePeriodLabel("Nov 1st - Nov 28th", new Date(Date.UTC(2026, 1, 3)))!;
+    expect(d.start.getUTCFullYear()).toBe(2025);
+  });
+
+  it.each(["Aggregates", "Week 3", "", "Sheet1", "Jun 30th"])(
+    "returns null rather than inventing dates for %j",
+    (label) => {
+      expect(parsePeriodLabel(label, ref)).toBeNull();
+      expect(describePeriod(label, ref)).toBeNull();
+    }
+  );
+
+  it("falls back to the day count when week tabs are absent", () => {
+    expect(formatPeriodLength(35)).toBe("5 weeks");
+    expect(formatPeriodLength(30)).toBe("4 weeks and 2 days");
+    expect(formatPeriodLength(1)).toBe("1 day");
   });
 });

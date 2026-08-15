@@ -1,11 +1,14 @@
 import {
   listPeriodSummaries,
-  tagBreakdownForPeriod,
   weeklyTotalsForPeriod,
   sectionTotalsForPeriod,
+  lineItemsForPeriod,
+  type LineItemRow,
 } from "@/lib/store";
-import { computeInsights, type MetricInsight } from "@/lib/insights";
+import { computeInsights } from "@/lib/insights";
 import { buildNarrative, type NarrativeSentence, type SectionTotals } from "@/lib/narrative";
+import { describePeriod } from "@/lib/period-dates";
+import { WhereItWent, type Bucket } from "./WhereItWent";
 import { DeletePeriodButton } from "./DeletePeriodButton";
 import type { PeriodSummary } from "@max/shared";
 
@@ -13,17 +16,6 @@ export const dynamic = "force-dynamic";
 
 function fmtGBP(n: number): string {
   return n.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
-}
-
-function pct(n: number): string {
-  return `${(n * 100).toFixed(1)}%`;
-}
-
-/** Only worth showing a "vs average" line when the delta is more than noise — a
- * zero delta (e.g. income unchanged) shouldn't render a misleading up/down arrow. */
-function formatDelta(delta: number | null, format: (n: number) => string): string | undefined {
-  if (delta === null || Math.abs(delta) <= 0.005) return undefined;
-  return `${format(Math.abs(delta))} vs your average`;
 }
 
 function StackedBarChart({ rows }: { rows: PeriodSummary[] }) {
@@ -121,54 +113,6 @@ function StackedBarChart({ rows }: { rows: PeriodSummary[] }) {
   );
 }
 
-function Legend() {
-  const items = [
-    { label: "Fixed (bills)", color: "var(--series-bills)" },
-    { label: "Variable (extras)", color: "var(--series-extras)" },
-    { label: "Weekly (grocery/weekend/transport)", color: "var(--series-weekly)" },
-  ];
-  return (
-    <div className="flex flex-wrap gap-4 text-sm mb-2" style={{ color: "var(--text-secondary)" }}>
-      {items.map((it) => (
-        <span key={it.label} className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-sm" style={{ background: it.color }} />
-          {it.label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function StatTile({
-  label,
-  value,
-  deltaText,
-  isGood,
-}: {
-  label: string;
-  value: string;
-  deltaText?: string;
-  isGood: boolean | null;
-}) {
-  return (
-    <div className="rounded-lg border p-4" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-      <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-        {label}
-      </p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
-      {deltaText && (
-        <p
-          className="text-sm mt-1 flex items-center gap-1"
-          style={{ color: isGood ? "var(--good-text)" : "var(--critical)" }}
-        >
-          <span aria-hidden>{isGood ? "▲" : "▼"}</span>
-          {deltaText}
-        </p>
-      )}
-    </div>
-  );
-}
-
 const EMPTY_SECTIONS: SectionTotals = { bills: 0, extras: 0, grocery: 0, weekend: 0, transport: 0 };
 
 /** B-8: an inference is visually distinguished, never rendered as flat fact. */
@@ -195,6 +139,24 @@ function Narrative({ sentences }: { sentences: NarrativeSentence[] }) {
   );
 }
 
+function Legend() {
+  const items = [
+    { label: "Bills", color: "var(--series-bills)" },
+    { label: "One-off things", color: "var(--series-extras)" },
+    { label: "Day-to-day", color: "var(--series-weekly)" },
+  ];
+  return (
+    <div className="flex flex-wrap gap-4 text-sm mb-2" style={{ color: "var(--text-secondary)" }}>
+      {items.map((it) => (
+        <span key={it.label} className="flex items-center gap-2">
+          <span className="inline-block w-3 h-3 rounded-sm" style={{ background: it.color }} />
+          {it.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default async function DashboardPage() {
   const rows = await listPeriodSummaries();
 
@@ -211,32 +173,106 @@ export default async function DashboardPage() {
 
   const insights = computeInsights(rows);
   const latest = insights.latest!;
-  const [tagRows, weeks, sectionRows] = await Promise.all([
-    tagBreakdownForPeriod(latest.periodId),
+  const [weeks, sectionRows, items] = await Promise.all([
     weeklyTotalsForPeriod(latest.periodId),
     sectionTotalsForPeriod(latest.periodId),
+    lineItemsForPeriod(latest.periodId),
   ]);
-  const tagBreakdown = tagRows.slice(0, 10);
+
   const sections = sectionRows.reduce<SectionTotals>(
     (acc, r) => (r.section in acc ? { ...acc, [r.section]: r.total } : acc),
     { ...EMPTY_SECTIONS }
   );
+
+  const tagTotals = new Map<string, { total: number; count: number; section: string }>();
+  for (const i of items) {
+    if (!i.tag) continue;
+    const cur = tagTotals.get(i.tag) ?? { total: 0, count: 0, section: i.section };
+    tagTotals.set(i.tag, { total: cur.total + i.amount, count: cur.count + 1, section: cur.section });
+  }
+  const tags = [...tagTotals.entries()].map(([tag, v]) => ({ tag, ...v }));
 
   const narrative = buildNarrative({
     periodLabel: latest.label,
     income: latest.income,
     sections,
     weeks,
-    tags: tagRows,
+    tags,
     insights,
   });
 
+  // The label carries no year ("Jun 30th - Aug 3rd"), so the year is inferred from
+  // when the row was recorded — which lives on the summary row, not the metrics.
+  const latestRow = rows.find((r) => r.periodId === latest.periodId);
+  const created = latestRow ? new Date(latestRow.createdAt) : new Date();
+  const described = describePeriod(latest.label, created, weeks.length);
+
+  const dayToDay = sections.grocery + sections.weekend + sections.transport;
+  const totalOut = dayToDay + sections.extras + sections.bills;
+  // When outgoings dwarf recorded income, income is probably partial — so any
+  // percentage-of-income figure would be confidently wrong. Show amounts instead.
+  const incomeQuestionable = latest.income > 0 && totalOut > latest.income * 1.5;
+
+  const bySection = (s: string) => items.filter((i) => i.section === s);
+  const weeklyItems: LineItemRow[] = items.filter((i) =>
+    ["grocery", "weekend", "transport"].includes(i.section)
+  );
+
+  const buckets: Bucket[] = [
+    {
+      key: "day-to-day",
+      label: "Day-to-day living",
+      amount: dayToDay,
+      meaning:
+        "Your ordinary running costs — the weekly shop, getting around, and weekends. This is the part that repeats.",
+      origin: `Added up from the ${weeks.length} weekly ${weeks.length === 1 ? "tab" : "tabs"} in your spreadsheet.`,
+      breakdown: weeks.map((w) => ({ label: `Week ${w.weekNumber}`, amount: w.total })),
+      items: weeklyItems,
+    },
+    {
+      key: "one-off",
+      label: "One-off things",
+      amount: sections.extras,
+      meaning:
+        "Things that aren't part of your normal week and aren't regular bills — trips, gifts, shopping, home stuff.",
+      origin: `${bySection("extras").length} rows from the summary tab of your spreadsheet.`,
+      items: bySection("extras"),
+    },
+    {
+      key: "bills",
+      label: "Bills",
+      amount: sections.bills,
+      meaning: "The regular, mostly-fixed costs that arrive whether you think about them or not.",
+      origin: `${bySection("bills").length} rows from the summary tab of your spreadsheet.`,
+      items: bySection("bills"),
+    },
+  ];
+
+  const incomeBucket: Bucket = {
+    key: "income",
+    label: "Money in",
+    amount: latest.income,
+    meaning: "What your spreadsheet records as coming in during this period.",
+    origin: "Read from the salary row on your summary tab.",
+    caveat: incomeQuestionable
+      ? "This is noticeably less than what went out, which usually means it's only part of the picture — a second income, savings, or a transfer that isn't in the sheet. Until that's settled, Max is showing you amounts rather than percentages, because a percentage of the wrong number is worse than no percentage."
+      : undefined,
+    items: [],
+  };
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      {/* B-24: the first thing on screen is a plain sentence, never a total or a verdict. */}
-      <p className="text-sm mb-3" style={{ color: "var(--text-muted)" }}>
-        {latest.label}
-      </p>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      {/* B-24: opens with what you're looking at, never a total or a verdict. */}
+      <header className="mb-8">
+        <h1 className="text-lg font-semibold">{described ? described.range : latest.label}</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+          {described ? `${described.length}` : "One pay period"}
+          {" · from your “"}
+          {latest.label}
+          {"” sheet"}
+        </p>
+      </header>
+
       <Narrative sentences={narrative} />
 
       <p className="text-sm mt-8 mb-10" style={{ color: "var(--text-muted)" }}>
@@ -245,64 +281,23 @@ export default async function DashboardPage() {
           : "Add another period and Max can start comparing this one to your usual."}
       </p>
 
-      <h2 className="text-sm font-medium mb-3" style={{ color: "var(--text-secondary)" }}>
-        The detail
-      </h2>
+      <WhereItWent buckets={buckets} title="Where it went" />
+      <WhereItWent buckets={[incomeBucket]} title="What came in" />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-10">
-        <StatTile
-          label="Income"
-          value={fmtGBP(insights.income.value)}
-          deltaText={formatDelta(insights.income.delta, fmtGBP)}
-          isGood={insights.income.delta !== null ? insights.income.delta >= 0 : null}
-        />
-        {insights.metrics.map((m: MetricInsight) => (
-          <StatTile
-            key={m.key}
-            label={m.label}
-            value={pct(m.value)}
-            deltaText={formatDelta(m.delta, pct)}
-            isGood={m.isGood}
-          />
-        ))}
-      </div>
-
-      <div className="rounded-lg border p-4 sm:p-6 mb-10 overflow-x-auto" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-        <h2 className="font-medium mb-4">Spend by category, per pay period</h2>
-        <Legend />
-        <div className="min-w-[560px]">
-          <StackedBarChart rows={rows} />
+      {rows.length > 1 && (
+        <div
+          className="rounded-lg border p-4 sm:p-6 mb-10 overflow-x-auto"
+          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+        >
+          <h2 className="text-sm font-medium mb-4" style={{ color: "var(--text-secondary)" }}>
+            Across your periods
+          </h2>
+          <Legend />
+          <div className="min-w-[560px]">
+            <StackedBarChart rows={rows} />
+          </div>
         </div>
-      </div>
-
-      <div className="rounded-lg border p-4 sm:p-6 overflow-x-auto" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-        <h2 className="font-medium mb-4">Where {latest.label}&rsquo;s spend went, by tag</h2>
-        <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
-          Pulled straight from the free-text tags on each transaction — no fixed category list.
-        </p>
-        <table className="w-full text-sm min-w-[420px]">
-          <thead>
-            <tr className="text-left" style={{ color: "var(--text-muted)" }}>
-              <th className="pb-2 font-normal">Tag</th>
-              <th className="pb-2 font-normal">Section</th>
-              <th className="pb-2 font-normal text-right">Transactions</th>
-              <th className="pb-2 font-normal text-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tagBreakdown.map((t) => (
-              <tr key={`${t.tag}-${t.section}`} className="border-t" style={{ borderColor: "var(--gridline)" }}>
-                <td className="py-2">{t.tag}</td>
-                <td className="py-2" style={{ color: "var(--text-secondary)" }}>
-                  {t.section}
-                </td>
-                <td className="py-2 text-right">{t.count}</td>
-                <td className="py-2 text-right font-medium">{fmtGBP(t.total)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      )}
 
       <div className="mt-8">
         <DeletePeriodButton periodId={latest.periodId} label={latest.label} />

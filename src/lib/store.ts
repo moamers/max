@@ -189,6 +189,40 @@ export async function sectionTotalsForPeriod(periodId: number): Promise<SectionT
   return rows.map((r) => ({ section: r.section, total: Number(r.total) }));
 }
 
+export interface LineItemRow {
+  id: number;
+  section: string;
+  weekNumber: number | null;
+  description: string | null;
+  note: string | null;
+  amount: number;
+  tag: string | null;
+}
+
+/**
+ * The items behind a number. Makes B-8 provenance *visible* — a figure the user
+ * can't trace back to their own spreadsheet is a figure they have to take on faith,
+ * and this product is for people who don't take money claims on faith.
+ */
+export async function lineItemsForPeriod(periodId: number): Promise<LineItemRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: lineItems.id,
+      section: lineItems.section,
+      weekNumber: lineItems.weekNumber,
+      description: lineItems.description,
+      note: lineItems.note,
+      amount: lineItems.amount,
+      tag: lineItems.tag,
+    })
+    .from(lineItems)
+    .where(eq(lineItems.periodId, periodId))
+    .orderBy(desc(lineItems.amount));
+
+  return rows.map((r) => ({ ...r, amount: Number(r.amount) }));
+}
+
 /** R-19: the user must be able to delete their own records without a console. */
 export async function deletePeriod(periodId: number): Promise<boolean> {
   const db = getDb();
