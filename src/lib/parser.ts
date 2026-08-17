@@ -29,6 +29,8 @@ export interface ParsedPeriod {
    * order, since pay-period tabs are laid out left-to-right in date order. */
   sheetOrder: number;
   income: number | null;
+  /** The labelled rows income was summed from, so the figure stays traceable (B-8). */
+  incomeComponents: IncomeComponent[];
   lineItems: ParsedLineItem[];
   budgets: ParsedBudget[];
 }
@@ -108,11 +110,75 @@ function extractBudgetAmount(cells: (string | number | null)[]): number | null {
   return null;
 }
 
-function extractSalary(cells: (string | number | null)[]): number | null {
-  const hasSalaryLabel = cells.some((c) => typeof c === "string" && /^salary\b/i.test(c) && !/left/i.test(c));
-  if (!hasSalaryLabel) return null;
-  const num = cells.find((c) => isNumber(c));
-  return typeof num === "number" ? num : null;
+/**
+ * Money-in rows are labelled on the summary panel: "Salary GBP", "Family cash in GBP".
+ * Rows that *derive* from income ("Salary and cash GBP left", forecasts, grand totals)
+ * are not income and must not be added to it.
+ */
+const INCOME_LABEL = /^salary\b|\bcash in\b/i;
+const DERIVED_LABEL = /\bleft\b|\bforecast\b|\btotal\b|\bbudget/i;
+
+function isIncomeLabel(c: string | number | null): c is string {
+  return typeof c === "string" && INCOME_LABEL.test(c) && !DERIVED_LABEL.test(c);
+}
+
+export interface IncomeComponent {
+  label: string;
+  amount: number;
+}
+
+/**
+ * F-3: takes the figure *adjacent* to the income label, not the first number on the
+ * row. On the real summary tab "Salary GBP | 6,647.94" sits in the right-hand panel
+ * on the same row as a "Rent … 2,285.00" line item — reading left-to-right made the
+ * rent the household's income, and every downstream sentence inherited that error.
+ */
+export function extractIncome(grid: (string | number | null)[][]): {
+  total: number | null;
+  components: IncomeComponent[];
+} {
+  const components: IncomeComponent[] = [];
+
+  for (const row of grid) {
+    for (let i = 0; i < row.length; i++) {
+      if (!isIncomeLabel(row[i])) continue;
+      const next = row.slice(i + 1).find((c) => c !== null) ?? null;
+      if (isNumber(next)) components.push({ label: row[i] as string, amount: next });
+    }
+  }
+
+  if (components.length === 0) return { total: null, components };
+  return { total: components.reduce((acc, c) => acc + c.amount, 0), components };
+}
+
+/**
+ * These sheets lay out two independent blocks side by side: line items on the left,
+ * a running summary panel on the right, separated by a column that is empty top to
+ * bottom. Every row predicate here scans a row end-to-end, so without a boundary the
+ * panel's text leaks into the item block — "GBP budgetted" in the panel ended the
+ * bills list sixteen rows early, and "GBP left" became a line item's tag.
+ *
+ * The boundary is derived from the sheet, not hardcoded: the first column that is
+ * empty in every row, searched from the first column that holds a number so a sheet
+ * with an unused notes column doesn't cut itself in half. A sheet with no empty
+ * column keeps its full width, which is what legacy single-block sheets need.
+ */
+export function itemBlockWidth(grid: (string | number | null)[][]): number {
+  const width = grid.reduce((max, row) => Math.max(max, row.length), 0);
+  if (width === 0) return 0;
+
+  const columnIsEmpty = (col: number) => grid.every((row) => row[col] === null || row[col] === undefined);
+  const firstNumericCol = (() => {
+    for (let c = 0; c < width; c++) {
+      if (grid.some((row) => isNumber(row[c]))) return c;
+    }
+    return 0;
+  })();
+
+  for (let c = firstNumericCol + 1; c < width; c++) {
+    if (columnIsEmpty(c)) return c;
+  }
+  return width;
 }
 
 /**
@@ -127,21 +193,24 @@ export function parsePeriodSheet(
 ): ParsedPeriod {
   const lineItems: ParsedLineItem[] = [];
   const budgets: ParsedBudget[] = [];
-  let income: number | null = null;
+
+  // Income lives on the summary panel, so it's read from the whole grid; everything
+  // else is read only from the item block.
+  const { total: income, components: incomeComponents } = extractIncome(grid);
+  const width = itemBlockWidth(grid);
 
   let currentSection: Section | null = null;
   let currentWeek: number | null = null;
   const weekCounters: Record<Section, number> = { bills: 0, extras: 0, grocery: 0, weekend: 0, transport: 0 };
 
-  for (const row of grid) {
+  for (const fullRow of grid) {
+    const row = fullRow.slice(0, width);
     const nonNull = row.filter((c) => c !== null);
     if (nonNull.length === 0) continue;
 
-    const salary = extractSalary(row);
-    if (salary !== null) {
-      if (income === null) income = salary;
-      // A salary/income row is a terminal summary line, never a section line item —
-      // and it means whatever section was last open is definitely closed.
+    // An income label inside the item block (older single-block sheets) closes the
+    // open section rather than being read as spending.
+    if (row.some(isIncomeLabel)) {
       currentSection = null;
       continue;
     }
@@ -203,7 +272,7 @@ export function parsePeriodSheet(
     });
   }
 
-  return { label: sheetName, sheetName, sheetOrder, income, lineItems, budgets };
+  return { label: sheetName, sheetName, sheetOrder, income, incomeComponents, lineItems, budgets };
 }
 
 export function isAggregatesSheet(sheetName: string): boolean {
@@ -251,13 +320,17 @@ export async function parseWorkbook(
   const lineItems: ParsedLineItem[] = [];
   const budgets: ParsedBudget[] = [];
   let income: number | null = null;
+  let incomeComponents: IncomeComponent[] = [];
 
   for (const plan of mapping.sheets) {
     if (plan.role.kind === "ignore") continue;
     const parsed = parsePeriodSheet(plan.sheetName, gridFor(plan.sheetName), 0);
 
     // Income can appear on any sheet; the summary sheet is the usual home.
-    if (income === null && parsed.income !== null) income = parsed.income;
+    if (income === null && parsed.income !== null) {
+      income = parsed.income;
+      incomeComponents = parsed.incomeComponents;
+    }
 
     if (plan.role.kind === "week") {
       // F-2: the week number comes from the sheet's identity, not from counting
@@ -280,7 +353,7 @@ export async function parseWorkbook(
   const label = mapping.periodLabel ?? labelFromFileName(fileName);
   const periods: ParsedPeriod[] =
     lineItems.length > 0
-      ? [{ label, sheetName: label, sheetOrder: 0, income, lineItems, budgets }]
+      ? [{ label, sheetName: label, sheetOrder: 0, income, incomeComponents, lineItems, budgets }]
       : [];
 
   return { periods, rawGrids, mapping };

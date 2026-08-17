@@ -248,12 +248,17 @@ export default async function DashboardPage() {
     },
   ];
 
+  const incomeParts = latestRow?.incomeComponents ?? [];
   const incomeBucket: Bucket = {
     key: "income",
     label: "Money in",
     amount: latest.income,
     meaning: "What your spreadsheet records as coming in during this period.",
-    origin: "Read from the salary row on your summary tab.",
+    origin:
+      incomeParts.length > 0
+        ? `Added up from ${incomeParts.length} labelled ${incomeParts.length === 1 ? "row" : "rows"} on the summary panel of your spreadsheet.`
+        : "Read from the summary panel of your spreadsheet.",
+    breakdown: incomeParts.map((c) => ({ label: c.label, amount: c.amount })),
     caveat: incomeQuestionable
       ? "This is noticeably less than what went out, which usually means it's only part of the picture — a second income, savings, or a transfer that isn't in the sheet. Until that's settled, Max is showing you amounts rather than percentages, because a percentage of the wrong number is worse than no percentage."
       : undefined,

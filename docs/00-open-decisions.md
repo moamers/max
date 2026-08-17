@@ -4,7 +4,7 @@
 
 **Convention.** Every item has an owner, a trigger (when it must be resolved by), and a consequence (what breaks if it isn't). Items move to [Resolved](#resolved) with a date and the decision, never deleted.
 
-> ✅ **`F-1` / `F-2` fixed** (2026-08-14) — see [Resolved](#resolved). The mis-parsed rows from the original upload are still in the database and need replacing with a fresh upload.
+> ✅ **`F-1` / `F-2` fixed** (2026-08-14) and **`F-3` fixed** (2026-08-17) — see [Resolved](#resolved). The mis-parsed rows from the original upload are still in the database and need replacing with a fresh upload ([`G-2`](#follow-ups-from-f-3)).
 > 🔑 **Needs the founder:** [`C-2`](#c--housekeeping) — rotate the Supabase password and Expo token, both exposed in a chat transcript.
 
 ---
@@ -80,6 +80,7 @@ Things that could change underneath us. Reviewed periodically, not acted on now.
 |---|---|---|
 | **F-1** | **The parser treats every worksheet as a separate pay period.** The real file (`Jun 30th - Aug 3rd.xlsx`) is **one pay period per file**, with a `Month summary` tab (bills + extras) plus one tab per week (`Week 1`…`Week 5`, each holding grocery/transport/weekend). The parser produced **six periods from one**. | **Critical — the dashboard output is meaningless on real data.** Income (£2,285) attaches only to the summary tab, so all five week-tabs show £0 income and a negative net position. Self-benchmarking compares weeks against a month summary. |
 | **F-2** | `week_number` is always `1` on weekly tabs. It's derived from counting repeated section headers *within* a sheet; a per-week tab has only one `Grocery` block, so every week is week 1. | Weekly rhythm and leak detection (the core diagnostic in [D-1](./architecture/01-data-model.md)) cannot work. |
+| **F-3** ✅ | **The parser read rows end-to-end, ignoring column boundaries.** The summary tab has two independent blocks side by side — line items on the left (description, note, amount, tag), a running summary panel on the right (budgets, totals, salary) — separated by an empty column. Reading across the gap let the panel contaminate the item block. Fixed 2026-08-17; see [Resolved](#resolved). | **Critical.** Three wrong figures on the founder's own file: income read as £2,285 (that's the *rent* — "Salary GBP 6,647.94" sits in the panel on the same row, and the first number left-to-right won); bills read as £416 across 5 rows instead of £3,745.33 across 21 (a panel "GBP budgetted" tripped the end-of-block rule); and panel text became line-item tags ("GBP left", "All transport"). |
 
 **What is NOT broken — verified against real data:** label-anchored line-item parsing works well. Descriptions, notes (including split amounts like `"12.99 + 34.29 + 16.5"`), values and free-text tags all came through correctly. The `fam-uk` tag spanning a family visit is exactly the exception-marker pattern [D-3](./architecture/01-data-model.md) describes — the data model's central bet is validated by the founder's own real file.
 
@@ -97,6 +98,16 @@ Today's schema is flat (one `periods` row, with `week_number` on line items), wh
 
 ---
 
+## Follow-ups from `F-3`
+
+| # | Item | Why it matters |
+|---|---|---|
+| **G-1** | **Ingest has no year.** Period labels are day-and-month only ("Jun 30th - Aug 3rd"). The year was briefly inferred from the upload date and was wrong on the very first real file — a 2025 workbook uploaded in 2026. The dashboard now shows no year at all. The Drive folder structure (year folders) is the obvious source. | Cross-year comparison ("last August vs this August") is impossible until periods carry a year. |
+| **G-2** | **Re-upload the real file.** The database still holds the `F-3` figures: income £2,285 (actually rent), bills £416 across 5 rows (actually £3,745.33 across 21). | Every number on the live dashboard is wrong until the file is parsed again. |
+| **G-3** | **Budget rows are captured but unused.** The sheet states its own budgets ("GBP 100 budgeted", "GBP 260 budgeted p.w.") and its own totals. Those are the user's stated intent and a free correctness check on the parser. | A parser that can compare its arithmetic to the sheet's own totals catches its next `F-3` itself, rather than waiting for someone to read a dashboard and squint. |
+
+---
+
 ## Resolved
 
 | Date | Decision |
@@ -109,4 +120,7 @@ Today's schema is flat (one `periods` row, with `week_number` on line items), wh
 | 2026-08-14 | **`F-1` / `F-2` fixed** via a workbook mapping layer (`src/lib/workbook-mapping.ts`) rather than a hardcoded rule for one layout. Structure detection emits an inspectable plan; deterministic code applies it. Verified: one period instead of six, week numbers 1–5 instead of all 1, weekly totals matching the real file exactly. Legacy sheet-per-period files still parse via the fallback strategy. |
 | 2026-08-14 | **`T-2` amended to "LLM as compiler, not interpreter."** The model may judge structure and meaning; it must not compute a figure it then states, and structural judgement must be emitted as a reusable plan rather than re-derived per read. Rationale is the asymmetry between recoverable structural errors and silent arithmetic ones, plus reproducibility and testability. |
 | 2026-08-14 | **V0 iteration 1 shipped** — narrative-first dashboard, deterministic sentence generation (`src/lib/narrative.ts`), code-enforced tone gate (`src/lib/tone.ts`), delete-your-data control (R-19), and the first 21 automated doctrine tests. Notable outcome: on real data the naive headline would have been a ~£4,000 deficit; the doctrine turned that into a question about whether recorded income is complete, which is both safer and more likely correct. |
+| 2026-08-17 | **`F-3` fixed — the parser now respects column boundaries.** The item block's right edge is derived from the sheet (the first column that is empty top to bottom, searched from the first column holding a number) rather than hardcoded, so a sheet with no gap keeps its full width and legacy single-block sheets don't regress. Income is read from the figure *adjacent* to its label and summed across labelled money-in rows, with the components stored so the total stays traceable. Verified against a faithful reconstruction of the real summary tab: bills £3,745.33 and outgoings £9,667.11, both matching the figures the sheet states for itself, and income £9,547.94 reproducing the sheet's own "−£119.17 left". |
+| 2026-08-17 | **The dashboard shows no year.** Inferring it from the upload date was wrong on the first real file (a 2025 workbook uploaded in 2026). A day and month the user can check beats a year the app guessed; the year returns when ingest carries one ([G-1](#follow-ups-from-f-3)). |
+| 2026-08-17 | **Percentage-of-income framing dropped in favour of amounts.** The tiles showed 148.8% and −177.4% — percentages of a number that turned out to be the rent. Amounts are legible without a denominator, and a percentage of the wrong number is worse than no percentage. |
 | 2026-08-14 | **Transactions clarified as constituents, not irrelevant** — the week is the atom, transactions are the particles. Detail is never required to supply, never wasted when supplied. Merchant identity is load-bearing for the savvy pillar ([D-9](./architecture/01-data-model.md)); user labels are their vocabulary and must not be normalised ([D-10](./architecture/01-data-model.md)). |

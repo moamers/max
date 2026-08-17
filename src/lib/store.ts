@@ -14,6 +14,7 @@ export async function savePeriod(parsed: ParsedPeriod, sourceFilename: string): 
       .values({
         label: parsed.label,
         income: incomeStr,
+        incomeComponents: parsed.incomeComponents,
         source: "sheet",
         sourceFilename,
         sourceSheetName: parsed.sheetName,
@@ -23,6 +24,7 @@ export async function savePeriod(parsed: ParsedPeriod, sourceFilename: string): 
         target: periods.label,
         set: {
           income: incomeStr,
+          incomeComponents: parsed.incomeComponents,
           sourceFilename,
           sourceSheetName: parsed.sheetName,
           sheetOrder: parsed.sheetOrder,
@@ -79,10 +81,16 @@ export async function savePeriod(parsed: ParsedPeriod, sourceFilename: string): 
   });
 }
 
+export interface IncomeComponentRow {
+  label: string;
+  amount: number;
+}
+
 export interface PeriodSummaryRow {
   periodId: number;
   label: string;
   createdAt: string;
+  incomeComponents: IncomeComponentRow[];
   totalFixed: number;
   totalVariable: number;
   totalWeekly: number;
@@ -97,6 +105,7 @@ export async function listPeriodSummaries(): Promise<PeriodSummaryRow[]> {
       periodId: periods.id,
       label: periods.label,
       createdAt: periods.createdAt,
+      incomeComponents: periods.incomeComponents,
       totalFixed: periodSummaries.totalFixed,
       totalVariable: periodSummaries.totalVariable,
       totalWeekly: periodSummaries.totalWeekly,
@@ -111,6 +120,7 @@ export async function listPeriodSummaries(): Promise<PeriodSummaryRow[]> {
     periodId: r.periodId,
     label: r.label,
     createdAt: r.createdAt.toISOString(),
+    incomeComponents: r.incomeComponents ?? [],
     totalFixed: Number(r.totalFixed ?? 0),
     totalVariable: Number(r.totalVariable ?? 0),
     totalWeekly: Number(r.totalWeekly ?? 0),

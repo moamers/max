@@ -3,6 +3,7 @@ import {
   integer,
   text,
   numeric,
+  jsonb,
   timestamp,
   index,
 } from "drizzle-orm/pg-core";
@@ -13,6 +14,8 @@ export const periods = pgTable("periods", {
   startDate: text("start_date"),
   endDate: text("end_date"),
   income: numeric("income", { precision: 12, scale: 2 }),
+  /** The labelled rows `income` was summed from, so the total stays traceable (B-8). */
+  incomeComponents: jsonb("income_components").$type<{ label: string; amount: number }[]>(),
   source: text("source").notNull().default("sheet"),
   sourceFilename: text("source_filename"),
   sourceSheetName: text("source_sheet_name"),

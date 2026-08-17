@@ -38,9 +38,9 @@ function monthIndex(name: string): number | null {
 }
 
 /**
- * Parses "Jun 30th - Aug 3rd" style labels. The year isn't in the label, so it's
- * inferred from `referenceDate` (normally when the data was recorded), rolling
- * the end into the next year when the range wraps December→January.
+ * Parses "Jun 30th - Aug 3rd" style labels. A year is needed to do date arithmetic
+ * at all, so one is assumed from `referenceDate` — but it is used only to count days
+ * and is never displayed, because the label doesn't actually say which year it is.
  */
 export function parsePeriodLabel(label: string, referenceDate: Date = new Date()): PeriodDates | null {
   const halves = label.split(/\s*[-–—]\s*|\s+to\s+/i);
@@ -76,19 +76,18 @@ export function parsePeriodLabel(label: string, referenceDate: Date = new Date()
 }
 
 const DAY_MONTH = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
-const DAY_MONTH_YEAR = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
-/** "30 June – 3 August 2026" — the year appears once, at the end, unless it changes. */
+/**
+ * "30 June – 3 August" — deliberately no year.
+ *
+ * The year is nowhere in the data. Inferring it from the upload date is wrong the
+ * moment someone uploads an older sheet, which is exactly what happened on the first
+ * real file: a 2025 workbook uploaded in 2026 was labelled 2026. A day and month the
+ * user can check beats a year the app guessed. The year comes back when ingest
+ * actually carries one.
+ */
 export function formatPeriodRange(d: PeriodDates): string {
-  const sameYear = d.start.getUTCFullYear() === d.end.getUTCFullYear();
-  return sameYear
-    ? `${DAY_MONTH.format(d.start)} – ${DAY_MONTH_YEAR.format(d.end)}`
-    : `${DAY_MONTH_YEAR.format(d.start)} – ${DAY_MONTH_YEAR.format(d.end)}`;
+  return `${DAY_MONTH.format(d.start)} – ${DAY_MONTH.format(d.end)}`;
 }
 
 /** "5 weeks" / "4 weeks and 2 days" — how long the period actually ran. */
