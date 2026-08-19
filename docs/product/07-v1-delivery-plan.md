@@ -85,6 +85,29 @@ Work is grouped so that no two concurrent agents touch the same file. **Agents d
 
 ---
 
+## 3a · Route map — pinned
+
+Home links to all of these. The first two were agreed in advance; the rest were
+guessed by the Home agent from the naming pattern and are now **fixed**, so the
+agents building those screens must match them rather than choose again.
+
+| Route | Screen |
+|---|---|
+| `/` | 02 Home |
+| `/add` | 08 Add |
+| `/week/[weekNumber]` | 03 One week |
+| `/transaction/[id]` | 04 One transaction |
+| `/import` | 01 Import |
+| `/recurring` | 05 Recurring |
+| `/one-offs` | 06 One-offs |
+| `/goals` | 11 Budget goals |
+| `/income` | 12 Income by month |
+| `/year` | 07 Year round-up |
+
+Routes are the seam between agents: nobody imports another's components.
+
+---
+
 ## 4 · Standing rules for every agent
 
 1. **Read `CLAUDE.md` first.** This Next.js version differs from training data; read `node_modules/next/dist/docs/` before writing App Router code.
@@ -107,3 +130,7 @@ Work is grouped so that no two concurrent agents touch the same file. **Agents d
 | **V1's setup burden** (targets, income) is the labelling tax the vision argues against. | Parity for the founder, open question for anyone else — [`A-5`](../00-open-decisions.md). |
 | **The live database still holds `F-3`-era figures.** | Re-import after the model migration lands ([`G-2`](../00-open-decisions.md)). |
 | **Two agents needing the same file.** | Ownership table above; conflicts get raised, not resolved locally. |
+| **The query layer can't list a user's periods.** Every export takes a `periodId` you already have, but Home, the month picker and the year strip all need to *find* one. The Home agent added a minimal read in `src/app/(home)/lib/` rather than reaching into a folder it didn't own. | Correct call, wrong home. It belongs in `src/lib/queries` before a second screen duplicates it. Assigned to the next data-touching agent. |
+| **"Clear data" in the menu does nothing.** The design shows it; the prototype's own handler just closes the menu, and the agent matched that literally rather than inventing a destructive action. | Also correct, but it now ships a red destructive-looking control that silently does nothing — worse than omitting it. R-19 says the user must be able to delete their own records without a console. Must be wired or removed before anyone else gets the link. |
+| **The month picker assumes calendar months; the data has pay periods.** Screen 09 draws a Jan–Dec grid, but a period is "Jun 30th – Aug 3rd". The agent buckets each period by the calendar month its start date falls in. | Fine for one period per month. Two periods starting in the same month, or a period spanning two, are not modelled by the design. See `A-6`. |
+| **Home renders `position: fixed; inset: 0`** so the design's sheets and scrim — which assume a 393×852 phone frame — position correctly on a scrolling page. | It covers the app's own nav bar while Home is active. Works, but it is a workaround for a prototype assumption, not a decision. Revisit when the nav is designed. |
