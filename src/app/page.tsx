@@ -1,112 +1,114 @@
-"use client";
+import { requireUser } from "@/lib/session";
+import { monthOverview, weeklyBreakdown, recurringForPeriod, oneOffsForPeriod } from "@/lib/queries";
+import { listPeriodsMeta, pickCurrentPeriodId, findPeriod } from "./(home)/lib/period-meta";
+import { buildYearData, yearsWithData, type YearData } from "./(home)/lib/year-overview";
+import { HomeScreen } from "@/components/home/HomeScreen";
+import { EmptyState } from "@/components/home/EmptyState";
+import { buildWeekViews } from "@/components/home/derive";
+import { formatDayMonth, monthAbbr, monthName, weekCounterLabel } from "@/components/home/format";
+import type { HomeData, MonthTileView, PeriodOptionView, YearView } from "@/components/home/types";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import type { UploadResponse, UploadErrorResponse } from "@max/shared";
+export const dynamic = "force-dynamic";
 
-export default function UploadPage() {
-  const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
-  const [result, setResult] = useState<UploadResponse | null>(null);
-  const [error, setError] = useState<UploadErrorResponse | null>(null);
+function toYearView(data: YearData, currentPeriodId: number): YearView {
+  const months: MonthTileView[] = data.months.map((m) => ({
+    monthIndex: m.monthIndex,
+    monthLabel: monthAbbr(m.monthIndex),
+    periodId: m.periodId,
+    net: m.net,
+    isCurrent: m.periodId !== null && m.periodId === currentPeriodId,
+  }));
+  return { year: data.year, months, netPosition: data.netPosition, sparkline: data.sparkline };
+}
 
-  async function handleFile(file: File) {
-    setStatus("uploading");
-    setError(null);
-    setResult(null);
+export default async function HomePage(props: PageProps<"/">) {
+  // Auth boundary: no valid session redirects to /login (README screen 02
+  // is the app's base screen, so every render below is scoped to this user).
+  const user = await requireUser();
+  const today = new Date();
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data as UploadErrorResponse);
-        setStatus("error");
-        return;
-      }
-      setResult(data as UploadResponse);
-      setStatus("done");
-    } catch {
-      setError({ error: "Upload failed — check the app is running and try again." });
-      setStatus("error");
-    }
+  const periodsMeta = await listPeriodsMeta(user.id, today);
+  if (periodsMeta.length === 0) {
+    return <EmptyState />;
   }
 
-  return (
-    <div className="max-w-2xl mx-auto px-6 py-16">
-      <h1 className="text-2xl font-semibold mb-2">Upload your budget workbook</h1>
-      <p className="mb-8" style={{ color: "var(--text-secondary)" }}>
-        Export your pay-period sheets (one tab per period, following your usual template) as a
-        single .xlsx workbook and drop it here. Max will parse each period and build your
-        dashboard.
-      </p>
+  const currentPeriodId = pickCurrentPeriodId(periodsMeta);
+  if (currentPeriodId === null) {
+    return <EmptyState />;
+  }
 
-      <label
-        className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-6 py-16 cursor-pointer transition-colors"
-        style={{ borderColor: "var(--baseline)" }}
-      >
-        <span className="font-medium">Choose a .xlsx file</span>
-        <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-          or drag it in
-        </span>
-        <input
-          type="file"
-          accept=".xlsx"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-          }}
-        />
-      </label>
+  const searchParams = await props.searchParams;
+  const requestedRaw = searchParams.period;
+  const requestedId = typeof requestedRaw === "string" ? Number(requestedRaw) : NaN;
+  const selected =
+    findPeriod(periodsMeta, Number.isInteger(requestedId) ? requestedId : null) ??
+    findPeriod(periodsMeta, currentPeriodId);
 
-      {status === "uploading" && (
-        <p className="mt-6" style={{ color: "var(--text-secondary)" }}>
-          Parsing workbook…
-        </p>
-      )}
+  // Only ever null if `currentPeriodId` itself weren't in `periodsMeta`, which
+  // can't happen — it was picked from that same list.
+  if (!selected) return <EmptyState />;
 
-      {status === "error" && error && (
-        <div
-          className="mt-6 rounded-lg p-4 border"
-          style={{ borderColor: "var(--critical)", color: "var(--critical)" }}
-        >
-          <p className="font-medium">{error.error}</p>
-          {error.sheetNames && (
-            <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
-              Sheets found in file: {error.sheetNames.join(", ")}
-            </p>
-          )}
-        </div>
-      )}
+  const [overview, weeklyRows, recurring, oneOffs] = await Promise.all([
+    monthOverview(user.id, selected.id, today),
+    weeklyBreakdown(user.id, selected.id),
+    recurringForPeriod(user.id, selected.id),
+    oneOffsForPeriod(user.id, selected.id),
+  ]);
 
-      {status === "done" && result && (
-        <div
-          className="mt-6 rounded-lg p-4 border"
-          style={{ borderColor: "var(--good)" }}
-        >
-          <p className="font-medium mb-3" style={{ color: "var(--good-text)" }}>
-            Parsed {result.saved.length} pay period{result.saved.length === 1 ? "" : "s"}
-          </p>
-          <ul className="text-sm space-y-1" style={{ color: "var(--text-secondary)" }}>
-            {result.saved.map((p) => (
-              <li key={p.label}>
-                {p.label} — {p.lineItemCount} line items, {p.budgetCount} budgets
-                {p.income ? `, income £${p.income.toFixed(2)}` : ""}
-              </li>
-            ))}
-          </ul>
-          <button
-            className="mt-4 rounded-md px-4 py-2 text-sm font-medium text-white"
-            style={{ background: "var(--series-bills)" }}
-            onClick={() => router.push("/dashboard")}
-          >
-            View dashboard →
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  // A period this same query just listed for this same user failing to
+  // resolve would mean the two reads disagreed mid-request — treat it the
+  // same as "nothing to show" rather than crash on a null overview.
+  if (!overview) return <EmptyState />;
+
+  const window = overview.window;
+  const { weeks, totalBudget, currentWeekNumber } = buildWeekViews(weeklyRows, window, today);
+
+  const dataYears = yearsWithData(periodsMeta);
+  const selectedYear = window ? window.start.getUTCFullYear() : today.getUTCFullYear();
+  const yearSpan = new Set([...dataYears, selectedYear]);
+  const minYear = Math.min(...yearSpan) - 1;
+  const maxYear = Math.max(...yearSpan) + 1;
+
+  const yearsByValue: Record<number, YearView> = {};
+  for (let y = minYear; y <= maxYear; y++) {
+    const yearData = await buildYearData(user.id, periodsMeta, y);
+    yearsByValue[y] = toYearView(yearData, currentPeriodId);
+  }
+
+  const periodOptions: PeriodOptionView[] = periodsMeta.map((p) => ({
+    id: p.id,
+    monthLabel: p.window ? monthName(p.window.start) : p.label,
+  }));
+
+  const monthLabel = window ? monthName(window.start) : selected.label;
+
+  const data: HomeData = {
+    monthLabel,
+    todayLabel: formatDayMonth(today),
+    weekCounter: weekCounterLabel(currentWeekNumber, weeks.length),
+    hero: {
+      monthName: monthLabel,
+      endOfMonthLabel: window ? formatDayMonth(window.end) : "",
+      daysRemaining: window?.daysRemaining ?? 0,
+      today: { spare: overview.leftToday, spend: overview.spent.total },
+      forecast: { spare: overview.projectedLeft, spend: overview.forecast },
+      income: overview.income.amount,
+    },
+    weeks,
+    weeksSummary: {
+      left: totalBudget === null ? null : totalBudget - overview.spent.weekly,
+      spent: overview.spent.weekly,
+      budget: totalBudget,
+    },
+    recurringTotal: recurring.total,
+    oneOffsTotal: oneOffs.total,
+    year: yearsByValue[selectedYear],
+    yearsByValue,
+    yearBounds: { min: minYear, max: maxYear },
+    currentPeriodId,
+    selectedPeriodId: selected.id,
+    periodOptions,
+  };
+
+  return <HomeScreen data={data} />;
 }
