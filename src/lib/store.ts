@@ -3,9 +3,11 @@
  * exported function takes a `UserId` as its first argument. That is the whole
  * isolation model:
  *
- *  - `periods.user_id` is the only ownership column. `line_items`, `budgets`
- *    and `period_summaries` inherit scope by joining back to `periods`, so
- *    there is exactly one predicate to get right rather than four.
+ *  - `periods.user_id` is the ownership column for everything hanging off a
+ *    month: `transactions`, `budgets` and `period_summaries` inherit scope by
+ *    joining back to `periods`, so there is one predicate to get right rather
+ *    than four. `goals` and `income_months` hang off the user directly and
+ *    carry `user_id` themselves; every statement below filters on it.
  *  - `UserId` is a branded type (see `auth.ts`). A call that omits the scope,
  *    or passes some other string, is a compile error — not a runtime check that
  *    a future refactor can quietly drop.
@@ -15,9 +17,27 @@
  */
 import { eq, and, sql, desc, asc } from "drizzle-orm";
 import { getDb } from "./db";
-import { periods, lineItems, budgets, periodSummaries } from "./schema";
+import { periods, transactions, budgets, periodSummaries, goals, incomeMonths, users } from "./schema";
 import { ParsedPeriod, summarizePeriod } from "./parser";
 import type { UserId } from "./auth";
+import {
+  SECTION_MAPPING,
+  sectionForKindCategory,
+  type TransactionKind,
+  type TransactionCategory,
+  type WeeklyCategory,
+} from "./transactions";
+
+/**
+ * A few reads below still speak the spreadsheet's vocabulary — `section`,
+ * `description`, `tag` — because the current dashboard renders it. The columns
+ * underneath are the V1 ones; the mapping back is `sectionForKindCategory`,
+ * which is the exact inverse of the mapping migration 0004 applied. Nothing is
+ * inferred on the way back, and when the V1 screens land these can go.
+ */
+function sectionOf(kind: string, category: string | null): string {
+  return sectionForKindCategory(kind, category) ?? kind;
+}
 
 export async function savePeriod(
   userId: UserId,
@@ -57,20 +77,27 @@ export async function savePeriod(
 
     // periodId came from a row we just wrote under this user's scope, so the
     // child deletes below are already confined to it.
-    await tx.delete(lineItems).where(eq(lineItems.periodId, periodId));
+    await tx.delete(transactions).where(eq(transactions.periodId, periodId));
     await tx.delete(budgets).where(eq(budgets.periodId, periodId));
 
     if (parsed.lineItems.length > 0) {
-      await tx.insert(lineItems).values(
-        parsed.lineItems.map((item) => ({
-          periodId,
-          section: item.section,
-          weekNumber: item.weekNumber,
-          description: item.description,
-          note: item.note,
-          amount: item.amount.toString(),
-          tag: item.tag,
-        }))
+      await tx.insert(transactions).values(
+        parsed.lineItems.map((item) => {
+          // Transcription, not judgement: the parser's section decides kind and
+          // category through the one table that the migration, the CHECK
+          // constraint and the tests all read from.
+          const { kind, category } = SECTION_MAPPING[item.section];
+          return {
+            periodId,
+            kind,
+            category,
+            weekNumber: item.weekNumber,
+            merchant: item.description,
+            note: item.note,
+            amount: item.amount.toString(),
+            label: item.tag,
+          };
+        })
       );
     }
 
@@ -167,30 +194,37 @@ export async function tagBreakdownForPeriod(
   periodId: number
 ): Promise<TagBreakdown[]> {
   const db = getDb();
-  const tagExpr = sql<string>`coalesce(${lineItems.tag}, '(untagged)')`;
-  const totalExpr = sql<string>`sum(${lineItems.amount})`;
+  const tagExpr = sql<string>`coalesce(${transactions.label}, '(untagged)')`;
+  const totalExpr = sql<string>`sum(${transactions.amount})`;
 
   const rows = await db
     .select({
       tag: tagExpr,
-      section: lineItems.section,
+      kind: transactions.kind,
+      category: transactions.category,
       total: totalExpr,
       count: sql<number>`count(*)`,
     })
-    .from(lineItems)
+    .from(transactions)
     // The join is the ownership check: a period id belonging to someone else
     // matches no row, so the query returns empty rather than their data.
-    .innerJoin(periods, eq(periods.id, lineItems.periodId))
-    .where(and(eq(lineItems.periodId, periodId), eq(periods.userId, userId)))
-    .groupBy(tagExpr, lineItems.section)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.periodId, periodId), eq(periods.userId, userId)))
+    .groupBy(tagExpr, transactions.kind, transactions.category)
     .orderBy(desc(totalExpr));
 
-  return rows.map((r) => ({
-    tag: r.tag,
-    section: r.section,
-    total: Number(r.total),
-    count: Number(r.count),
-  }));
+  // Several recurring categories collapse onto one sheet section, so the rows
+  // are merged after mapping rather than trusted to be distinct.
+  const merged = new Map<string, TagBreakdown>();
+  for (const r of rows) {
+    const section = sectionOf(r.kind, r.category);
+    const key = `${r.tag}\u0000${section}`;
+    const acc = merged.get(key) ?? { tag: r.tag, section, total: 0, count: 0 };
+    acc.total += Number(r.total);
+    acc.count += Number(r.count);
+    merged.set(key, acc);
+  }
+  return [...merged.values()].sort((a, b) => b.total - a.total);
 }
 
 export interface WeeklyTotalRow {
@@ -206,14 +240,14 @@ export async function weeklyTotalsForPeriod(
   const db = getDb();
   const rows = await db
     .select({
-      weekNumber: lineItems.weekNumber,
-      total: sql<string>`sum(${lineItems.amount})`,
+      weekNumber: transactions.weekNumber,
+      total: sql<string>`sum(${transactions.amount})`,
     })
-    .from(lineItems)
-    .innerJoin(periods, eq(periods.id, lineItems.periodId))
-    .where(and(eq(lineItems.periodId, periodId), eq(periods.userId, userId)))
-    .groupBy(lineItems.weekNumber)
-    .orderBy(asc(lineItems.weekNumber));
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.periodId, periodId), eq(periods.userId, userId)))
+    .groupBy(transactions.weekNumber)
+    .orderBy(asc(transactions.weekNumber));
 
   return rows
     .filter((r) => r.weekNumber !== null)
@@ -231,22 +265,41 @@ export async function sectionTotalsForPeriod(
 ): Promise<SectionTotalRow[]> {
   const db = getDb();
   const rows = await db
-    .select({ section: lineItems.section, total: sql<string>`sum(${lineItems.amount})` })
-    .from(lineItems)
-    .innerJoin(periods, eq(periods.id, lineItems.periodId))
-    .where(and(eq(lineItems.periodId, periodId), eq(periods.userId, userId)))
-    .groupBy(lineItems.section);
-  return rows.map((r) => ({ section: r.section, total: Number(r.total) }));
+    .select({
+      kind: transactions.kind,
+      category: transactions.category,
+      total: sql<string>`sum(${transactions.amount})`,
+    })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.periodId, periodId), eq(periods.userId, userId)))
+    .groupBy(transactions.kind, transactions.category);
+
+  const merged = new Map<string, number>();
+  for (const r of rows) {
+    const section = sectionOf(r.kind, r.category);
+    merged.set(section, (merged.get(section) ?? 0) + Number(r.total));
+  }
+  return [...merged].map(([section, total]) => ({ section, total }));
 }
 
 export interface LineItemRow {
   id: number;
+  /** Derived from `kind`/`category` for the screens that still speak sheet. */
   section: string;
+  kind: TransactionKind;
+  category: TransactionCategory | null;
   weekNumber: number | null;
+  /** Alias of `merchant`, kept while the current dashboard still reads it. */
   description: string | null;
+  merchant: string | null;
   note: string | null;
   amount: number;
+  /** Alias of `label`. The user's own word — never normalised (D-10). */
   tag: string | null;
+  label: string | null;
+  occurredOn: string | null;
+  pending: boolean;
 }
 
 /**
@@ -261,20 +314,29 @@ export async function lineItemsForPeriod(
   const db = getDb();
   const rows = await db
     .select({
-      id: lineItems.id,
-      section: lineItems.section,
-      weekNumber: lineItems.weekNumber,
-      description: lineItems.description,
-      note: lineItems.note,
-      amount: lineItems.amount,
-      tag: lineItems.tag,
+      id: transactions.id,
+      kind: transactions.kind,
+      category: transactions.category,
+      weekNumber: transactions.weekNumber,
+      merchant: transactions.merchant,
+      note: transactions.note,
+      amount: transactions.amount,
+      label: transactions.label,
+      occurredOn: transactions.occurredOn,
+      pending: transactions.pending,
     })
-    .from(lineItems)
-    .innerJoin(periods, eq(periods.id, lineItems.periodId))
-    .where(and(eq(lineItems.periodId, periodId), eq(periods.userId, userId)))
-    .orderBy(desc(lineItems.amount));
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.periodId, periodId), eq(periods.userId, userId)))
+    .orderBy(desc(transactions.amount));
 
-  return rows.map((r) => ({ ...r, amount: Number(r.amount) }));
+  return rows.map((r) => ({
+    ...r,
+    section: sectionOf(r.kind, r.category),
+    description: r.merchant,
+    tag: r.label,
+    amount: Number(r.amount),
+  }));
 }
 
 /**
@@ -299,4 +361,199 @@ export async function getPeriodByLabel(userId: UserId, label: string) {
     .from(periods)
     .where(and(eq(periods.label, label), eq(periods.userId, userId)));
   return row;
+}
+
+
+// --------------------------------------------------------------------- goals
+
+export interface GoalRow {
+  category: WeeklyCategory;
+  weeklyAmount: number;
+}
+
+export async function listGoals(userId: UserId): Promise<GoalRow[]> {
+  const db = getDb();
+  const rows = await db
+    .select({ category: goals.category, weeklyAmount: goals.weeklyAmount })
+    .from(goals)
+    .where(eq(goals.userId, userId));
+  return rows.map((r) => ({ category: r.category, weeklyAmount: Number(r.weeklyAmount) }));
+}
+
+/** One target per category per user; setting it again replaces it. */
+export async function setGoal(
+  userId: UserId,
+  category: WeeklyCategory,
+  weeklyAmount: number
+): Promise<void> {
+  const db = getDb();
+  await db
+    .insert(goals)
+    .values({ userId, category, weeklyAmount: weeklyAmount.toString() })
+    .onConflictDoUpdate({
+      target: [goals.userId, goals.category],
+      set: { weeklyAmount: weeklyAmount.toString() },
+    });
+}
+
+// -------------------------------------------------------------------- income
+
+/**
+ * The user's fallback figure. `null` means they have not told us — which is a
+ * different claim from zero, and the screens must say so rather than forecast
+ * against an assumed nothing.
+ */
+export async function getDefaultMonthlyIncome(userId: UserId): Promise<number | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({ amount: users.defaultMonthlyIncome })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.amount == null ? null : Number(row.amount);
+}
+
+export async function setDefaultMonthlyIncome(
+  userId: UserId,
+  amount: number | null
+): Promise<void> {
+  const db = getDb();
+  await db
+    .update(users)
+    .set({ defaultMonthlyIncome: amount === null ? null : amount.toString() })
+    .where(eq(users.id, userId));
+}
+
+/**
+ * Record what actually came in for one month. Scoped twice over: the `user_id`
+ * predicate on the period lookup means a period id belonging to someone else
+ * resolves to nothing and the write never happens.
+ */
+export async function setIncomeForPeriod(
+  userId: UserId,
+  periodId: number,
+  amount: number,
+  setByUser = true
+): Promise<boolean> {
+  const db = getDb();
+  const owned = await db
+    .select({ id: periods.id })
+    .from(periods)
+    .where(and(eq(periods.id, periodId), eq(periods.userId, userId)));
+  if (owned.length === 0) return false;
+
+  await db
+    .insert(incomeMonths)
+    .values({ userId, periodId, amount: amount.toString(), setByUser })
+    .onConflictDoUpdate({
+      target: [incomeMonths.userId, incomeMonths.periodId],
+      set: { amount: amount.toString(), setByUser, updatedAt: new Date() },
+    });
+  return true;
+}
+
+// -------------------------------------------------------------- transactions
+
+export interface TransactionInput {
+  kind: TransactionKind;
+  category: TransactionCategory | null;
+  weekNumber: number | null;
+  merchant: string | null;
+  note: string | null;
+  amount: number;
+  label: string | null;
+  occurredOn: string | null;
+  pending?: boolean;
+  rawImport?: string | null;
+}
+
+/**
+ * Add a transaction by hand (screen 08). Returns null when the period is not
+ * this user's — indistinguishable, from the caller's side, from a period that
+ * doesn't exist.
+ */
+export async function addTransaction(
+  userId: UserId,
+  periodId: number,
+  input: TransactionInput
+): Promise<number | null> {
+  const db = getDb();
+  const owned = await db
+    .select({ id: periods.id })
+    .from(periods)
+    .where(and(eq(periods.id, periodId), eq(periods.userId, userId)));
+  if (owned.length === 0) return null;
+
+  const [row] = await db
+    .insert(transactions)
+    .values({
+      periodId,
+      kind: input.kind,
+      category: input.category,
+      weekNumber: input.weekNumber,
+      merchant: input.merchant,
+      note: input.note,
+      amount: input.amount.toString(),
+      label: input.label,
+      occurredOn: input.occurredOn,
+      pending: input.pending ?? false,
+      rawImport: input.rawImport ?? null,
+    })
+    .returning({ id: transactions.id });
+  return row?.id ?? null;
+}
+
+/**
+ * Re-file or correct one transaction (screen 04). This is how a bill moves from
+ * the flat `bills` group into Housing or Childcare — a judgement the user makes
+ * and can see, never one the import guessed on their behalf.
+ */
+export async function updateTransaction(
+  userId: UserId,
+  transactionId: number,
+  patch: Partial<TransactionInput>
+): Promise<boolean> {
+  const db = getDb();
+  const owned = await db
+    .select({ id: transactions.id })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.id, transactionId), eq(periods.userId, userId)));
+  if (owned.length === 0) return false;
+
+  const set: Record<string, unknown> = {};
+  if (patch.kind !== undefined) set.kind = patch.kind;
+  if (patch.category !== undefined) set.category = patch.category;
+  if (patch.weekNumber !== undefined) set.weekNumber = patch.weekNumber;
+  if (patch.merchant !== undefined) set.merchant = patch.merchant;
+  if (patch.note !== undefined) set.note = patch.note;
+  if (patch.amount !== undefined) set.amount = patch.amount.toString();
+  if (patch.label !== undefined) set.label = patch.label;
+  if (patch.occurredOn !== undefined) set.occurredOn = patch.occurredOn;
+  if (patch.pending !== undefined) set.pending = patch.pending;
+  if (patch.rawImport !== undefined) set.rawImport = patch.rawImport;
+  if (Object.keys(set).length === 0) return true;
+
+  const updated = await db
+    .update(transactions)
+    .set(set)
+    .where(eq(transactions.id, transactionId))
+    .returning({ id: transactions.id });
+  return updated.length > 0;
+}
+
+/** R-19 again, one row at a time. A guessed id belonging to someone else deletes nothing. */
+export async function deleteTransaction(userId: UserId, transactionId: number): Promise<boolean> {
+  const db = getDb();
+  const owned = await db
+    .select({ id: transactions.id })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(transactions.id, transactionId), eq(periods.userId, userId)));
+  if (owned.length === 0) return false;
+
+  const deleted = await db
+    .delete(transactions)
+    .where(eq(transactions.id, transactionId))
+    .returning({ id: transactions.id });
+  return deleted.length > 0;
 }

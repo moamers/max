@@ -129,3 +129,34 @@ export const KIND_TITLES: Readonly<Record<TransactionKind, string>> = {
   recurring: "Recurring",
   one_off: "One-off spend",
 };
+
+/**
+ * The inverse of `SECTION_MAPPING`. Forward the mapping is one-to-one; back it
+ * is not, and the difference matters.
+ *
+ * Every recurring group maps back to `bills`, because that is what the founder's
+ * sheet has — one flat list. So `housing`, `childcare`, `bills` and
+ * `subscriptions` are four kinds of thing collapsing into one, and the function
+ * is total but lossy in that direction.
+ *
+ * Two consequences worth stating plainly:
+ *
+ *  - Migration `0004` can still drop `line_items.section` without losing
+ *    anything, because at migration time every recurring row *is* `bills`. That
+ *    is a fact about the data being migrated, not a property of the mapping.
+ *  - **A sheet round-trip loses the recurring group.** Re-file rent under
+ *    Housing, export, re-import, and it comes back as `bills` — because the
+ *    sheet has nowhere to record the distinction. That is a real limitation of
+ *    the founder's template, not a bug to fix here, and export must not pretend
+ *    otherwise. See `G-4` in docs/00-open-decisions.md.
+ */
+export function sectionForKindCategory(kind: string, category: string | null): SheetSection | null {
+  if (kind === "recurring") return "bills";
+  if (kind === "one_off") return "extras";
+  if (kind === "weekly") {
+    if (category === "everyday") return "grocery";
+    if (category === "weekend") return "weekend";
+    if (category === "transport") return "transport";
+  }
+  return null;
+}

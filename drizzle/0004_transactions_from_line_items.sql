@@ -136,9 +136,14 @@ END $$;
 ALTER TABLE "transactions" ALTER COLUMN "kind" SET NOT NULL;
 
 -- `section` is dropped only now, once every row has been mapped. Nothing is
--- lost: the five sections and the kind/category pairs are one-to-one in both
--- directions, so the export path can reconstruct the sheet's vocabulary from
--- the new columns (weekly/everyday -> grocery, recurring/* -> bills, and so on).
+-- lost *here*, because at this moment every recurring row is `bills` — the
+-- backfill above put it there and does not guess at sub-groups. The sheet's
+-- vocabulary is therefore reconstructible from the new columns.
+--
+-- Note the mapping is one-to-one forward but not backward: once a user re-files
+-- a bill under Housing, that distinction has no home in the sheet and will not
+-- survive an export/re-import. Lossy by the template's design, not by this
+-- migration's.
 ALTER TABLE "transactions" DROP COLUMN IF EXISTS "section";
 
 -- --------------------------------------------------------------- 5 · the rule

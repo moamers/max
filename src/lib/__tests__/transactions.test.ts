@@ -16,6 +16,7 @@ import {
   weeklyCategoryForSection,
   WEEKLY_CATEGORY_TITLES,
   RECURRING_CATEGORY_TITLES,
+  sectionForKindCategory,
 } from "../transactions";
 
 describe("transaction vocabulary", () => {
@@ -70,5 +71,41 @@ describe("transaction vocabulary", () => {
     for (const c of WEEKLY_CATEGORIES) expect(WEEKLY_CATEGORY_TITLES[c], c).toBeTruthy();
     for (const c of RECURRING_CATEGORIES) expect(RECURRING_CATEGORY_TITLES[c], c).toBeTruthy();
     expect(TRANSACTION_KINDS).toHaveLength(3);
+  });
+});
+
+describe("the reverse mapping is total but lossy", () => {
+  it("brings every sheet section back to itself", () => {
+    for (const section of SHEET_SECTIONS) {
+      const { kind, category } = SECTION_MAPPING[section];
+      expect(sectionForKindCategory(kind, category), section).toBe(section);
+    }
+  });
+
+  it("gives every valid kind/category pair somewhere to land in the sheet", () => {
+    // Export writes into the founder's template, which has five blocks and no
+    // sixth. A pair with no section would have nowhere to go.
+    for (const c of WEEKLY_CATEGORIES) expect(sectionForKindCategory("weekly", c)).not.toBeNull();
+    for (const c of RECURRING_CATEGORIES) expect(sectionForKindCategory("recurring", c)).not.toBeNull();
+    expect(sectionForKindCategory("one_off", null)).toBe("extras");
+  });
+
+  it("collapses all four recurring groups into the sheet's single bills block", () => {
+    // Documented, not accidental: the sheet keeps one flat bills list, so the
+    // group has nowhere to be recorded.
+    const landed = RECURRING_CATEGORIES.map((c) => sectionForKindCategory("recurring", c));
+    expect(new Set(landed)).toEqual(new Set(["bills"]));
+  });
+
+  it("loses the recurring group across a sheet round trip", () => {
+    // G-4. Re-file rent under Housing, export, re-import — it returns as bills.
+    // This is a limit of the template, and export must not claim otherwise.
+    const section = sectionForKindCategory("recurring", "housing")!;
+    expect(SECTION_MAPPING[section]).toEqual({ kind: "recurring", category: "bills" });
+  });
+
+  it("refuses a pair the database would reject rather than inventing a section", () => {
+    expect(sectionForKindCategory("weekly", "housing")).toBeNull();
+    expect(sectionForKindCategory("nonsense", null)).toBeNull();
   });
 });
