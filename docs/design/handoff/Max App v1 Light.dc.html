@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #F6F6F2; }
+  a { color: #3F6B0A; text-decoration: none; }
+  a:hover { color: #D0332F; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  @keyframes sheetUp { from { transform: translateY(26px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  @keyframes fadeUp { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  @keyframes scrim { from { opacity: 0 } to { opacity: 1 } }
+</style>
+</helmet>
+
+<div style="background:#F6F6F2; color:#15150F; font-family:'Schibsted Grotesk',sans-serif; padding:52px 44px 90px; display:flex; gap:52px; align-items:flex-start; justify-content:center; min-height:100vh; box-sizing:border-box">
+
+  <div style="width:344px; flex-shrink:0; display:flex; flex-direction:column; gap:30px; padding-top:6px">
+    <div style="display:flex; align-items:center; gap:12px">
+      <svg viewBox="0 0 100 100" style="width:30px; height:30px; overflow:visible">
+        <path d="M46,95 C25,93 13,77 17,57 C20,41 34,29 52,30 C71,31 85,44 84,63 C83,79 71,92 58,94 C54,95 50,95 46,95 Z" fill="#15150F"></path>
+        <path d="M53,30 C52,16 61,6 78,3 C79,17 70,28 53,30 Z" fill="#C6FF3D"></path>
+        <path d="M58,25 C63,18 69,12 75,8" stroke="#F6F6F2" stroke-width="2" stroke-linecap="round" fill="none"></path>
+      </svg>
+      <span style="font-size:22px; font-weight:800; letter-spacing:-0.03em">Max</span>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64; margin-left:4px">v1 · product</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <h1 style="margin:0; font-size:34px; line-height:1.02; letter-spacing:-0.035em; font-weight:800; text-wrap:balance">Where do I stand?</h1>
+      <p style="margin:0; font-size:15px; line-height:1.6; color:#5C5C55; text-wrap:pretty">One number answers it. Everything underneath &mdash; weeks, bills, one-offs, the year &mdash; is one tap down, in the order you'd actually ask.</p>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <div style="display:flex; align-items:center; gap:12px; padding-bottom:6px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6C6C64">States</span>
+        <span style="height:1px; flex:1; background:#E3E3DB"></span>
+      </div>
+      <sc-for list="{{ rail }}" as="r" hint-placeholder-count="10">
+        <div onClick="{{ r.go }}" style="{{ r.style }}" style-hover="background:#F2F2ED">
+          <span style="{{ r.numStyle }}">{{ r.n }}</span>
+          <span style="{{ r.labelStyle }}">{{ r.t }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ notesOn }}" hint-placeholder-val="{{ true }}">
+      <div style="border:1px solid #E3E3DB; background:#EFEFEA; border-radius:18px; padding:20px 20px 22px; display:flex; flex-direction:column; gap:10px">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#3F6B0A">{{ note.label }}</span>
+        <p style="margin:0; font-size:14px; line-height:1.62; color:#5C5C55; text-wrap:pretty">{{ note.text }}</p>
+      </div>
+    </sc-if>
+
+    <div style="display:flex; flex-direction:column; gap:12px; padding-top:2px">
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6C6C64">Colours, one meaning each</span>
+      <div style="display:flex; align-items:center; gap:10px"><span style="width:9px; height:9px; border-radius:3px; background:#96968D"></span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">the bar fills as you spend</span></div>
+      <div style="display:flex; align-items:center; gap:10px"><span style="width:9px; height:9px; border-radius:3px; background:#B93A34"></span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">bar turns red past the line</span></div>
+      <div style="display:flex; align-items:center; gap:10px"><span style="width:9px; height:9px; border-radius:3px; background:#C6FF3D"></span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">what's left, as a number</span></div>
+      <div style="display:flex; align-items:center; gap:10px"><span style="width:9px; height:9px; border-radius:3px; background:#F0C64B"></span><span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">pending &mdash; a transaction flag, not a bar</span></div>
+    </div>
+  </div>
+
+  <div style="width:412px; flex-shrink:0; border-radius:54px; padding:11px; background:#FFFFFF; border:1px solid #D0D0C6; box-shadow:0 50px 100px rgba(0,0,0,0.66); position:sticky; top:40px; box-sizing:border-box">
+    <div style="position:relative; width:390px; height:820px; border-radius:44px; overflow:hidden; background:#F6F6F2; display:flex; flex-direction:column">
+
+      <div style="height:46px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 26px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#5C5C55">
+        <span>23:12</span>
+        <div style="display:flex; align-items:flex-end; gap:3px">
+          <span style="width:3px; height:6px; background:#9B9B92; border-radius:1px"></span>
+          <span style="width:3px; height:9px; background:#6C6C64; border-radius:1px"></span>
+          <span style="width:3px; height:12px; background:#5C5C55; border-radius:1px"></span>
+          <span style="width:16px; height:9px; border:1px solid #6C6C64; border-radius:2px; margin-left:5px; padding:1px; box-sizing:border-box; display:flex"><span style="flex:0.72; background:#C6FF3D; border-radius:1px"></span></span>
+        </div>
+      </div>
+
+      <sc-if value="{{ isImport }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1; overflow:hidden; display:flex; flex-direction:column">
+
+          <sc-if value="{{ imp0 }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:1; display:flex; flex-direction:column; padding:34px 26px 30px; gap:26px">
+              <svg viewBox="0 0 100 100" style="width:42px; height:42px; overflow:visible; flex-shrink:0">
+                <path d="M46,95 C25,93 13,77 17,57 C20,41 34,29 52,30 C71,31 85,44 84,63 C83,79 71,92 58,94 C54,95 50,95 46,95 Z" fill="#15150F"></path>
+                <path d="M53,30 C52,16 61,6 78,3 C79,17 70,28 53,30 Z" fill="#C6FF3D"></path>
+                <path d="M58,25 C63,18 69,12 75,8" stroke="#F6F6F2" stroke-width="2" stroke-linecap="round" fill="none"></path>
+              </svg>
+              <div style="display:flex; flex-direction:column; gap:12px">
+                <h2 style="margin:0; font-size:36px; line-height:1.04; letter-spacing:-0.035em; font-weight:800; text-wrap:balance">Send me the spreadsheet.</h2>
+                <p style="margin:0; font-size:16px; line-height:1.55; color:#5C5C55">Sheets, screenshots, statements &mdash; I'll do the tidying.</p>
+              </div>
+              <div onClick="{{ startRead }}" style="flex:1; border:1px dashed #C4C4B9; border-radius:26px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; cursor:pointer; background:#EFEFEA" style-hover="border-color:#3F6B0A; background:#EFEFEA">
+                <svg viewBox="0 0 24 24" style="width:26px; height:26px" fill="none" stroke="#6C6C64" stroke-width="1.6" stroke-linecap="round"><path d="M12 16V4"></path><path d="M6.5 9.5 12 4l5.5 5.5"></path><path d="M4 16v3.5h16V16"></path></svg>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#5C5C55">drop a file, or paste</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:0 26px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:7px 12px">spreadsheet</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:7px 12px">screenshot</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:7px 12px">statement</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:7px 12px">pdf</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px; flex-shrink:0">
+                <div onClick="{{ startRead }}" style="height:56px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; letter-spacing:-0.01em; cursor:pointer" style-hover="background:#D4FF5F">Choose a file</div>
+                <div onClick="{{ goHome }}" style="display:flex; align-items:center; justify-content:center; height:22px; cursor:pointer" style-hover="opacity:0.7">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#5C5C55">skip &mdash; start from scratch</span>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ imp1 }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1; display:flex; flex-direction:column; padding:34px 26px 30px; gap:24px">
+              <div style="display:flex; flex-direction:column; gap:14px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#3F6B0A">Reading</span>
+                <h2 style="margin:0; font-size:28px; line-height:1.1; letter-spacing:-0.03em; font-weight:800">household-2026.xlsx</h2>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#6C6C64">4 sheets · 1,284 rows · 8 months</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px">
+                <sc-for list="{{ readRows }}" as="row" hint-placeholder-count="3">
+                  <div style="display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-bottom:1px solid #E7E7E0; animation:fadeUp 0.32s ease both">
+                    <span style="{{ row.tickStyle }}">{{ row.tick }}</span>
+                    <span style="{{ row.textStyle }}">{{ row.text }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="margin-top:auto; display:flex; align-items:center; gap:12px">
+                <div style="flex:1; height:4px; border-radius:99px; background:#EDEDE7; overflow:hidden"><div style="{{ readBarStyle }}"></div></div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">{{ readPct }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ imp2 }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1; overflow-y:auto; padding:32px 26px 30px; display:flex; flex-direction:column; gap:24px">
+              <div style="display:flex; flex-direction:column; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#3F6B0A">Done · 8 seconds</span>
+                <h2 style="margin:0; font-size:32px; line-height:1.06; letter-spacing:-0.035em; font-weight:800; text-wrap:balance">1,284 lines. Nothing thrown away.</h2>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                <div style="background:#FFFFFF; border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Income</span>
+                  <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em">£5,850</span>
+                </div>
+                <div style="background:#FFFFFF; border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Recurring</span>
+                  <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em">£2,975</span>
+                </div>
+                <div style="background:#FFFFFF; border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Your week</span>
+                  <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em">£420</span>
+                </div>
+                <div style="background:#FFFFFF; border-radius:16px; padding:16px 18px; display:flex; flex-direction:column; gap:6px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Labels kept</span>
+                  <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em">9</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Your words, not mine</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:7px 12px">dxb-26</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:7px 12px">home-improvements</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:7px 12px">holiday</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:7px 12px">weekend-0 / 1</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:7px 12px">+ 6 names</span>
+                </div>
+              </div>
+              <div style="border:1px solid #D7D7CD; border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:14px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#B93A34">2 I couldn't place</span>
+                <sc-for list="{{ unsure }}" as="u" hint-placeholder-count="2">
+                  <div style="display:flex; flex-direction:column; gap:10px; padding-bottom:12px; border-bottom:1px solid #F2F2ED">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px">
+                      <span style="font-size:15px; font-weight:600">{{ u.m }}</span>
+                      <span style="font-size:15px; font-weight:700; letter-spacing:-0.02em">{{ u.a }}</span>
+                    </div>
+                    <sc-if value="{{ u.open }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex; gap:7px; flex-wrap:wrap">
+                        <span onClick="{{ u.pickEveryday }}" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:8px 12px; cursor:pointer" style-hover="border-color:#3F6B0A; color:#3F6B0A">everyday</span>
+                        <span onClick="{{ u.pickWeekend }}" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:8px 12px; cursor:pointer" style-hover="border-color:#3F6B0A; color:#3F6B0A">weekend</span>
+                        <span onClick="{{ u.pickOneoff }}" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; border:1px solid #D7D7CD; border-radius:99px; padding:8px 12px; cursor:pointer" style-hover="border-color:#3F6B0A; color:#3F6B0A">one-off</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ u.done }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#3F6B0A">{{ u.answer }}</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64; line-height:1.5">everything else I filed myself &mdash; correct me later if I got one wrong</span>
+              </div>
+              <div onClick="{{ goHome }}" style="height:56px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:700; letter-spacing:-0.01em; cursor:pointer; flex-shrink:0" style-hover="background:#D4FF5F">Continue</div>
+            </div>
+          </sc-if>
+
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1; overflow-y:auto; padding:8px 20px 108px; display:flex; flex-direction:column; gap:22px">
+
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0 4px">
+            <div onClick="{{ goMonths }}" style="display:flex; align-items:center; gap:11px; cursor:pointer" style-hover="opacity:0.75">
+              <svg viewBox="0 0 100 100" style="width:24px; height:24px; overflow:visible">
+                <path d="M46,95 C25,93 13,77 17,57 C20,41 34,29 52,30 C71,31 85,44 84,63 C83,79 71,92 58,94 C54,95 50,95 46,95 Z" fill="#15150F"></path>
+                <path d="M53,30 C52,16 61,6 78,3 C79,17 70,28 53,30 Z" fill="#C6FF3D"></path>
+              </svg>
+              <span style="font-size:21px; font-weight:800; letter-spacing:-0.03em">{{ monthLabel }}</span>
+              <svg viewBox="0 0 24 24" style="width:15px; height:15px" fill="none" stroke="#6C6C64" stroke-width="2.4" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"></path></svg>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">18 Aug · wk 4 of 5</span>
+              <div onClick="{{ goMenu }}" style="width:34px; height:34px; border-radius:99px; background:#FFFFFF; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; flex-shrink:0" style-hover="background:#EDEDE7">
+                <span style="width:14px; height:1.6px; border-radius:2px; background:#5C5C55"></span>
+                <span style="width:14px; height:1.6px; border-radius:2px; background:#5C5C55"></span>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{ heroForecast }}" hint-placeholder-val="{{ true }}">
+            <div style="background:linear-gradient(140deg,#C6FF3D,#4DE0FF); border-radius:26px; padding:18px 22px 22px; display:flex; flex-direction:column; gap:12px">
+              <div style="display:flex; gap:4px; background:rgba(14,15,20,0.14); border-radius:99px; padding:3px; align-self:flex-end">
+                <div onClick="{{ setToday }}" style="{{ heroTabTodayLight }}">Today</div>
+                <div onClick="{{ setForecast }}" style="{{ heroTabEomLight }}">End of month</div>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#1E3A16">Forecast · spare on 31 Aug</span>
+              <span style="font-size:52px; font-weight:800; letter-spacing:-0.045em; line-height:0.94; color:#0F2118">{{ heroBig }}</span>
+              <p style="margin:0; font-size:15px; line-height:1.5; color:#123028; text-wrap:pretty">2 weeks to go. Spend the weekly budget that's left and this is where August lands.</p>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:10px; border-top:1px solid rgba(14,15,20,0.18); margin-top:2px">
+                <div style="display:flex; align-items:baseline; gap:6px">
+                  <span style="font-size:17px; font-weight:800; letter-spacing:-0.03em; color:#0F2118">{{ heroSpend }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#1E3A16">of</span>
+                  <span style="font-size:17px; font-weight:800; letter-spacing:-0.03em; color:#0F2118">{{ heroIncome }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#1E3A16">income</span>
+                </div>
+                <div onClick="{{ goIncome }}" style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#0F2118; background:rgba(255,255,255,0.6); border-radius:99px; padding:6px 11px; cursor:pointer; flex-shrink:0" style-hover="background:rgba(255,255,255,0.9)">edit income</div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ heroToday }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#EDEDE7; border-radius:26px; padding:18px 22px 22px; display:flex; flex-direction:column; gap:12px">
+              <div style="display:flex; gap:4px; background:#FFFFFF; border-radius:99px; padding:3px; align-self:flex-end">
+                <div onClick="{{ setToday }}" style="{{ heroTabTodayDark }}">Today</div>
+                <div onClick="{{ setForecast }}" style="{{ heroTabEomDark }}">End of month</div>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Actual · spare today</span>
+              <span style="font-size:52px; font-weight:800; letter-spacing:-0.045em; line-height:0.94; color:#15150F">{{ heroBig }}</span>
+              <p style="margin:0; font-size:15px; line-height:1.5; color:#5C5C55; text-wrap:pretty">True, but 2 weeks of ordinary life hasn't happened yet.</p>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:10px; border-top:1px solid #DEDED5; margin-top:2px">
+                <div style="display:flex; align-items:baseline; gap:6px">
+                  <span style="font-size:17px; font-weight:800; letter-spacing:-0.03em; color:#15150F">{{ heroSpend }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6C6C64">of</span>
+                  <span style="font-size:17px; font-weight:800; letter-spacing:-0.03em; color:#15150F">{{ heroIncome }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#6C6C64">income</span>
+                </div>
+                <div onClick="{{ goIncome }}" style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#5C5C55; background:#FFFFFF; border-radius:99px; padding:6px 11px; cursor:pointer; flex-shrink:0" style-hover="color:#15150F">edit income</div>
+              </div>
+            </div>
+          </sc-if>
+
+
+          <div style="display:flex; flex-direction:column; gap:2px; padding:6px 16px 10px; background:#FFFFFF; border-radius:22px">
+            <div onClick="{{ toggleWeeks }}" style="display:flex; align-items:flex-end; justify-content:space-between; gap:10px; padding:16px 4px 14px; cursor:pointer" style-hover="opacity:0.8">
+              <div style="display:flex; align-items:center; gap:9px">
+                <span style="font-size:17px; font-weight:700; letter-spacing:-0.02em">Weeks</span>
+                <span style="{{ weeksCaretStyle }}">›</span>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px">
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:25px; font-weight:800; letter-spacing:-0.035em; color:#3F6B0A">£703</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">left</span>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#83837B">£1,397 spent of £2,100 this month</span>
+              </div>
+            </div>
+            <sc-if value="{{ weeksOpen }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ weeksB }}" as="b" hint-placeholder-count="5">
+              <div onClick="{{ b.open }}" style="{{ b.rowStyle }}" style-hover="opacity:0.82">
+                <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:14px">
+                  <div style="display:flex; flex-direction:column; gap:7px">
+                    <div style="display:flex; align-items:center; gap:9px">
+                      <span style="font-size:15px; font-weight:500; letter-spacing:-0.01em; color:#5C5C55">{{ b.range }}</span>
+                      <sc-if value="{{ b.isLive }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:#12210A; background:#C6FF3D; border-radius:99px; padding:3px 7px">now</span>
+                      </sc-if>
+                    </div>
+                    <div style="display:flex; align-items:baseline; gap:8px">
+                      <span style="{{ b.headStyle }}">{{ b.head }}</span>
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">{{ b.headWord }}</span>
+                    </div>
+                  </div>
+                  <span style="font-size:16px; color:#A9A9A0; line-height:1">›</span>
+                </div>
+                <div style="height:3px; border-radius:99px; background:#F0F0EA"><div style="{{ b.barStyle }}"></div></div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px">
+                  <sc-for list="{{ b.cats }}" as="c" hint-placeholder-count="3">
+                    <div style="display:flex; flex-direction:column; gap:4px">
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; color:#83837B">{{ c.name }}</span>
+                      <span style="{{ c.valStyle }}">{{ c.val }}</span>
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#9B9B92">{{ c.word }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            </sc-if>
+          </div>
+
+          <div onClick="{{ goRecurring }}" style="background:#FFFFFF; border-radius:22px; padding:20px; display:flex; flex-direction:column; gap:13px; cursor:pointer" style-hover="background:#F2F2ED">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+              <span style="font-size:17px; font-weight:700; letter-spacing:-0.02em">Recurring</span>
+              <span style="font-size:19px; font-weight:700; letter-spacing:-0.025em">£2,975</span>
+            </div>
+          </div>
+
+          <div onClick="{{ goOneoffs }}" style="background:#FFFFFF; border-radius:22px; padding:20px; display:flex; flex-direction:column; gap:13px; cursor:pointer" style-hover="background:#F2F2ED">
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+              <span style="font-size:17px; font-weight:700; letter-spacing:-0.02em">One-offs</span>
+              <span style="font-size:19px; font-weight:700; letter-spacing:-0.025em">£468</span>
+            </div>
+          </div>
+
+          <div onClick="{{ goYear }}" style="border:1px solid #E3E3DB; border-radius:22px; padding:18px 20px; display:flex; align-items:center; gap:16px; cursor:pointer" style-hover="border-color:#CBCBC1">
+            <div style="display:flex; flex-direction:column; gap:5px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">2026 net position</span>
+              <span style="font-size:19px; font-weight:700; letter-spacing:-0.025em; color:#3F6B0A">+£1,108</span>
+            </div>
+            <svg viewBox="0 0 160 40" style="width:160px; height:40px; margin-left:auto; display:block">
+              <line x1="0" y1="30" x2="160" y2="30" stroke="#E3E3DB" stroke-width="1" stroke-dasharray="3 4"></line>
+              <polyline points="{{ cumMini }}" fill="none" stroke="#3F6B0A" stroke-width="2" stroke-linejoin="round"></polyline>
+            </svg>
+          </div>
+
+        </div>
+
+        <div style="position:absolute; left:0; right:0; bottom:0; padding:14px 20px 20px; background:linear-gradient(to top,#F6F6F2 62%,rgba(246,246,242,0)); display:flex; gap:10px; align-items:center">
+          <div style="flex:1"></div>
+          <div onClick="{{ goAdd }}" style="width:52px; height:52px; border-radius:99px; background:#C6FF3D; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0" style-hover="background:#D4FF5F">
+            <svg viewBox="0 0 24 24" style="width:22px; height:22px" fill="none" stroke="#12210A" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetWeek }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">August · {{ wk.n }}</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:14px 20px 96px; display:flex; flex-direction:column; gap:22px">
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <h2 style="margin:0; font-size:30px; font-weight:800; letter-spacing:-0.035em; line-height:1.04">{{ wk.range }}</h2>
+              <div style="display:flex; align-items:baseline; gap:12px">
+                <span style="{{ wk.headStyle }}">{{ wk.head }}</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#83837B">{{ wk.vs }}</span>
+              </div>
+              <div style="border-radius:99px; overflow:hidden; background:#F0F0EA; height:12px">
+                <svg viewBox="0 0 100 12" preserveAspectRatio="none" style="width:100%; height:12px; display:block">
+                  <sc-for list="{{ wk.bars }}" as="b" hint-placeholder-count="2">
+                    <rect x="{{ b.x }}" y="0" width="{{ b.w }}" height="12" fill="{{ b.c }}"></rect>
+                  </sc-for>
+                </svg>
+              </div>
+            </div>
+
+
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <sc-for list="{{ wk.segments }}" as="s" hint-placeholder-count="3">
+                <div style="background:#FFFFFF; border-radius:20px; overflow:hidden">
+                  <div onClick="{{ s.toggle }}" style="padding:18px; display:flex; flex-direction:column; gap:12px; cursor:pointer" style-hover="background:#F2F2ED">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+                      <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">{{ s.name }}</span>
+                      <div style="display:flex; align-items:baseline; gap:10px">
+                        <span style="{{ s.headStyle }}">{{ s.head }}</span>
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#83837B">{{ s.vs }}</span>
+                        <span style="{{ s.caretStyle }}">›</span>
+                      </div>
+                    </div>
+                    <div style="border-radius:99px; overflow:hidden; height:8px; background:#F0F0EA">
+                      <svg viewBox="0 0 100 8" preserveAspectRatio="none" style="width:100%; height:8px; display:block">
+                        <sc-for list="{{ s.bars }}" as="b" hint-placeholder-count="2">
+                          <rect x="{{ b.x }}" y="0" width="{{ b.w }}" height="8" fill="{{ b.c }}"></rect>
+                        </sc-for>
+                      </svg>
+                    </div>
+                  </div>
+                  <sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:0 18px 8px; display:flex; flex-direction:column">
+                      <sc-for list="{{ s.items }}" as="t" hint-placeholder-count="4">
+                        <div onClick="{{ t.open }}" style="padding:13px 0; border-top:1px solid #F2F2ED; display:flex; flex-direction:column; gap:5px; cursor:pointer" style-hover="opacity:0.7">
+                          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+                            <div style="display:flex; align-items:center; gap:8px">
+                              <span style="font-size:15px; font-weight:500">{{ t.m }}</span>
+                              <sc-if value="{{ t.pending }}" hint-placeholder-val="{{ false }}">
+                                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#8A5E00; background:#FAF0D0; border-radius:99px; padding:4px 8px">pending</span>
+                              </sc-if>
+                            </div>
+                            <span style="{{ t.amountStyle }}">{{ t.a }}</span>
+                          </div>
+                          <sc-if value="{{ t.hasNote }}" hint-placeholder-val="{{ true }}">
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">{{ t.note }}</span>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div onClick="{{ addHere }}" style="position:absolute; right:20px; bottom:22px; width:54px; height:54px; border-radius:99px; background:#C6FF3D; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 24px rgba(30,32,24,0.18)" style-hover="background:#D4FF5F">
+            <svg viewBox="0 0 24 24" style="width:23px; height:23px" fill="none" stroke="#12210A" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetRecurring }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">August · recurring</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:14px 20px 96px; display:flex; flex-direction:column; gap:22px">
+            <div style="display:flex; flex-direction:column; gap:12px">
+              <h2 style="margin:0; font-size:44px; font-weight:800; letter-spacing:-0.04em; line-height:1">£2,975</h2>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#0A7391">+£24 on July</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <sc-for list="{{ recurring }}" as="g" hint-placeholder-count="4">
+                <div style="background:#FFFFFF; border-radius:20px; overflow:hidden">
+                  <div onClick="{{ g.toggle }}" style="padding:18px; display:flex; flex-direction:column; gap:12px; cursor:pointer" style-hover="background:#F2F2ED">
+                    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+                      <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">{{ g.name }}</span>
+                      <div style="display:flex; align-items:baseline; gap:10px">
+                        <span style="font-size:17px; font-weight:700; letter-spacing:-0.025em">{{ g.amount }}</span>
+                        <span style="{{ g.caretStyle }}">›</span>
+                      </div>
+                    </div>
+                  </div>
+                  <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:0 18px 10px; display:flex; flex-direction:column">
+                      <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="3">
+                        <div onClick="{{ i.open }}" style="padding:13px 0; border-top:1px solid #F2F2ED; display:flex; flex-direction:column; gap:5px; cursor:pointer" style-hover="opacity:0.7">
+                          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+                            <div style="display:flex; align-items:center; gap:8px">
+                              <span style="{{ i.nameStyle }}">{{ i.m }}</span>
+                              <sc-if value="{{ i.pending }}" hint-placeholder-val="{{ false }}">
+                                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#8A5E00; background:#FAF0D0; border-radius:99px; padding:4px 8px">pending</span>
+                              </sc-if>
+                            </div>
+                            <span style="{{ i.amountStyle }}">{{ i.a }}</span>
+                          </div>
+                          <sc-if value="{{ i.hasNote }}" hint-placeholder-val="{{ true }}">
+                            <span style="{{ i.noteStyle }}">{{ i.note }}</span>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div onClick="{{ addHere }}" style="position:absolute; right:20px; bottom:22px; width:54px; height:54px; border-radius:99px; background:#C6FF3D; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 24px rgba(30,32,24,0.18)" style-hover="background:#D4FF5F">
+            <svg viewBox="0 0 24 24" style="width:23px; height:23px" fill="none" stroke="#12210A" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetOneoffs }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">August · one-offs</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:14px 20px 96px; display:flex; flex-direction:column; gap:22px">
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <h2 style="margin:0; font-size:44px; font-weight:800; letter-spacing:-0.04em; line-height:1">£468</h2>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px">
+              <sc-for list="{{ ooList }}" as="i" hint-placeholder-count="7">
+                <div onClick="{{ i.open }}" style="background:#FFFFFF; border-radius:16px; padding:15px 16px; display:flex; flex-direction:column; gap:9px; cursor:pointer" style-hover="background:#F2F2ED">
+                  <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px">
+                    <div style="display:flex; align-items:center; gap:8px">
+                      <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em">{{ i.m }}</span>
+                      <sc-if value="{{ i.pending }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#8A5E00; background:#FAF0D0; border-radius:99px; padding:4px 8px">pending</span>
+                      </sc-if>
+                    </div>
+                    <span style="{{ i.amountStyle }}">{{ i.a }}</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap">
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:5px 10px">{{ i.label }}</span>
+                    <sc-if value="{{ i.hasNote }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">{{ i.note }}</span>
+                    </sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div onClick="{{ addHere }}" style="position:absolute; right:20px; bottom:22px; width:54px; height:54px; border-radius:99px; background:#C6FF3D; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 10px 24px rgba(30,32,24,0.18)" style-hover="background:#D4FF5F">
+            <svg viewBox="0 0 24 24" style="width:23px; height:23px" fill="none" stroke="#12210A" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetYear }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">{{ yearCaption }}</span>
+            <div style="display:flex; align-items:center; gap:2px; margin-left:auto">
+              <div onClick="{{ yearPrev }}" style="{{ yearPrevStyle }}">‹</div>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500; color:#15150F; min-width:44px; text-align:center">{{ yearSelLabel }}</span>
+              <div onClick="{{ yearNext }}" style="{{ yearNextStyle }}">›</div>
+            </div>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:18px 20px 40px; display:flex; flex-direction:column; gap:30px">
+
+            <div style="display:flex; flex-direction:column; gap:11px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Net position</span>
+              <h2 style="{{ yearNetStyle }}">{{ yearNet }}</h2>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#5C5C55">{{ yearNetSub }}</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="display:flex; align-items:center; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Annualised</span>
+                <span style="height:1px; flex:1; background:#F2F2ED"></span>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                <sc-for list="{{ shareRows }}" as="r" hint-placeholder-count="4">
+                  <div style="{{ r.tileStyle }}">
+                    <span style="{{ r.nameStyle }}">{{ r.name }}</span>
+                    <span style="{{ r.amtStyle }}">{{ r.amount }}</span>
+                    <span style="{{ r.pctStyle }}">{{ r.sub }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="display:flex; align-items:center; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Month by month</span>
+                <span style="height:1px; flex:1; background:#F2F2ED"></span>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <sc-for list="{{ yearRows }}" as="y" hint-placeholder-count="8">
+                  <div style="{{ y.rowStyle }}">
+                    <div onClick="{{ y.toggle }}" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; cursor:pointer" style-hover="background:#F2F2ED">
+                      <div style="display:flex; align-items:center; gap:10px">
+                        <span style="font-size:15px; font-weight:600; letter-spacing:-0.01em; min-width:34px">{{ y.m }}</span>
+                        <sc-if value="{{ y.hasNote }}" hint-placeholder-val="{{ true }}">
+                          <span style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6C6C64">{{ y.note }}</span>
+                        </sc-if>
+                      </div>
+                      <span style="{{ y.vStyle }}">{{ y.v }}</span>
+                    </div>
+                    <sc-if value="{{ y.open }}" hint-placeholder-val="{{ false }}">
+                      <div style="padding:0 16px 14px; display:flex; flex-direction:column; gap:9px">
+                        <div onClick="{{ y.go }}" style="display:flex; align-items:center; justify-content:flex-end; gap:6px; padding-top:2px; cursor:pointer" style-hover="opacity:0.7">
+                          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#3F6B0A">open {{ y.m }}</span>
+                          <span style="font-size:13px; color:#3F6B0A">›</span>
+                        </div>
+                        <sc-for list="{{ y.parts }}" as="p" hint-placeholder-count="4">
+                          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding-top:9px; border-top:1px solid #F2F2ED">
+                            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">{{ p.k }}</span>
+                            <span style="{{ p.vStyle }}">{{ p.v }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="background:#FFFFFF; border-radius:20px; padding:20px 18px 16px; display:flex; flex-direction:column; gap:12px; margin-top:6px">
+                <div style="display:flex; align-items:baseline; justify-content:space-between">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Running position</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#B93A34">{{ yearLow }}</span>
+                </div>
+                <svg viewBox="0 0 320 90" style="width:100%; height:auto; display:block">
+                  <line x1="0" y1="{{ zeroY }}" x2="320" y2="{{ zeroY }}" stroke="#DEDED5" stroke-width="1" stroke-dasharray="3 4"></line>
+                  <polyline points="{{ cumPoints }}" fill="none" stroke="{{ cumStroke }}" stroke-width="2" stroke-linejoin="round"></polyline>
+                  <sc-for list="{{ cumDots }}" as="d" hint-placeholder-count="8">
+                    <circle cx="{{ d.x }}" cy="{{ d.y }}" r="3" fill="{{ d.c }}"></circle>
+                  </sc-for>
+                </svg>
+                <div style="{{ monthColsStyle }}">
+                  <sc-for list="{{ monthLabels }}" as="m" hint-placeholder-count="8">
+                    <span style="{{ m.style }}">{{ m.name }}</span>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-direction:column; padding:0 2px">
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:13px 0; border-bottom:1px solid #F2F2ED">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">best month</span>
+                  <div style="display:flex; align-items:baseline; gap:9px">
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">{{ kpiBestM }}</span>
+                    <span style="font-size:15px; font-weight:700; letter-spacing:-0.02em; color:#3F6B0A">{{ kpiBest }}</span>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:13px 0; border-bottom:1px solid #F2F2ED">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">worst month</span>
+                  <div style="display:flex; align-items:baseline; gap:9px">
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55">{{ kpiWorstM }}</span>
+                    <span style="font-size:15px; font-weight:700; letter-spacing:-0.02em; color:#B93A34">{{ kpiWorst }}</span>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:13px 0">
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">average month</span>
+                  <span style="{{ kpiAvgStyle }}">{{ kpiAvg }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetMonths }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; z-index:6; display:flex; flex-direction:column; justify-content:flex-end; background:rgba(40,42,34,0.32); animation:scrim 0.2s ease both">
+          <div onClick="{{ back }}" style="flex:1; cursor:pointer"></div>
+          <div style="background:#FFFFFF; border-top:1px solid #DEDED5; border-radius:30px 30px 44px 44px; padding:12px 22px 26px; display:flex; flex-direction:column; gap:20px; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+            <div style="width:42px; height:4px; border-radius:99px; background:#CBCBC1; margin:0 auto"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between">
+              <span onClick="{{ prevYear }}" style="width:38px; height:38px; border-radius:99px; background:#F0F0EA; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:#5C5C55">‹</span>
+              <span style="font-size:20px; font-weight:700; letter-spacing:-0.02em">{{ pickerYear }}</span>
+              <span onClick="{{ nextYear }}" style="width:38px; height:38px; border-radius:99px; background:#F0F0EA; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; color:#5C5C55">›</span>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px">
+              <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+                <div onClick="{{ m.pick }}" style="{{ m.style }}">
+                  <span style="{{ m.nameStyle }}">{{ m.name }}</span>
+                  <span style="{{ m.subStyle }}">{{ m.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetMenu }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; z-index:6; display:flex; background:rgba(40,42,34,0.32); animation:scrim 0.2s ease both">
+          <div style="width:296px; background:#FFFFFF; border-right:1px solid #DEDED5; padding:22px 20px 26px; display:flex; flex-direction:column; gap:26px; animation:fadeUp 0.24s ease both">
+            <div style="display:flex; align-items:center; gap:11px">
+              <svg viewBox="0 0 100 100" style="width:26px; height:26px; overflow:visible">
+                <path d="M46,95 C25,93 13,77 17,57 C20,41 34,29 52,30 C71,31 85,44 84,63 C83,79 71,92 58,94 C54,95 50,95 46,95 Z" fill="#15150F"></path>
+                <path d="M53,30 C52,16 61,6 78,3 C79,17 70,28 53,30 Z" fill="#C6FF3D"></path>
+              </svg>
+              <span style="font-size:19px; font-weight:800; letter-spacing:-0.03em">Max</span>
+            </div>
+            <div style="display:flex; flex-direction:column">
+              <div onClick="{{ goGoals }}" style="padding:16px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer" style-hover="opacity:0.7">
+                <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">Manage budget goals</span>
+                <span style="font-size:17px; color:#9B9B92">›</span>
+              </div>
+              <div style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:10px">
+                <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">Appearance</span>
+                <div style="display:flex; gap:3px; background:#F0F0EA; border-radius:99px; padding:3px">
+                  <a href="Max App v1.dc.html" style="font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 13px; border-radius:99px; color:#5C5C55; text-decoration:none">Dark</a>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 13px; border-radius:99px; background:#C6FF3D; color:#12210A; font-weight:700">Light</span>
+                </div>
+              </div>
+              <div onClick="{{ goImport }}" style="padding:16px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer" style-hover="opacity:0.7">
+                <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">Import a file</span>
+                <span style="font-size:17px; color:#9B9B92">›</span>
+              </div>
+              <div onClick="{{ back }}" style="padding:16px 0; border-top:1px solid #E3E3DB; border-bottom:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer" style-hover="opacity:0.7">
+                <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em; color:#B93A34">Clear data</span>
+                <span style="font-size:17px; color:#9B9B92">›</span>
+              </div>
+            </div>
+          </div>
+          <div onClick="{{ back }}" style="flex:1; cursor:pointer"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetGoals }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Budget goals</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:16px 20px 30px; display:flex; flex-direction:column; gap:26px">
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <h2 style="margin:0; font-size:26px; font-weight:800; letter-spacing:-0.03em; line-height:1.08">What are you aiming for?</h2>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.6; color:#5C5C55">three weekly numbers, and what you expect to earn</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Per week</span>
+              <sc-for list="{{ goalFields }}" as="g" hint-placeholder-count="3">
+                <div style="background:#FFFFFF; border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px">
+                  <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">{{ g.name }}</span>
+                  <div style="display:flex; align-items:center; gap:8px; background:#EAEBE4; border-radius:12px; padding:0 14px; height:48px">
+                    <span style="font-size:17px; font-weight:600; color:#83837B">£</span>
+                    <input value="{{ g.value }}" onChange="{{ g.set }}" inputmode="numeric" style="width:76px; background:transparent; border:none; outline:none; color:#15150F; font-family:inherit; font-size:21px; font-weight:700; letter-spacing:-0.03em; text-align:right; padding:0" />
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:12px 16px 0">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">that is</span>
+                <div style="display:flex; align-items:baseline; gap:7px">
+                  <span style="font-size:19px; font-weight:800; letter-spacing:-0.03em">{{ goalTotal }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">a week · {{ goalMonthly }} a month</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6C6C64">Expected income</span>
+              <div style="background:#FFFFFF; border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px">
+                <span style="font-size:16px; font-weight:600; letter-spacing:-0.015em">A month</span>
+                <div style="display:flex; align-items:center; gap:8px; background:#EAEBE4; border-radius:12px; padding:0 14px; height:48px">
+                  <span style="font-size:17px; font-weight:600; color:#83837B">£</span>
+                  <input value="{{ incomeDefault }}" onChange="{{ setIncomeDefault }}" inputmode="numeric" style="width:76px; background:transparent; border:none; outline:none; color:#15150F; font-family:inherit; font-size:21px; font-weight:700; letter-spacing:-0.03em; text-align:right; padding:0" />
+                </div>
+              </div>
+              <div onClick="{{ goIncome }}" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px; cursor:pointer" style-hover="opacity:0.7">
+                <span style="font-size:15px; color:#5C5C55">Some months differ &mdash; set them one by one</span>
+                <span style="font-size:17px; color:#9B9B92">›</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:0 20px 22px; flex-shrink:0">
+            <div onClick="{{ back }}" style="height:54px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; cursor:pointer" style-hover="background:#D4FF5F">Done</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetIncome }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:#F6F6F2; display:flex; flex-direction:column; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+          <div style="padding:14px 20px 6px; display:flex; align-items:center; gap:14px; flex-shrink:0">
+            <div onClick="{{ back }}" style="width:38px; height:38px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer" style-hover="background:#EDEDE7">
+              <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Income · {{ incomeYear }}</span>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:16px 20px 30px; display:flex; flex-direction:column; gap:20px">
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <h2 style="margin:0; font-size:26px; font-weight:800; letter-spacing:-0.03em; line-height:1.08">Income, month by month</h2>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.6; color:#5C5C55">months you haven't touched use {{ incomeDefault2 }}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px">
+              <sc-for list="{{ incomeRows }}" as="r" hint-placeholder-count="12">
+                <div style="{{ r.rowStyle }}">
+                  <div style="display:flex; align-items:baseline; gap:9px">
+                    <span style="{{ r.nameStyle }}">{{ r.m }}</span>
+                    <sc-if value="{{ r.edited }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:#0A7391">set by you</span>
+                    </sc-if>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:7px; background:#EAEBE4; border-radius:11px; padding:0 12px; height:44px">
+                    <span style="font-size:15px; font-weight:600; color:#83837B">£</span>
+                    <input value="{{ r.v }}" onChange="{{ r.set }}" inputmode="numeric" style="width:72px; background:transparent; border:none; outline:none; color:#15150F; font-family:inherit; font-size:18px; font-weight:700; letter-spacing:-0.025em; text-align:right; padding:0" />
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:0 20px 22px; flex-shrink:0">
+            <div onClick="{{ back }}" style="height:54px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; cursor:pointer" style-hover="background:#D4FF5F">Done</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetAdd }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; background:rgba(40,42,34,0.32); z-index:6; display:flex; flex-direction:column; justify-content:flex-end; animation:scrim 0.2s ease both">
+          <div onClick="{{ back }}" style="flex:1; cursor:pointer"></div>
+          <div style="background:#FFFFFF; border-top:1px solid #DEDED5; border-radius:30px 30px 44px 44px; padding:12px 22px 26px; display:flex; flex-direction:column; gap:18px; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+            <div style="width:42px; height:4px; border-radius:99px; background:#CBCBC1; margin:0 auto"></div>
+
+            <sc-if value="{{ addTyping }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:24px">
+                <div style="display:flex; flex-direction:column; gap:13px; padding:2px 0 18px; border-bottom:1px solid #DEDED5">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+                    <div style="display:flex; align-items:baseline; gap:10px">
+                      <span style="font-size:34px; font-weight:700; color:#6C6C64; letter-spacing:-0.03em">£</span>
+                      <span style="{{ addAmtColorStyle }}">{{ addAmtLabel }}</span>
+                      <span style="width:2px; height:34px; background:#C6FF3D; margin-left:2px"></span>
+                    </div>
+                    <div style="display:flex; gap:4px; background:#F0F0EA; border-radius:99px; padding:3px; flex-shrink:0">
+                      <div onClick="{{ setAddFinal }}" style="{{ addFinalStyle }}">Final</div>
+                      <div onClick="{{ setAddPending }}" style="{{ addPendingStyle }}">Pending</div>
+                    </div>
+                  </div>
+                  <div onClick="{{ scrubAmt }}" style="height:22px; display:flex; align-items:center; cursor:pointer; position:relative">
+                    <div style="height:5px; border-radius:99px; background:#DEDED5; width:100%; overflow:hidden">
+                      <div style="{{ addAmtFillStyle }}"></div>
+                    </div>
+                    <div style="{{ addAmtKnobStyle }}"></div>
+                  </div>
+                </div>
+                <div style="height:52px; border-radius:14px; background:#F0F0EA; display:flex; align-items:center; padding:0 16px"><span style="font-size:15px; color:#6C6C64">Where &mdash; shop, café, name&hellip;</span></div>
+                <div style="display:flex; flex-direction:column; gap:14px">
+                  <div style="display:flex; gap:4px; background:#F0F0EA; border-radius:12px; padding:4px">
+                    <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="3">
+                      <div onClick="{{ k.pick }}" style="{{ k.style }}">{{ k.name }}</div>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ hasSubs }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; padding-left:14px">
+                      <sc-for list="{{ subs }}" as="a" hint-placeholder-count="3">
+                        <span onClick="{{ a.pick }}" style="{{ a.style }}">{{ a.name }}</span>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+                  <div style="display:flex; align-items:center; gap:10px">
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6C6C64">Label</span>
+                    <span onClick="{{ openLabelPick }}" style="{{ addLabelChipStyle }}">{{ addLabelCurrent }}</span>
+                  </div>
+                </div>
+                <div style="height:50px; border-radius:14px; background:#F0F0EA; display:flex; align-items:center; padding:0 16px"><span style="font-size:15px; color:#6C6C64">Note &mdash; for future reference</span></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ labelPicking }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:16px">
+                <div style="display:flex; align-items:center; gap:12px">
+                  <div onClick="{{ closeLabelPick }}" style="width:34px; height:34px; border-radius:99px; background:#F0F0EA; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0" style-hover="background:#E9E9E3">
+                    <svg viewBox="0 0 24 24" style="width:17px; height:17px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M14.5 5 8 12l6.5 7"></path></svg>
+                  </div>
+                  <span style="font-size:17px; font-weight:700; letter-spacing:-0.02em">Pick a label</span>
+                </div>
+                <div style="display:flex; flex-direction:column">
+                  <sc-for list="{{ addLabels }}" as="l" hint-placeholder-count="5">
+                    <div onClick="{{ l.pick }}" style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer" style-hover="opacity:0.7">
+                      <span style="{{ l.rowStyle }}">{{ l.name }}</span>
+                      <span style="{{ l.tickStyle }}">&#10003;</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div onClick="{{ closeLabelPick }}" style="height:50px; border-radius:14px; background:#F0F0EA; display:flex; align-items:center; padding:0 16px; cursor:pointer" style-hover="background:#E9E9E3"><span style="font-size:15px; color:#6C6C64">Other &mdash; type a new label&hellip;</span></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ addUploading }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:14px">
+                <div style="border:1px dashed #C4C4B9; border-radius:20px; padding:26px 18px; display:flex; flex-direction:column; align-items:center; gap:12px">
+                  <svg viewBox="0 0 24 24" style="width:24px; height:24px" fill="none" stroke="#6C6C64" stroke-width="1.6" stroke-linecap="round"><path d="M12 16V4"></path><path d="M6.5 9.5 12 4l5.5 5.5"></path><path d="M4 16v3.5h16V16"></path></svg>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55; text-align:center; line-height:1.6">receipt · screenshot · statement · spreadsheet<br />I'll pull the transactions out</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex; gap:10px; align-items:center">
+              <div onClick="{{ back }}" style="width:54px; height:54px; border-radius:99px; border:1px solid #D7D7CD; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0" style-hover="border-color:#A9A9A0">
+                <svg viewBox="0 0 24 24" style="width:19px; height:19px" fill="none" stroke="#5C5C55" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg>
+              </div>
+              <div onClick="{{ toggleUpload }}" style="{{ uploadBtnStyle }}">
+                <svg viewBox="0 0 24 24" style="width:20px; height:20px" fill="none" stroke="{{ uploadIconColor }}" stroke-width="1.9" stroke-linecap="round"><path d="M12 16V4"></path><path d="M6.5 9.5 12 4l5.5 5.5"></path><path d="M4 16v3.5h16V16"></path></svg>
+              </div>
+              <div onClick="{{ back }}" style="flex:1; height:54px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; cursor:pointer" style-hover="background:#D4FF5F">{{ addCta }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetTxn }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; top:46px; left:0; right:0; bottom:0; z-index:7; display:flex; flex-direction:column; justify-content:flex-end; background:rgba(8,9,12,0.7); animation:scrim 0.2s ease both">
+          <div onClick="{{ closeTxn }}" style="flex:1; cursor:pointer"></div>
+          <div style="background:#FFFFFF; border-top:1px solid #DEDED5; border-radius:30px 30px 44px 44px; padding:12px 22px 26px; display:flex; flex-direction:column; gap:18px; animation:sheetUp 0.26s cubic-bezier(0.22,0.9,0.3,1) both">
+            <div style="width:42px; height:4px; border-radius:99px; background:#CBCBC1; margin:0 auto"></div>
+            <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px">
+              <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em">{{ txn.m }}</span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">{{ txn.when }}</span>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:12px; padding-bottom:4px">
+              <span style="{{ txnAmountStyle }}">{{ txn.a }}</span>
+            </div>
+            <div style="display:flex; flex-direction:column">
+              <div style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">amount is</span>
+                <div style="display:flex; gap:4px; background:#F0F0EA; border-radius:99px; padding:3px">
+                  <div onClick="{{ setFinal }}" style="{{ txnFinalStyle }}">Final</div>
+                  <div onClick="{{ setPending }}" style="{{ txnPendingStyle }}">Pending</div>
+                </div>
+              </div>
+              <div style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">category</span>
+                <span style="{{ txn.areaStyle }}">{{ txn.area }}</span>
+              </div>
+              <div style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:center; justify-content:space-between; gap:12px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64">label</span>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#0A7391; background:#DFF1F7; border-radius:99px; padding:6px 11px">{{ txn.label }}</span>
+              </div>
+              <div style="padding:14px 0; border-top:1px solid #E3E3DB; display:flex; align-items:flex-start; justify-content:space-between; gap:16px">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:#6C6C64; flex-shrink:0; padding-top:2px">note</span>
+                <span style="font-size:15px; color:#15150F; text-align:right; line-height:1.45">{{ txn.note }}</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px">
+              <div onClick="{{ closeTxn }}" style="flex:1; height:54px; border-radius:99px; border:1px solid #F2D8D7; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#B93A34; cursor:pointer" style-hover="border-color:#B93A34">Delete</div>
+              <div onClick="{{ closeTxn }}" style="flex:1.2; height:54px; border-radius:99px; background:#C6FF3D; color:#12210A; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; cursor:pointer" style-hover="background:#D4FF5F">Edit</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;heroLead&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;End of month&quot;,&quot;Today&quot;],&quot;default&quot;:&quot;End of month&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Home&quot;},&quot;overTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Soft&quot;,&quot;Strong&quot;],&quot;default&quot;:&quot;Soft&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Colour&quot;},&quot;microLines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Home&quot;},&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presentation&quot;}}">
+class Component extends DCLogic {
+  state = {
+    base: 'import', sheet: null, txn: null, imp: 0, read: 0,
+    hero: null, week: 'w2', seg: 'weekend', recOpen: 'bills', ooOpen: 'dxb',
+    unsure: [false, false], addArea: 'One-off spend', addMode: 'type', weeksOpen: true,
+    pickerYear: 2026
+  };
+
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._done); }
+
+  over() { return this.props.overTone === 'Strong' ? '#D0332F' : '#B93A34'; }
+  spent() { return '#96968D'; }
+  left() { return '#3F6B0A'; }
+
+  gbp(n, dp) {
+    const d = dp === undefined ? 0 : dp;
+    const a = Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d });
+    return (n < 0 ? '\u2212£' : '£') + a;
+  }
+
+  /* one bar grammar everywhere: the whole track IS the budget.
+     filled = spent, empty = left, whole bar red once it is past the line. */
+  bar(spend, budget) {
+    const pct = budget > 0 ? spend / budget * 100 : 0;
+    if (pct <= 0) return [];
+    return [{ x: 0, w: Math.min(pct, 100), c: pct > 100 ? this.over() : '#8A8A80' }];
+  }
+
+  CATS() { const g = this.state.goalVals || {}; return [['Everyday', 'everyday', g.everyday || 190], ['Weekend', 'weekend', g.weekend || 150], ['Transport', 'transport', g.transport || 80]]; }
+
+  data() {
+    const W = [
+      { id: 'w1', n: 'Week 1', range: '28 Jul – 3 Aug', everyday: 176, weekend: 132, transport: 63, state: 'done',
+        line: 'A cheap week. You were in most of it.',
+        tx: {
+          everyday: { items: [['Tesco', 58.20, ''], ['Lidl', 41.10, ''], ['Boots', 12.40, 'hayfever']], more: 4 },
+          weekend: { items: [['The Fox', 38.00, 'weekend-0 · Friday'], ['Brunch, Rosie\u2019s', 42.50, 'weekend-0']], more: 3 },
+          transport: { items: [['TfL', 42.00, 'week travel', 1], ['Uber', 12.80, 'Saturday, late']], more: 2 }
+        } },
+      { id: 'w2', n: 'Week 2', range: '4 – 10 Aug', everyday: 198, weekend: 212, transport: 86, state: 'done',
+        line: 'Weekend is the leak \u2014 £62 past its line. Everything else held.',
+        dayOff: { day: 'Thu 7', cost: 64, line: 'Thursday off work cost £64.' },
+        tx: {
+          everyday: { items: [['Tesco', 62.40, ''], ['Sainsbury\u2019s', 48.75, ''], ['Lidl', 38.15, ''], ['Tesco Express', 25.00, ''], ['Boots', 14.20, 'Aaron\u2019s inhaler'], ['Gail\u2019s', 9.50, 'day off · Thu']], more: 0 },
+          weekend: { items: [['Dishoom', 86.00, 'weekend-1 · dinner, both of us'], ['Soft play', 36.00, 'weekend-1 · Sunday'], ['The Crown', 34.50, 'weekend-1 · Friday'], ['Curzon', 28.00, 'weekend-1'], ['Corner shop', 16.10, 'weekend-1'], ['Coffee', 11.40, 'weekend-1']], more: 0 },
+          transport: { items: [['TfL', 42.00, 'week travel', 1], ['Train, Brighton', 21.40, 'day off · Thu'], ['Uber', 18.60, 'Saturday, late'], ['Parking', 4.00, 'day off · Thu']], more: 0 }
+        } },
+      { id: 'w3', n: 'Week 3', range: '11 – 17 Aug', everyday: 214, weekend: 136, transport: 62, state: 'done',
+        line: 'Under overall, but the big shop went £24 past its line.',
+        tx: {
+          everyday: { items: [['Sainsbury\u2019s', 71.40, 'big shop'], ['Tesco', 44.90, ''], ['Pharmacy', 18.60, 'prescription']], more: 5 },
+          weekend: { items: [['Pizza Union', 46.00, 'weekend-2'], ['Curzon', 24.00, 'weekend-2']], more: 4 },
+          transport: { items: [['TfL', 42.00, 'week travel'], ['Train', 14.60, 'Nadia\u2019s, Sunday']], more: 1 }
+        } },
+      { id: 'w4', n: 'Week 4', range: '18 – 24 Aug', everyday: 84, weekend: 0, transport: 34, state: 'live',
+        line: 'Two days in. Nothing to read into yet.',
+        tx: {
+          everyday: { items: [['Tesco', 52.30, ''], ['Boots', 23.30, ''], ['Gail\u2019s', 8.40, '']], more: 0 },
+          weekend: { items: [], more: 0 },
+          transport: { items: [['TfL', 28.00, 'week travel', 1], ['Bus', 6.00, '']], more: 0 }
+        } },
+      { id: 'w5', n: 'Week 5', range: '25 – 31 Aug', everyday: 0, weekend: 0, transport: 0, state: 'future',
+        line: 'Hasn\u2019t happened. I\u2019ve assumed a normal £420 of it.',
+        tx: { everyday: { items: [], more: 0 }, weekend: { items: [], more: 0 }, transport: { items: [], more: 0 } } }
+    ];
+    return W.map(w => Object.assign({}, w, { budget: 420, total: w.everyday + w.weekend + w.transport }));
+  }
+
+  head(spend, budget, state) {
+    if (state === 'future') return { text: this.gbp(budget) + ' budget', style: 'font-size:18px; font-weight:700; letter-spacing:-0.025em; color:#83837B' };
+    const d = budget - spend;
+    return {
+      text: d >= 0 ? this.gbp(d) + ' left' : this.gbp(-d) + ' over',
+      style: 'font-size:18px; font-weight:700; letter-spacing:-0.025em; color:' + (d >= 0 ? this.left() : this.over())
+    };
+  }
+
+  startRead = () => {
+    clearInterval(this._t);
+    this.setState({ imp: 1, read: 1 });
+    this._t = setInterval(() => {
+      const n = this.state.read + 1;
+      if (n >= 6) {
+        clearInterval(this._t);
+        this.setState({ read: 6 });
+        this._done = setTimeout(() => this.setState({ imp: 2 }), 900);
+      } else this.setState({ read: n });
+    }, 520);
+  };
+
+  areaChip() {
+    return "font-family:'JetBrains Mono',monospace; font-size:11px; color:#15150F; background:#F0F0EA; border-radius:99px; padding:6px 11px";
+  }
+
+  go = (id) => () => {
+    clearInterval(this._t); clearTimeout(this._done);
+    if (id === 'import') return this.setState({ base: 'import', sheet: null, txn: null, imp: 0, read: 0 });
+    if (id === 'home') return this.setState({ base: 'home', sheet: null, txn: null });
+    if (id === 'week') return this.setState({ base: 'home', sheet: 'week', txn: null, week: 'w2', seg: 'weekend' });
+    if (id === 'txn') return this.setState({ base: 'home', sheet: 'week', week: 'w2', seg: 'weekend',
+      txn: { m: 'Dishoom', a: this.gbp(86, 2), when: 'Sat 9 Aug · 20:14', area: 'Weekend', areaStyle: this.areaChip(), label: 'weekend-1', note: 'dinner, both of us', raw: 'CARD PURCHASE  DISHOOM KINGS X  09AUG  20:14', max: 'Saturday night, so I filed it under Weekend. Change anything here \u2014 amount included.' } });
+    return this.setState({ base: 'home', sheet: id, txn: null });
+  };
+
+  addFrom = (area) => () => {
+    const kind = area === 'Recurring' ? 'Recurring' : (area === 'One-off spend' ? 'One-off spend' : 'Weekly');
+    const a = area === 'Recurring' ? 'Housing' : area;
+    this.setState({ sheet: 'add', addKind: kind, addArea: a, addMode: 'type', labelPick: false, txn: null });
+  };
+
+  openTxn = (t, area, label) => () => this.setState({
+    txn: { m: t[0], a: this.gbp(t[1], 2), when: 'August · ' + area.toLowerCase(), area: area, areaStyle: this.areaChip(),
+      label: t[2] ? t[2].split(' · ')[0] : label,
+      note: t[2] ? t[2].replace(/^[^·]*· /, '') : '',
+      pending: !!t[3] }
+  });
+
+  screenId() {
+    const s = this.state;
+    if (s.txn) return 'txn';
+    if (s.sheet) return s.sheet;
+    return s.base === 'import' ? 'import' : 'home';
+  }
+
+  renderVals() {
+    const s = this.state, id = this.screenId();
+    const heroF = (s.hero || (this.props.heroLead === 'Today' ? 'today' : 'forecast')) === 'forecast';
+    const RED = this.over();
+
+    const RAIL = [
+      ['01', 'Import', 'import'], ['02', 'Home · where I stand', 'home'], ['03', 'One week, opened', 'week'],
+      ['04', 'One transaction', 'txn'], ['05', 'Recurring', 'recurring'], ['06', 'One-offs', 'oneoffs'],
+      ['07', 'Year round-up', 'year'], ['08', 'Add or upload', 'add'], ['09', 'Change month', 'months'],
+      ['10', 'Menu', 'menu'], ['11', 'Budget goals', 'goals'], ['12', 'Income by month', 'income']
+    ];
+    const NOTES = {
+      import: { label: '01 · Import', text: 'No setup, no column mapping. Max reads the mess and reports back in your own words \u2014 the two lines it couldn\u2019t place are the only thing asked of you.' },
+      home: { label: '02 · Home', text: 'Weeks now lead with what\u2019s LEFT, and each week shows its three lines separately so the leak is obvious at a glance. Collapse the list and you still see the month total against the month\u2019s budget.' },
+      week: { label: '03 · A week', text: 'Same bar grammar one level down: every category against its own line. Week 2 reads instantly \u2014 weekend £62 past, the other two fine. Add is always in reach, bottom right.' },
+      txn: { label: '04 · A transaction', text: 'Any transaction can be marked Pending — amber, like your yellow cells — when the number is not final yet: energy, water, TfL, a holiday instalment. Every field is editable, including the amount, and it\u2019s reachable from weeks, recurring and one-offs alike. Delete sits beside Save because bad imports happen.' },
+      recurring: { label: '05 · Recurring', text: 'No budget, no target \u2014 so no bars against a line. Four groups, a total, and what changed since July. Items open the same editor as everything else.' },
+      oneoffs: { label: '06 · One-offs', text: 'Leads with what\u2019s left of genuinely spare money, not what\u2019s gone. The notch is the half you\u2019d rather keep \u2014 a preference, not a budget.' },
+      year: { label: '07 · Year round-up', text: 'One position line, not two charts. Then the KPIs your sheet actually computes: share of income across weekly, fixed and variable, best and worst month, and a per-month row showing where each £100 went.' },
+      add: { label: '08 · Add or upload', text: 'Two ways in: type it (amount, where, an auto-picked category you can override, optional note) or hand over a photo, screenshot or file. Available from every screen, pre-tagged by where you were.' },
+      menu: { label: '10 · Menu', text: 'Two things only, because two things is all there is: the budget goals behind every bar in the app, and the door out — clear data.' },
+      goals: { label: '11 · Budget goals', text: 'Four numbers, typed. Three weekly lines and expected monthly income \u2014 the week total is shown because it is the sum, not a fourth thing to set.' },
+      income: { label: '12 · Income by month', text: 'Income is not one number for the year. Set a default, then type over any month that differed \u2014 bonus, short month, extra work.' },
+      months: { label: '09 · Change month', text: 'Months are the spine, so switching them is a picker, not a swipe you have to discover. Future months are visible but flat.' }
+    };
+
+    const rail = RAIL.map(r => ({
+      n: r[0], t: r[1], go: this.go(r[2]),
+      style: 'display:flex; align-items:center; gap:14px; padding:11px 14px; border-radius:12px; cursor:pointer; background:' + (id === r[2] ? '#F2F2ED' : 'transparent'),
+      numStyle: "font-family:'JetBrains Mono',monospace; font-size:11px; color:" + (id === r[2] ? '#3F6B0A' : '#9B9B92'),
+      labelStyle: 'font-size:15px; font-weight:' + (id === r[2] ? '600' : '400') + '; color:' + (id === r[2] ? '#15150F' : '#5C5C55')
+    }));
+
+    const READ = [
+      '1,284 transactions, Jan to August',
+      'weeks, not days \u2014 your months start Monday',
+      'three everyday lines: shop, weekend, transport',
+      '19 recurring payments, 4 of them variable',
+      'kept your labels: dxb-26, home-improvements, holiday, weekend-0/1',
+      '2 lines I couldn\u2019t place'
+    ];
+    const readRows = READ.slice(0, s.read).map((t, i) => ({
+      text: t, tick: i === 5 && s.read >= 6 ? '?' : '\u2713',
+      tickStyle: "font-family:'JetBrains Mono',monospace; font-size:12px; width:12px; flex-shrink:0; color:" + (i === 5 ? RED : '#3F6B0A'),
+      textStyle: 'font-size:14px; line-height:1.5; color:' + (i === 5 ? '#15150F' : '#5C5C55')
+    }));
+
+    const UNSURE = [
+      { m: 'PAYPAL *SUMUP', a: '£48.00', answer: 'filed as one-off \u2014 thanks' },
+      { m: 'AMZNMKTPLACE', a: '£31.99', answer: 'filed as everyday \u2014 thanks' }
+    ];
+    const unsure = UNSURE.map((u, i) => {
+      const set = () => this.setState({ unsure: this.state.unsure.map((v, j) => j === i ? true : v) });
+      return { m: u.m, a: u.a, answer: u.answer, done: s.unsure[i], open: !s.unsure[i], pickEveryday: set, pickWeekend: set, pickOneoff: set };
+    });
+
+    const D = this.data(), C = this.CATS();
+    const weeks = D.map(w => {
+      const h = this.head(w.total, w.budget, w.state);
+      return {
+        range: w.range, isLive: w.state === 'live', head: h.text, headStyle: h.style,
+        vs: w.state === 'future' ? '' : 'of ' + this.gbp(w.budget),
+        cats: C.map(c => {
+          const v = w[c[1]], d = c[2] - v;
+          return {
+            name: c[0], bars: this.bar(v, c[2]),
+            val: w.state === 'future' ? '\u2014' : (d >= 0 ? this.gbp(d) + ' left' : this.gbp(-d) + ' over'),
+            valStyle: 'font-size:12px; font-weight:600; letter-spacing:-0.01em; color:' + (d < 0 ? RED : (w.state === 'future' ? '#9B9B92' : '#3F6B0A'))
+          };
+        }),
+        cardStyle: 'background:#F0F0EA; border-radius:16px; padding:15px 16px; display:flex; flex-direction:column; gap:13px; cursor:pointer; border-left:3px solid ' + (w.state === 'live' ? '#3F6B0A' : 'transparent'),
+        open: () => this.setState({ sheet: 'week', week: w.id, seg: w.state === 'future' ? null : 'everyday', txn: null })
+      };
+    });
+
+    const weeksB = D.map(w => {
+      const d = w.budget - w.total, fut = w.state === 'future';
+      const pct = Math.min(100, w.total / w.budget * 100);
+      return {
+        range: w.range, isLive: w.state === 'live',
+        head: fut ? this.gbp(w.budget) : (d >= 0 ? this.gbp(d) : this.gbp(-d)),
+        headStyle: 'font-size:27px; font-weight:800; letter-spacing:-0.04em; line-height:1; color:' + (fut ? '#9B9B92' : (d < 0 ? RED : '#3F6B0A')),
+        headWord: fut ? 'budget' : (d >= 0 ? 'left' : 'over'),
+        barStyle: 'height:3px; border-radius:99px; width:' + pct + '%; background:' + (d < 0 ? RED : '#8A8A80'),
+        cats: C.map(c => {
+          const v = w[c[1]], cd = c[2] - v;
+          return {
+            name: c[0].toLowerCase(),
+            val: fut ? '\u2014' : (cd >= 0 ? this.gbp(cd) : this.gbp(-cd)),
+            word: fut ? 'budget ' + this.gbp(c[2]) : (cd >= 0 ? 'left of ' + this.gbp(c[2]) : 'over ' + this.gbp(c[2])),
+            valStyle: 'font-size:16px; font-weight:700; letter-spacing:-0.03em; color:' + (fut ? '#9B9B92' : (cd < 0 ? RED : '#22221E'))
+          };
+        }),
+        rowStyle: 'display:flex; flex-direction:column; gap:16px; padding:22px 4px 24px; border-top:1px solid #F0F0EA; cursor:pointer',
+        open: () => this.setState({ sheet: 'week', week: w.id, seg: w.state === 'future' ? null : 'everyday', txn: null })
+      };
+    });
+
+    const w = D.find(x => x.id === s.week) || D[1];
+    const wh = this.head(w.total, w.budget, w.state);
+    const wk = {
+      n: w.n, range: w.range, line: w.line, bars: this.bar(w.total, w.budget),
+      head: wh.text, headStyle: wh.style.replace('font-size:18px', 'font-size:36px').replace('-0.025em', '-0.04em'),
+      vs: w.state === 'future' ? 'nothing spent yet' : 'of ' + this.gbp(w.budget) + ' \u00b7 ' + this.gbp(w.total) + ' spent',
+      hasDayOff: !!w.dayOff, dayOffDay: w.dayOff ? w.dayOff.day : '', dayOffLine: w.dayOff ? w.dayOff.line : '',
+      segments: C.map(c => {
+        const t = w.tx[c[1]], open = s.seg === c[1], v = w[c[1]], listed = t.items.reduce((a, b) => a + b[1], 0);
+        const sh = this.head(v, c[2], w.state);
+        return {
+          name: c[0], bars: this.bar(v, c[2]), open: open,
+          head: sh.text, headStyle: sh.style.replace('font-size:18px', 'font-size:15px'),
+          vs: 'of ' + this.gbp(c[2]),
+          items: t.items.map(it => ({ m: it[0], a: this.gbp(it[1], 2), note: it[2], hasNote: !!it[2], pending: !!it[3],
+            amountStyle: 'font-size:15px; font-weight:600; letter-spacing:-0.02em; color:' + (it[3] ? '#8A5E00' : '#2C2C27'),
+            open: this.openTxn(it, c[0], c[1]) })),
+          hasMore: t.more > 0, moreLabel: '+ ' + t.more + ' more', moreAmount: this.gbp(v - listed, 2),
+          caretStyle: 'font-size:18px; color:#9B9B92; display:inline-block; transform:rotate(' + (open ? '90deg' : '0deg') + ')',
+          toggle: () => this.setState({ seg: open ? null : c[1] })
+        };
+      })
+    };
+
+    const REC = [
+      ['housing', 'Housing', 1664, 179, '#A9A9A0', [['Rent', 1450, ''], ['Council tax', 214, '']]],
+      ['childcare', 'Childcare', 716, 77, '#96968D', [['Little Owls nursery', 620, ''], ['After-school club', 96, '']]],
+      ['bills', 'Bills', 320, 34, '#83837B', [['Energy', 186, '', 1], ['Phones', 54, ''], ['Water', 42, '', 1], ['Broadband', 38, '']]],
+      ['subs', 'Subscriptions & services', 275, 24, '#787870', [['Cleaner', 120, ''], ['Insurance', 68, ''], ['Gym', 42, ''], ['Streaming', 26, ''], ['Music', 11, ''], ['Cloud', 8, '']]]
+    ];
+    const recurring = REC.map(g => {
+      const open = s.recOpen === g[0];
+      return {
+        name: g[1], amount: this.gbp(g[2]), barW: g[3], barC: g[4], open: open,
+        caretStyle: 'font-size:18px; color:#9B9B92; display:inline-block; transform:rotate(' + (open ? '90deg' : '0deg') + ')',
+        toggle: () => this.setState({ recOpen: open ? null : g[0] }),
+        items: g[5].map(i => ({
+          m: i[0], a: i[1] === 0 ? '\u2014' : this.gbp(i[1]), note: i[2], hasNote: !!i[2], pending: !!i[3],
+          nameStyle: 'font-size:15px; font-weight:500; color:' + (i[1] === 0 ? '#83837B' : '#15150F'),
+          amountStyle: 'font-size:15px; font-weight:600; letter-spacing:-0.02em; color:' + (i[3] ? '#8A5E00' : (i[1] === 0 ? '#83837B' : '#2C2C27')),
+          noteStyle: "font-family:'JetBrains Mono',monospace; font-size:11px; color:" + (i[2].indexOf('+£') === 0 ? '#0A7391' : '#6C6C64'),
+          open: this.openTxn([i[0], i[1], 'monthly · ' + (i[2] || 'recurring'), i[3]], 'Recurring', 'monthly')
+        }))
+      };
+    });
+
+    const OO = [
+      ['dxb', 'Dubai, December', 'dxb-26', 198, '2 of 3 still due · £396', [['Emirates', 198, 'instalment 1 of 3 · £594 total', 1]]],
+      ['house', 'The house', 'home-improvements', 147, '', [['Wickes', 86, 'shelf brackets, filler'], ['IKEA', 61, 'kitchen bits']]],
+      ['aaron', 'Aaron', 'Aaron', 64, '', [['Zara', 64, 'school shoes + jumper']]],
+      ['adam', 'Adam', 'Adam', 52, '', [['Decathlon', 52, 'football boots']]],
+      ['nadia', 'Nadia', 'Nadia', 45, '', [['John Lewis', 45, 'birthday']]],
+    ];
+    const ooList = [];
+    OO.forEach(g => g[5].forEach(i => ooList.push({
+      m: i[0], a: this.gbp(i[1]), note: i[2], hasNote: !!i[2], label: g[2], pending: !!i[3],
+      amountStyle: 'font-size:16px; font-weight:700; letter-spacing:-0.025em; color:' + (i[3] ? '#8A5E00' : (i[1] < 0 ? '#3F6B0A' : '#15150F')),
+      open: this.openTxn([i[0], Math.abs(i[1]), g[2] + ' \u00b7 ' + i[2], i[3]], 'One-off spend', g[2])
+    })));
+    const oneoffs = OO.map(g => {
+      const open = s.ooOpen === g[0];
+      return {
+        name: g[1], label: g[2], amount: this.gbp(g[3]), note: g[4], hasNote: !!g[4], open: open,
+        amountStyle: 'font-size:17px; font-weight:700; letter-spacing:-0.025em; color:' + (g[3] < 0 ? '#3F6B0A' : '#15150F'),
+        caretStyle: 'font-size:18px; color:#9B9B92; display:inline-block; transform:rotate(' + (open ? '90deg' : '0deg') + ')',
+        toggle: () => this.setState({ ooOpen: open ? null : g[0] }),
+        items: g[5].map(i => ({
+          m: i[0], a: this.gbp(i[1]), note: i[2], pending: !!i[3],
+          amountStyle: 'font-size:15px; font-weight:600; letter-spacing:-0.02em; color:' + (i[3] ? '#8A5E00' : (i[1] < 0 ? '#3F6B0A' : '#2C2C27')),
+          open: this.openTxn([i[0], Math.abs(i[1]), g[2] + ' · ' + i[2], i[3]], 'One-off spend', g[2])
+        }))
+      };
+    });
+
+    /* year: income, weekly, fixed, variable per month */
+    const Y26 = [
+      ['Jan', 5850, 1980, 2905, 545, ''], ['Feb', 5850, 1890, 2930, 650, ''],
+      ['Mar', 5850, 2120, 2950, 1820, ''], ['Apr', 5850, 1940, 2900, 500, ''],
+      ['May', 5850, 2180, 2960, 470, ''], ['Jun', 6420, 2050, 2920, 830, ''],
+      ['Jul', 5850, 2260, 3020, 880, ''], ['Aug', 5850, 2119, 2975, 468, '']
+    ];
+    const Y25 = [
+      ['Jan', 5480, 2090, 2840, 720, ''], ['Feb', 5480, 2210, 2860, 640, ''],
+      ['Mar', 5480, 2180, 2880, 1240, ''], ['Apr', 5480, 2240, 2870, 690, ''],
+      ['May', 5480, 2310, 2890, 880, ''], ['Jun', 5480, 2270, 2900, 1460, ''],
+      ['Jul', 5480, 2350, 2920, 760, ''], ['Aug', 5480, 2280, 2910, 690, ''],
+      ['Sep', 5480, 2190, 2900, 1120, ''], ['Oct', 5480, 2240, 2930, 640, ''],
+      ['Nov', 5480, 2260, 2940, 980, ''], ['Dec', 5480, 2480, 2960, 1610, '']
+    ];
+    const yearSel = s.yearSel || 2026;
+    const Y = yearSel === 2025 ? Y25 : Y26;
+    const pos = m => m[1] - m[2] - m[3] - m[4];
+    const tot = Y.reduce((a, m) => ({ inc: a.inc + m[1], wk: a.wk + m[2], fx: a.fx + m[3], vr: a.vr + m[4] }), { inc: 0, wk: 0, fx: 0, vr: 0 });
+    const keptPct = (tot.inc - tot.wk - tot.fx - tot.vr) / tot.inc * 100;
+    const SH = [
+      ['Recurring', tot.fx, '#A9A9A0'], ['All weekly', tot.wk, '#83837B'],
+      ['One-off spend', tot.vr, '#8A8A80'], ['Kept', tot.inc - tot.wk - tot.fx - tot.vr, '#3F6B0A']
+    ];
+    let sx = 0;
+    const shareBar = SH.map(r => { const wd = r[1] / tot.inc * 100; const o = { x: sx, w: Math.max(0.6, wd), c: r[2] }; sx += wd; return o; });
+    const shareRows = SH.map(r => {
+      const kept = r[2] === '#3F6B0A', neg = kept && r[1] < 0;
+      return {
+        name: kept ? (r[1] < 0 ? 'Overspent' : 'Kept') : r[0],
+        amount: (neg ? '\u2212' : '') + this.gbp(Math.abs(Math.round(r[1]))),
+        pct: Math.abs(r[1] / tot.inc * 100).toFixed(1) + '%',
+        sub: '~' + this.gbp(Math.round(Math.abs(r[1]) / Y.length)) + ' / ' + Math.abs(r[1] / tot.inc * 100).toFixed(0) + '% per month',
+        tileStyle: 'background:#FFFFFF; border-radius:18px; padding:16px 16px 15px; display:flex; flex-direction:column; gap:6px' +
+          (kept ? '; border:1px solid ' + (neg ? '#F2D8D7' : '#BFD98A') : ''),
+        nameStyle: "font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:" + (kept ? (neg ? RED : '#3F6B0A') : '#6C6C64'),
+        amtStyle: 'font-size:22px; font-weight:700; letter-spacing:-0.03em; color:' + (kept ? (neg ? RED : '#3F6B0A') : '#15150F'),
+        pctStyle: "font-family:'JetBrains Mono',monospace; font-size:11px; color:#5C5C55"
+      };
+    });
+
+    let run = 0; const cum = Y.map(m => { run += pos(m); return run; });
+    const lo = Math.min(0, Math.min.apply(null, cum)) - 300, hi = Math.max(300, Math.max.apply(null, cum)) + 300;
+    const yMap = v => 78 - ((v - lo) / (hi - lo)) * 66;
+    const stepX = Y.length > 1 ? 280 / (Y.length - 1) : 0;
+    const cumPoints = cum.map((v, i) => (20 + i * stepX).toFixed(1) + ',' + yMap(v).toFixed(1)).join(' ');
+    const cumDots = cum.map((v, i) => ({ x: +(20 + i * stepX).toFixed(1), y: +yMap(v).toFixed(1), c: v < 0 ? RED : '#3F6B0A' }));
+    const miniStep = Y26.length > 1 ? 148 / (Y26.length - 1) : 0;
+    let r26 = 0; const cum26 = Y26.map(m => { r26 += pos(m); return r26; });
+    const cumMini = cum26.map((v, i) => (6 + i * miniStep).toFixed(1) + ',' + (34 - ((v + 400) / 1700) * 28).toFixed(1)).join(' ');
+    const posList = Y.map(pos);
+    const bestI = posList.indexOf(Math.max.apply(null, posList)), worstI = posList.indexOf(Math.min.apply(null, posList));
+    const avgPos = posList.reduce((a, b) => a + b, 0) / posList.length;
+    const lowI = cum.indexOf(Math.min.apply(null, cum));
+    const monthLabels = Y.map((m, i) => ({
+      name: m[0], style: "font-family:'JetBrains Mono',monospace; font-size:10px; text-align:center; color:" + (i === Y.length - 1 && yearSel === 2026 ? '#3F6B0A' : '#6C6C64')
+    }));
+
+    const yearRows = Y.map(m => {
+      const p = pos(m), open = s.yOpen === m[0];
+      return {
+        m: m[0], note: m[5], hasNote: !!m[5], open: open,
+        v: (p >= 0 ? '+' : '\u2212') + this.gbp(Math.abs(p)),
+        vStyle: 'font-size:16px; font-weight:700; letter-spacing:-0.025em; color:' + (p < 0 ? RED : '#3F6B0A'),
+        rowStyle: 'background:#FFFFFF; border-radius:16px; overflow:hidden',
+        parts: [['all weekly', m[2]], ['recurring', m[3]], ['one-off spend', m[4]], ['income', m[1]]].map(q => ({
+          k: q[0], v: this.gbp(q[1]),
+          vStyle: "font-family:'JetBrains Mono',monospace; font-size:12px; color:" + (q[0] === 'income' ? '#3F6B0A' : '#2C2C27')
+        })),
+        toggle: () => this.setState({ yOpen: open ? null : m[0] }),
+        go: () => this.setState({ base: 'home', sheet: null, txn: null, monthLabel: m[0] })
+      };
+    });
+
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const RESULT = { Jan: '+420', Feb: '+380', Mar: '\u22121,040', Apr: '+510', May: '+240', Jun: '+620', Jul: '\u2212310', Aug: '+288' };
+    const months = MONTHS.map((m, i) => {
+      const has = s.pickerYear === 2026 && i <= 7, now = s.pickerYear === 2026 && i === 7;
+      return {
+        name: m, sub: has ? RESULT[m] : '\u2014', pick: () => this.setState({ sheet: null }),
+        style: 'border-radius:14px; padding:13px 10px; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; background:' +
+          (now ? '#EFF8DA; border:1px solid #3F6B0A' : '#F0F0EA; border:1px solid transparent'),
+        nameStyle: 'font-size:15px; font-weight:600; color:' + (has ? '#15150F' : '#9B9B92'),
+        subStyle: "font-family:'JetBrains Mono',monospace; font-size:10px; color:" + (has ? (RESULT[m].indexOf('\u2212') === 0 ? RED : '#3F6B0A') : '#A9A9A0')
+      };
+    });
+
+    const AREAS = ['Everyday', 'Weekend', 'Transport', 'One-off', 'Recurring'];
+    const mkArea = a => ({
+      name: a, pick: () => this.setState({ addArea: a }),
+      style: 'font-size:13px; letter-spacing:-0.005em; border-radius:8px; padding:8px 13px; cursor:pointer; ' +
+        (s.addArea === a ? 'background:#C6FF3D; color:#12210A; font-weight:600' : 'background:#F0F0EA; color:#5C5C55; font-weight:500')
+    });
+    const amt = s.addAmt === undefined ? 0 : s.addAmt, aPct = Math.min(100, amt / 250 * 100);
+    const scrubAmt = (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      this.setState({ addAmt: Math.round(p * 250 * 20) / 20 });
+    };
+    const GD = [['Everyday', 'everyday', 190], ['Weekend', 'weekend', 150], ['Transport', 'transport', 80]];
+    const gCur = {}; GD.forEach(g => { const v = (s.goalVals || {})[g[1]]; gCur[g[1]] = v === undefined ? g[2] : v; });
+    const gTotal = GD.reduce((a, g) => a + gCur[g[1]], 0);
+    const num = e => Math.max(0, Math.min(99999, parseInt(String(e.target.value).replace(/[^0-9]/g, ''), 10) || 0));
+    const goalFields = GD.map(g => ({
+      name: g[0], value: String(gCur[g[1]]),
+      set: e => this.setState({ goalVals: Object.assign({}, s.goalVals, { [g[1]]: num(e) }) })
+    }));
+    const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const incDef = s.incDefault === undefined ? 5850 : s.incDefault;
+    const incSet = s.inc || {};
+    const incFor = m => incSet[m] === undefined ? incDef : incSet[m];
+    const incomeRows = MN.map(m => ({
+      m: m, v: String(incFor(m)), edited: incSet[m] !== undefined,
+      rowStyle: 'background:#FFFFFF; border-radius:16px; padding:11px 14px 11px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px' +
+        (m === 'Aug' ? '; border:1px solid #BFD98A' : ''),
+      nameStyle: 'font-size:16px; font-weight:600; letter-spacing:-0.015em; color:' + (m === 'Aug' ? '#3F6B0A' : '#15150F'),
+      set: e => this.setState({ inc: Object.assign({}, s.inc, { [m]: num(e) }) })
+    }));
+    const augInc = incFor('Aug');
+    const spentNow = 4840, spentFc = 2975 + 468 + 2100;
+    const heroSpendN = heroF ? spentFc : spentNow;
+    const LABELS = ['no label', 'dxb-26', 'home-improvements', 'holiday', 'weekend-1'];
+    const curLabel = s.addLabel || 'weekend-1';
+    const addLabels = LABELS.map(l => ({
+      name: l, pick: () => this.setState({ addLabel: l, labelPick: false }),
+      rowStyle: "font-family:'JetBrains Mono',monospace; font-size:13px; color:" + (curLabel === l ? '#0A7391' : '#2C2C27'),
+      tickStyle: "font-family:'JetBrains Mono',monospace; font-size:13px; color:" + (curLabel === l ? '#0A7391' : 'transparent')
+    }));
+    const KINDS = ['Weekly', 'Recurring', 'One-off spend'];
+    const SUBS = { Weekly: ['Everyday', 'Weekend', 'Transport'], Recurring: ['Housing', 'Childcare', 'Bills', 'Subscriptions'] };
+    const kind = s.addKind || 'Weekly';
+    const kinds = KINDS.map(k => ({
+      name: k,
+      pick: () => this.setState({ addKind: k, addArea: (SUBS[k] || [k])[0] }),
+      style: 'flex:1; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; letter-spacing:-0.01em; cursor:pointer; white-space:nowrap; ' +
+        (kind === k ? 'background:#D7D7CD; color:#15150F; font-weight:600' : 'background:transparent; color:#6C6C64; font-weight:500')
+    }));
+    const subs = (SUBS[kind] || []).map(mkArea);
+
+    const heroTab = (on, light) => "font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.04em; padding:6px 11px; border-radius:99px; cursor:pointer; white-space:nowrap; background:" +
+      (on ? (light ? 'rgba(255,255,255,0.82); color:#12210A; font-weight:700' : '#D7D7CD; color:#15150F; font-weight:700')
+          : (light ? 'transparent; color:#1E3A16' : 'transparent; color:#6C6C64'));
+    const pTab = (on, col) => "font-family:'JetBrains Mono',monospace; font-size:11px; padding:6px 12px; border-radius:99px; cursor:pointer; " +
+      (on ? 'background:#D7D7CD; font-weight:700; color:' + col : 'background:transparent; color:#6C6C64');
+    const tab = on => 'flex:1; height:42px; border-radius:99px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; cursor:pointer; background:' +
+      (on ? '#D7D7CD; color:#15150F' : 'transparent; color:#6C6C64');
+
+    return {
+      rail, note: NOTES[id], notesOn: this.props.showNotes !== false, microOn: this.props.microLines !== false,
+      isImport: s.base === 'import', isHome: s.base === 'home',
+      imp0: s.base === 'import' && s.imp === 0, imp1: s.base === 'import' && s.imp === 1, imp2: s.base === 'import' && s.imp === 2,
+      startRead: this.startRead, goHome: this.go('home'), goYear: this.go('year'), goMonths: this.go('months'),
+      goRecurring: this.go('recurring'), goOneoffs: this.go('oneoffs'), goAdd: this.addFrom('One-off spend'),
+      addHere: this.addFrom(s.sheet === 'recurring' ? 'Recurring' : (s.sheet === 'week' ? 'Everyday' : 'One-off spend')),
+      back: () => this.setState({ sheet: null, txn: null }), closeTxn: () => this.setState({ txn: null }),
+      readRows, readPct: Math.round(s.read / 6 * 100) + '%',
+      readBarStyle: 'height:4px; border-radius:99px; background:#C6FF3D; width:' + Math.round(s.read / 6 * 100) + '%; transition:width 0.4s ease',
+      unsure,
+      monthLabel: 'August', heroForecast: heroF, heroToday: !heroF,
+      setToday: () => this.setState({ hero: 'today' }), setForecast: () => this.setState({ hero: 'forecast' }),
+      heroTabTodayLight: heroTab(!heroF, true), heroTabEomLight: heroTab(heroF, true),
+      heroTabTodayDark: heroTab(!heroF, false), heroTabEomDark: heroTab(heroF, false),
+      monthBar: this.bar(1397, 2100), weeksOpen: s.weeksOpen, weeksToggle: s.weeksOpen ? 'hide weeks' : 'show 5 weeks',
+      toggleWeeks: () => this.setState({ weeksOpen: !s.weeksOpen }),
+      weeksCaretStyle: 'font-size:15px; color:#83837B; display:inline-block; transform:rotate(' + (s.weeksOpen ? '90deg' : '0deg') + ')',
+      weeks, weeksB, wk, recurring, oneoffs, ooList,
+      shareRows, cumPoints, cumDots, cumMini, zeroY: +yMap(0).toFixed(1), yearRows,
+      cumStroke: cum[cum.length - 1] < 0 ? RED : '#3F6B0A',
+      monthLabels, monthColsStyle: 'display:grid; grid-template-columns:repeat(' + Y.length + ',1fr)',
+      yearLow: 'low ' + (cum[lowI] < 0 ? '\u2212' : '') + this.gbp(Math.abs(cum[lowI])) + ' \u00b7 ' + Y[lowI][0],
+      kpiBest: '+' + this.gbp(posList[bestI]), kpiBestM: Y[bestI][0],
+      kpiWorst: (posList[worstI] < 0 ? '\u2212' : '+') + this.gbp(Math.abs(posList[worstI])), kpiWorstM: Y[worstI][0],
+      kpiAvg: (avgPos < 0 ? '\u2212' : '+') + this.gbp(Math.abs(Math.round(avgPos))),
+      kpiAvgStyle: 'font-size:17px; font-weight:700; letter-spacing:-0.025em; color:' + (avgPos < 0 ? RED : '#15150F'),
+      yearCaption: yearSel === 2026 ? '2026 \u00b7 8 months in' : yearSel + ' \u00b7 full year',
+      yearNet: (tot.inc - tot.wk - tot.fx - tot.vr >= 0 ? '+' : '\u2212') + this.gbp(Math.abs(tot.inc - tot.wk - tot.fx - tot.vr)),
+      yearNetStyle: 'margin:0; font-size:46px; font-weight:800; letter-spacing:-0.04em; line-height:1; color:' + (tot.inc - tot.wk - tot.fx - tot.vr < 0 ? RED : '#3F6B0A'),
+      yearNetSub: (tot.inc - tot.wk - tot.fx - tot.vr < 0 ? 'spent ' : 'kept ') + Math.abs(keptPct).toFixed(1) + '% of the ' + this.gbp(tot.inc) + ' you earned' + (tot.inc - tot.wk - tot.fx - tot.vr < 0 ? ' \u2014 and then some' : ''),
+      yearSelLabel: String(yearSel),
+      yearPrevStyle: 'width:30px; height:30px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; color:' + (yearSel <= 2025 ? '#A9A9A0' : '#5C5C55'),
+      yearPrev: () => this.setState({ yearSel: Math.max(2025, yearSel - 1) }),
+      yearNext: () => this.setState({ yearSel: Math.min(2026, yearSel + 1) }),
+      yearNextStyle: 'width:30px; height:30px; border-radius:99px; background:#FFFFFF; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; color:' + (yearSel >= 2026 ? '#A9A9A0' : '#5C5C55'),
+      months, pickerYear: s.pickerYear,
+      prevYear: () => this.setState({ pickerYear: s.pickerYear - 1 }), nextYear: () => this.setState({ pickerYear: s.pickerYear + 1 }),
+      scrubAmt,
+      addAmtLabel: amt.toFixed(2),
+      addAmtColorStyle: 'font-size:34px; font-weight:800; letter-spacing:-0.04em; color:' + (s.addPending ? '#8A5E00' : '#15150F'),
+      addAmtFillStyle: 'height:5px; border-radius:99px; background:' + (s.addPending ? '#F0C64B' : '#C6FF3D') + '; width:' + aPct + '%',
+      addAmtKnobStyle: 'position:absolute; top:50%; width:16px; height:16px; border-radius:99px; background:' + (s.addPending ? '#F0C64B' : '#C6FF3D') + '; border:3px solid #FFFFFF; transform:translate(-50%,-50%); left:' + aPct + '%',
+      setAddFinal: () => this.setState({ addPending: false }),
+      setAddPending: () => this.setState({ addPending: true }),
+      addFinalStyle: pTab(!s.addPending, '#15150F'), addPendingStyle: pTab(!!s.addPending, '#8A5E00'),
+      addLabels, kinds, subs, hasSubs: (SUBS[kind] || []).length > 0,
+      addLabelCurrent: curLabel,
+      addLabelChipStyle: "font-family:'JetBrains Mono',monospace; font-size:11px; border-radius:99px; padding:6px 11px; cursor:pointer; " +
+        (curLabel === 'no label' ? 'color:#6C6C64; background:#F0F0EA' : 'color:#0A7391; background:#DFF1F7'),
+      labelPicking: s.addMode === 'type' && !!s.labelPick,
+      openLabelPick: () => this.setState({ labelPick: true }),
+      closeLabelPick: () => this.setState({ labelPick: false }),
+      addTyping: s.addMode === 'type' && !s.labelPick, addUploading: s.addMode === 'upload',
+      addCta: s.addMode === 'upload' ? 'Read it' : 'Add it',
+      toggleUpload: () => this.setState({ addMode: s.addMode === 'upload' ? 'type' : 'upload', labelPick: false }),
+      uploadBtnStyle: 'width:54px; height:54px; border-radius:99px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; ' +
+        (s.addMode === 'upload' ? 'background:#D7D7CD; border:1px solid #A9A9A0' : 'border:1px solid #D7D7CD'),
+      uploadIconColor: s.addMode === 'upload' ? '#15150F' : '#5C5C55',
+      tabTypeStyle: tab(s.addMode === 'type'), tabUploadStyle: tab(s.addMode === 'upload'),
+      sheetWeek: s.sheet === 'week', sheetRecurring: s.sheet === 'recurring', sheetOneoffs: s.sheet === 'oneoffs',
+      sheetYear: s.sheet === 'year', sheetAdd: s.sheet === 'add', sheetMonths: s.sheet === 'months',
+      sheetMenu: s.sheet === 'menu', sheetGoals: s.sheet === 'goals',
+      goMenu: () => this.setState({ sheet: 'menu' }), goGoals: () => this.setState({ sheet: 'goals' }),
+      goImport: this.go('import'),
+      goalFields, goalTotal: this.gbp(gTotal), goalMonthly: this.gbp(gTotal * 5),
+      incomeRows, incomeYear: '2026', incomeDefault: String(incDef), incomeDefault2: this.gbp(incDef),
+      setIncomeDefault: e => this.setState({ incDefault: num(e) }),
+      sheetIncome: s.sheet === 'income', goIncome: () => this.setState({ sheet: 'income' }),
+      heroBig: this.gbp(augInc - heroSpendN), heroSpend: this.gbp(heroSpendN), heroIncome: this.gbp(augInc),
+      sheetTxn: !!s.txn, txn: s.txn || {},
+      txnIsPending: !!(s.txn && s.txn.pending),
+      txnAmountStyle: 'font-size:34px; font-weight:800; letter-spacing:-0.04em; color:' + (s.txn && s.txn.pending ? '#8A5E00' : '#15150F'),
+      txnFinalStyle: pTab(!(s.txn && s.txn.pending), '#15150F'),
+      txnPendingStyle: pTab(!!(s.txn && s.txn.pending), '#8A5E00'),
+      setFinal: () => this.setState({ txn: Object.assign({}, s.txn, { pending: false }) }),
+      setPending: () => this.setState({ txn: Object.assign({}, s.txn, { pending: true }) })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

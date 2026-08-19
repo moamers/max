@@ -6,27 +6,42 @@ Each phase has a single question it needs to answer before moving to the next. W
 
 ## Where things actually stand right now
 
-There's already a working, deployed foundation: a flexible parser and data model (free-text tags, not a fixed category taxonomy — this part already matches the "dynamic data model" pillar well), a Postgres backend on Railway, and a web app for uploading a spreadsheet and viewing the result.
+There's a deployed foundation: a parser that has now survived two rounds of contact with the founder's real spreadsheet, a Postgres backend on Railway, a narrative-first dashboard, and a tone gate enforced in code rather than in prose. Both parser defects (`F-1`, `F-3`) were caught by making a number traceable, not by reading the code — which is the strongest argument so far for the "provenance travels with the figure" doctrine.
 
-**But by the founder's own bar, V1 isn't finished yet.** The current dashboard is a fairly conventional stat-tiles-and-bar-chart layout — exactly the "who cares about charts" pattern the Product Vision explicitly argues against. That's not a failure, it's the honest starting point: the plumbing (parsing, storage, an API) is proven, but the *presentation* still needs to move from "here is a chart" to "here is a sentence a friend would say." Closing that gap is the immediate next step, detailed in the V0 Implementation Plan.
+Two things have changed since this roadmap was written.
 
-## V1 — Prove the low-effort, non-chart experience works
+**A complete design exists.** Twelve screens, both themes, final copy, and a deliberately minimal chart grammar — one bar that means one thing. It lives in [`docs/design/handoff/`](../design/handoff/README.md) and it is the specification for V1, not a mood board.
 
-**Question to answer:** if a real user (not us) uploads their own messy spreadsheet, do they come away understanding something useful about their money — without us explaining a single chart to them?
+**The founder's bar for V1 became concrete:** *he stops using the spreadsheet and uses Max instead.* That is a much harder and much better test than "someone understands a sentence", and it reorders everything below. Parity and capture come before insight — because insight on partial data is the failure mode this project already hit once (a £4,000 "deficit" that was really a misread rent row), and the data stays partial until Max is where he actually records.
 
-- Upload flow stays as-is (already low-friction: one file, no setup).
-- Replace the chart-first dashboard with a narrative-first one: a small number of plain-language sentences ("You spent about £X more on groceries than your usual month"), with numbers and any chart as supporting detail underneath, not the headline.
-- **Add a second capture surface: free-text entry.** ("spent about 80 on the shop this week, 40 on petrol"). Capture is half the data-model pillar and currently doesn't exist beyond file upload — see [The Data Model](../architecture/01-data-model.md). Text is the cheapest surface to add and it validates the "adding data feels like texting a friend" test before any of the harder ones (screenshot, voice) are built.
-- Self-benchmarking (this period vs. your own history) already exists — keep it, but express it as sentences first, tiles/chart second.
-- Apply the tone rules from [Agent Behaviour §8](../principles/01-agent-behaviour.md) even to template-generated sentences: no moralising vocabulary, no verdict-on-open, no unrequested monthly totals. These constraints apply from the very first sentence Max ever says.
-- No accounts, no login, no onboarding form. This can still work as a "drop a file, see a result" tool at this stage.
-- **Explicitly out of scope for V1:** bank connections, conversational chat, memory, cohort comparison against other people (still self-comparison only at this stage), proactive nudges.
+So the narrative and comparison work that used to be V1 moves into V2. It isn't cut, and it isn't wasted: `narrative.ts` and the tone gate stay in the build, and the tone rules apply to every word of V1's copy.
 
-**Done when:** someone outside the founder's own head can upload a real spreadsheet and describe back, unprompted, what the app told them — in their own words, not by reading a chart.
+## V1 — Replace the spreadsheet
+
+**Question to answer:** does the founder stop opening the spreadsheet?
+
+Everything here is parity with what the spreadsheet already does for him, plus the two things a spreadsheet does that a web app doesn't get for free: keeping other people out, and letting him leave.
+
+- **Accounts and per-user isolation.** Not best-in-class security — a real login, a session, and every row scoped to its owner, so the app can be handed to a friend without handing over the founder's income. This blocks everything else and goes first.
+- **Import**, from the existing parser: the three-state flow (invite → reading → result), including the "lines I couldn't place" reconciliation step. The parser already keeps free-text labels; the import result screen is where that stops being invisible.
+- **Capture.** A transaction can be added by hand in a few taps, pre-tagged by wherever the user was standing. This is the feature that decides the whole question — a tool you can read but not write to does not replace a spreadsheet.
+- **The month view**: where I stand today and at month end, weeks with their targets, drill-down to a week, to a category, to a single transaction, every field editable.
+- **Recurring and one-off spend**, as separate surfaces with no budget bars, because neither has a target.
+- **Targets and income**: weekly per-category goals and month-by-month income, since these drive every bar in the app.
+- **Export back to his own spreadsheet template.** The escape hatch, and the honesty test: if Max can't reproduce the sheet it read, it hasn't really understood it. This doubles as the strongest available check on the parser.
+- **Year round-up**, last — it is parity with the Aggregates tab, but it needs a year of data to say anything, so it is the first thing to cut if V1 is running long.
+
+**Explicitly deferred to V2, not dropped:** conversational chat, memory, LLM-generated narrative beyond today's deterministic sentences, comparison against anyone other than himself, proactive nudges, free-text capture ("spent 80 on the shop"), and the remaining capture surfaces (screenshot, voice).
+
+**Done when:** a full pay period passes and the founder recorded it in Max rather than the spreadsheet — and the export round-trips back to his template without losing a row or a label.
+
+**The tension worth naming:** this V1 is a numbers-and-bars budgeting app, and the founding thesis is that nobody wants a numbers-and-bars budgeting app. Both are true, and the order resolves it. V1 earns the right to be opinionated later by first being *complete and trustworthy* — the comparative, conversational layer that makes Max different is V2, and it needs V1's data to exist at all. The risk to watch is that V1's setup (weekly targets, per-category goals) is exactly the "labelling tax" the vision argues against. For the founder it is parity, because he already does it. For a second user it is onboarding, and that is an open question, not a settled one — see [`A-5`](../00-open-decisions.md).
 
 ## V2 — Make it conversational, and give it memory
 
 **Question to answer:** does talking to it, instead of just reading its output, make people actually come back?
+
+**Moved here from V1** when the V1 bar became "replace the spreadsheet": the narrative-first presentation of insight, self-benchmarking expressed as sentences, and free-text capture ("spent about 80 on the shop"). None of it is cut — the deterministic sentence generator and the tone gate are already built and stay in the V1 build. What changed is that they now sit on top of complete data instead of a single uploaded file, which is the condition under which they were always going to be worth anything.
 
 - Add a persistent conversational surface (Payhawk-style: normal UI plus an always-available chat input, not a chat *replacing* the UI).
 - Wire in an LLM to answer questions about the user's own data ("how much did I spend on takeout last month?").
