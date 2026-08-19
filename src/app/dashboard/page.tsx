@@ -8,6 +8,7 @@ import {
 import { computeInsights } from "@/lib/insights";
 import { buildNarrative, type NarrativeSentence, type SectionTotals } from "@/lib/narrative";
 import { describePeriod } from "@/lib/period-dates";
+import { requireUser } from "@/lib/session";
 import { WhereItWent, type Bucket } from "./WhereItWent";
 import { DeletePeriodButton } from "./DeletePeriodButton";
 import type { PeriodSummary } from "@max/shared";
@@ -158,7 +159,10 @@ function Legend() {
 }
 
 export default async function DashboardPage() {
-  const rows = await listPeriodSummaries();
+  // Auth boundary: no valid session redirects to /login. Every store call below
+  // is scoped to this user — there is no unscoped variant to call by mistake.
+  const user = await requireUser();
+  const rows = await listPeriodSummaries(user.id);
 
   if (rows.length === 0) {
     return (
@@ -174,9 +178,9 @@ export default async function DashboardPage() {
   const insights = computeInsights(rows);
   const latest = insights.latest!;
   const [weeks, sectionRows, items] = await Promise.all([
-    weeklyTotalsForPeriod(latest.periodId),
-    sectionTotalsForPeriod(latest.periodId),
-    lineItemsForPeriod(latest.periodId),
+    weeklyTotalsForPeriod(user.id, latest.periodId),
+    sectionTotalsForPeriod(user.id, latest.periodId),
+    lineItemsForPeriod(user.id, latest.periodId),
   ]);
 
   const sections = sectionRows.reduce<SectionTotals>(

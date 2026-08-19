@@ -79,7 +79,8 @@ light mode: `0 10px 24px rgba(30,32,24,0.18)`; scrim `rgba(40,42,34,0.32)` (dark
 `rgba(8,9,12,0.72)`).
 
 ### Typography
-- UI face: a geometric grotesque — the prototype uses **Manrope** (fallback system sans). Weights 400/500/600/700/800.
+- UI face: a geometric grotesque — the prototype uses **Schibsted Grotesk** (fallback system sans). Weights 400/500/600/700/800.
+  <br>*(Correction applied during implementation: this line and the Assets section originally said Manrope. The prototype's own stylesheet loads `Schibsted+Grotesk:wght@400;500;600;700;800` and every UI rule resolves to `'Schibsted Grotesk',sans-serif` — the weight list matches exactly. The build follows the prototype, which is what was reviewed and approved.)*
 - Numeric / meta face: **JetBrains Mono**, 9.5–12px, letter-spacing 0.06–0.16em, frequently uppercase.
 - Scale in use: 52px/800 hero number · 36px/800 week-sheet headline · 30–34px/800 sheet titles ·
   25–27px/800 section "left" numbers · 21–22px/700 field values · 19px/800 month title ·
@@ -268,7 +269,7 @@ and derived aggregates per week/month/year.
 ## Assets
 No bitmap assets. The Max mark is two inline SVG paths (a blob in text colour + a lime leaf); all
 other icons are inline stroked SVGs at 1.6–2.4 stroke width, `stroke-linecap:round`. Fonts:
-Manrope and JetBrains Mono (Google Fonts in the prototype — swap for the codebase's loader).
+Schibsted Grotesk and JetBrains Mono (Google Fonts in the prototype — swap for the codebase's loader).
 
 ## Files
 - `Max App v1.dc.html` — dark mode, all 12 screens.

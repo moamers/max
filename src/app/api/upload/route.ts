@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseWorkbook } from "@/lib/parser";
 import { savePeriod } from "@/lib/store";
+import { getSessionUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
   const formData = await req.formData();
   const file = formData.get("file");
 
@@ -47,7 +51,7 @@ export async function POST(req: NextRequest) {
   const saved = await Promise.all(
     periods.map(async (p) => ({
       label: p.label,
-      periodId: await savePeriod(p, file.name),
+      periodId: await savePeriod(user.id, p, file.name),
       lineItemCount: p.lineItems.length,
       budgetCount: p.budgets.length,
       income: p.income,

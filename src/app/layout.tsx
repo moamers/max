@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Schibsted_Grotesk, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
+import { themeInitScript } from "@/components/theme/theme-init-script";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const grotesk = Schibsted_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -22,10 +27,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Applies a saved theme choice before first paint, avoiding a flash of the wrong theme. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript() }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <nav className="border-b px-6 py-4 flex gap-6 items-center" style={{ borderColor: "var(--border)" }}>
+        <nav className="border-b px-6 py-4 flex gap-6 items-center" style={{ borderColor: "var(--hairline-3)" }}>
           <Link href="/" className="font-semibold">
             Max
           </Link>
@@ -34,6 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </Link>
           <Link href="/dashboard" className="text-sm" style={{ color: "var(--text-secondary)" }}>
             Dashboard
+          </Link>
+          <Link href="/styleguide" className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Styleguide
           </Link>
         </nav>
         <main className="flex-1">{children}</main>

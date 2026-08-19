@@ -1,79 +1,319 @@
 @import "tailwindcss";
 
+/*
+  Max design tokens
+  ------------------
+  Source: docs/design/handoff/README.md ("Design tokens" + "The one chart
+  grammar" sections), cross-checked against the literal values baked into
+  docs/design/handoff/Max App v1(.dc| Light.dc).html.
+
+  Semantic role names are identical across themes — components read the
+  role, never the theme. Light is the bare-:root default (and the
+  prefers-color-scheme: light behaviour); dark is applied either by
+  prefers-color-scheme: dark or by an explicit data-theme="dark" override on
+  <html>. data-theme="light" always wins over the media query so the
+  Appearance switch on screen 10 can force either mode.
+
+  The one rule worth re-stating here because it is easy to get backwards:
+  lime (--lime-fill) stays the saturated brand hex #C6FF3D in BOTH themes
+  when used as a fill (buttons, pills, the hero gradient). It only changes
+  when used as ink (text/links/mono accents) — there it is --lime-ink, which
+  is #C6FF3D in dark mode and darkens to #3F6B0A in light mode so it stays
+  legible on a light page.
+*/
+
 :root {
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-  --gridline: #e1e0d9;
-  --baseline: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
+  /* ---- surfaces ---- */
+  --bg: #f6f6f2;
+  --surface: #ffffff;
+  --surface-inset: #f0f0ea;
+  --surface-inset-deep: #eaebe4;
+  --surface-raised: #f2f2ed;
+  --surface-hover: #ededE7;
+  --control-active: #e7e7e0;
 
-  --series-bills: #2a78d6;
-  --series-extras: #eb6834;
-  --series-weekly: #1baf7a;
+  /* ---- hairlines (subtlest -> most visible) ---- */
+  --hairline-1: #e7e7e0;
+  --hairline-2: #dedecf;
+  --hairline-3: #d7d7cd;
+  --hairline-4: #d7d7cd;
 
-  --good: #0ca30c;
-  --warning: #fab219;
-  --serious: #ec835a;
-  --critical: #d03b3b;
-  --good-text: #006300;
+  /* ---- text ---- */
+  --text-primary: #15150f;
+  --text-secondary: #5c5c55;
+  --text-secondary-2: #5c5c55;
+  --text-tertiary: #6c6c64;
+  --text-disabled: #9b9b92;
+  --text-disabled-2: #9b9b92;
+
+  /* ---- lime accent (see rule above) ---- */
+  --lime-fill: #c6ff3d;
+  --lime-fill-hover: #d4ff5f;
+  --lime-ink-on-fill: #12210a;
+  --lime-ink: #3f6b0a;
+
+  /* ---- chart grammar: the one bar ---- */
+  --bar-track: var(--surface-inset);
+  --bar-fill: #8a8a80;
+  --bar-over: #b93a34;
+  --bar-over-strong: #d0332f;
+
+  /* ---- pending (amber) — a transaction flag, never a bar colour ---- */
+  --amber-ink: #8a5e00;
+  --amber-tint-bg: #faf0d0;
+
+  /* ---- label / tag (cyan) ---- */
+  --cyan-ink: #0a7391;
+  --cyan-tint-bg: #dff1f7;
+
+  /* ---- stat-tile borders ---- */
+  --tile-positive-border: #bfd98a;
+  --tile-negative-border: #f2d8d7;
+
+  /* ---- hero gradient (unchanged across themes) ---- */
+  --hero-gradient: linear-gradient(140deg, #c6ff3d, #4de0ff);
+  --hero-ink-1: #0f2118;
+  --hero-ink-2: #123028;
+  --hero-ink-3: #1e3a16;
+
+  /* ---- chrome ---- */
+  --shadow-card: 0 10px 24px rgba(30, 32, 24, 0.18);
+  --scrim: rgba(40, 42, 34, 0.32);
+
+  /* ---- radii ---- */
+  --radius-chip: 9px;
+  --radius-field: 12px;
+  --radius-row: 16px;
+  --radius-card-sm: 20px;
+  --radius-card-lg: 22px;
+  --radius-hero: 26px;
+  --radius-sheet-top: 30px;
+  --radius-pill: 99px;
+
+  /* ---- spacing scale (px) ---- */
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-26: 26px;
+
+  /* ---- motion ---- */
+  --ease-sheet: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --duration-sheet: 0.26s;
+  --duration-fade: 0.28s;
+  --duration-scrim: 0.2s;
+  --duration-bar: 0.4s;
 }
 
 @theme inline {
-  --color-background: var(--page);
+  --color-background: var(--bg);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --gridline: #2c2c2a;
-    --baseline: #383835;
-    --border: rgba(255, 255, 255, 0.1);
+    --bg: #0e0f14;
+    --surface: #14171c;
+    --surface-inset: #191c23;
+    --surface-inset-deep: #0e1015;
+    --surface-raised: #1c1f27;
+    --surface-hover: #1a1d24;
+    --control-active: #262a33;
 
-    --series-bills: #3987e5;
-    --series-extras: #d95926;
-    --series-weekly: #199e70;
+    --hairline-1: #16191f;
+    --hairline-2: #1e212a;
+    --hairline-3: #23262f;
+    --hairline-4: #262a33;
 
-    --good: #0ca30c;
-    --warning: #fab219;
-    --serious: #ec835a;
-    --critical: #e66767;
-    --good-text: #0ca30c;
+    --text-primary: #f2f4ee;
+    --text-secondary: #9da2ae;
+    --text-secondary-2: #8b8f9c;
+    --text-tertiary: #6e7382;
+    --text-disabled: #4a4f5a;
+    --text-disabled-2: #5b6270;
+
+    --lime-fill: #c6ff3d;
+    --lime-fill-hover: #d4ff5f;
+    --lime-ink-on-fill: #12210a;
+    --lime-ink: #c6ff3d;
+
+    --bar-fill: #7a8296;
+    --bar-over: #e8736f;
+    --bar-over-strong: #ff5a5f;
+
+    --amber-ink: #f0c64b;
+    --amber-tint-bg: #1e1a0c;
+
+    --cyan-ink: #4de0ff;
+    --cyan-tint-bg: #0f1d24;
+
+    --tile-positive-border: #2b3417;
+    --tile-negative-border: #3a2224;
+
+    --hero-ink-1: #0f2118;
+    --hero-ink-2: #123028;
+    --hero-ink-3: #1e3a16;
+
+    --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.4);
+    --scrim: rgba(8, 9, 12, 0.72);
   }
 }
 
 :root[data-theme="dark"] {
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #898781;
-  --gridline: #2c2c2a;
-  --baseline: #383835;
-  --border: rgba(255, 255, 255, 0.1);
+  --bg: #0e0f14;
+  --surface: #14171c;
+  --surface-inset: #191c23;
+  --surface-inset-deep: #0e1015;
+  --surface-raised: #1c1f27;
+  --surface-hover: #1a1d24;
+  --control-active: #262a33;
 
-  --series-bills: #3987e5;
-  --series-extras: #d95926;
-  --series-weekly: #199e70;
+  --hairline-1: #16191f;
+  --hairline-2: #1e212a;
+  --hairline-3: #23262f;
+  --hairline-4: #262a33;
 
-  --good: #0ca30c;
-  --warning: #fab219;
-  --serious: #ec835a;
-  --critical: #e66767;
-  --good-text: #0ca30c;
+  --text-primary: #f2f4ee;
+  --text-secondary: #9da2ae;
+  --text-secondary-2: #8b8f9c;
+  --text-tertiary: #6e7382;
+  --text-disabled: #4a4f5a;
+  --text-disabled-2: #5b6270;
+
+  --lime-fill: #c6ff3d;
+  --lime-fill-hover: #d4ff5f;
+  --lime-ink-on-fill: #12210a;
+  --lime-ink: #c6ff3d;
+
+  --bar-fill: #7a8296;
+  --bar-over: #e8736f;
+  --bar-over-strong: #ff5a5f;
+
+  --amber-ink: #f0c64b;
+  --amber-tint-bg: #1e1a0c;
+
+  --cyan-ink: #4de0ff;
+  --cyan-tint-bg: #0f1d24;
+
+  --tile-positive-border: #2b3417;
+  --tile-negative-border: #3a2224;
+
+  --hero-ink-1: #0f2118;
+  --hero-ink-2: #123028;
+  --hero-ink-3: #1e3a16;
+
+  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.4);
+  --scrim: rgba(8, 9, 12, 0.72);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--page);
+  background: var(--bg);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-grotesk), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+a {
+  color: var(--lime-ink);
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scrimFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+  Interaction states from the "Interactions & behaviour" section of the
+  handoff — these need real :hover rules, which inline styles can't express.
+  Component files apply the class names below; the rules stay here so every
+  hover step is defined in one place alongside the tokens it uses.
+*/
+.max-card--interactive:hover {
+  background: var(--surface-hover);
+}
+
+.max-row--interactive:hover {
+  opacity: 0.78;
+}
+
+.max-btn-primary:hover,
+.max-fab:hover {
+  background: var(--lime-fill-hover) !important;
+}
+
+.max-btn-secondary:hover {
+  border-color: var(--text-disabled-2);
+}
+
+.max-icon-button:hover {
+  background: var(--surface-hover);
+}
+
+.max-chip--quiet:hover {
+  border-color: var(--lime-fill);
+  color: var(--lime-ink);
+}
+
+.max-caret {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.max-caret--open {
+  transform: rotate(90deg);
+}
+
+.max-scrim {
+  animation: scrimFade var(--duration-scrim) ease both;
+}
+
+.max-sheet--full {
+  animation: sheetUp var(--duration-sheet) var(--ease-sheet) both;
+}
+
+.max-sheet--bottom {
+  animation: sheetUp var(--duration-sheet) var(--ease-sheet) both;
 }

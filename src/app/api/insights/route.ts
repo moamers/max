@@ -5,6 +5,7 @@ import {
   sectionTotalsForPeriod,
   tagBreakdownForPeriod,
 } from "@/lib/store";
+import { getSessionUser } from "@/lib/session";
 import { computeInsights } from "@/lib/insights";
 import { buildNarrative, type SectionTotals } from "@/lib/narrative";
 
@@ -19,7 +20,10 @@ const EMPTY_SECTIONS: SectionTotals = {
 };
 
 export async function GET() {
-  const periods = await listPeriodSummaries();
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const periods = await listPeriodSummaries(user.id);
   const insights = computeInsights(periods);
 
   if (!insights.latest) {
@@ -28,9 +32,9 @@ export async function GET() {
 
   const periodId = insights.latest.periodId;
   const [weeks, sectionRows, tags] = await Promise.all([
-    weeklyTotalsForPeriod(periodId),
-    sectionTotalsForPeriod(periodId),
-    tagBreakdownForPeriod(periodId),
+    weeklyTotalsForPeriod(user.id, periodId),
+    sectionTotalsForPeriod(user.id, periodId),
+    tagBreakdownForPeriod(user.id, periodId),
   ]);
 
   const sections = sectionRows.reduce<SectionTotals>(
