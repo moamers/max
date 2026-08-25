@@ -105,4 +105,20 @@ describe("a write leaves you in the month you made it in", () => {
   it("every one of those files still exists", () => {
     for (const file of MUTATION_FILES) expect(fs.existsSync(file)).toBe(true);
   });
+
+  /**
+   * A Server Action's `redirect` defaults to `push`, so the screen the user
+   * just finished with stays on the history stack. After a delete that screen
+   * is a row that no longer exists, and Back rendered a bare 404.
+   */
+  it("leaves the finished screen behind rather than on the history stack", () => {
+    const editor = fs.readFileSync(path.join(ROOT, "app", "transaction", "[id]", "actions.ts"), "utf8");
+    const redirects = editor.split("\n").filter((l) => /\bredirect\(/.test(l) && !l.trimStart().startsWith("*"));
+    expect(redirects.length).toBeGreaterThanOrEqual(2);
+    for (const line of redirects) expect(line).toContain("RedirectType.replace");
+
+    const add = fs.readFileSync(path.join(ROOT, "app", "add", "AddView.tsx"), "utf8");
+    expect(add).toContain("router.replace(transactionHome(");
+    expect(add).not.toContain("router.push(transactionHome(");
+  });
 });

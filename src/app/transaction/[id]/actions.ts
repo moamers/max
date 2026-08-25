@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { updateTransaction, deleteTransaction } from "@/lib/store";
@@ -65,7 +65,11 @@ export async function saveTransaction(
   revalidatePath(`/transaction/${id}`);
   for (const path of pathsAffectedBy(kind, weekNumber)) revalidatePath(path);
 
-  redirect(transactionHome(kind, periodId, weekNumber));
+  // `replace`, not the Server Action default of `push`: the editor we are
+  // leaving must not stay on the history stack, or Back returns to a screen
+  // for a row the user has finished with — and after a delete, to a row that
+  // no longer exists, which renders as a bare 404.
+  redirect(transactionHome(kind, periodId, weekNumber), RedirectType.replace);
 }
 
 export async function removeTransaction(id: number): Promise<never> {
@@ -83,5 +87,6 @@ export async function removeTransaction(id: number): Promise<never> {
   revalidatePath(`/transaction/${id}`);
   for (const path of pathsAffectedBy(detail.kind, detail.weekNumber)) revalidatePath(path);
 
-  redirect(transactionHome(detail.kind, detail.periodId, detail.weekNumber));
+  // See saveTransaction: Back must not land on the deleted row's page.
+  redirect(transactionHome(detail.kind, detail.periodId, detail.weekNumber), RedirectType.replace);
 }

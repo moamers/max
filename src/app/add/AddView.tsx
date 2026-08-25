@@ -88,7 +88,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
           pending,
           needsAttention,
         });
-        router.push(transactionHome(kind, periodId, weekNumber));
+        router.replace(transactionHome(kind, periodId, weekNumber));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
       }
