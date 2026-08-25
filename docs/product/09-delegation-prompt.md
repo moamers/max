@@ -134,7 +134,13 @@ real data" is a good line in a report, not a gap.
 ---
 ## 3 · Task briefs
 
-**Paste exactly one of these** after the prompt above.
+**Run D and C as two separate agent sessions, at the same time.** Each session
+gets the prompt from §2 followed by **one** brief from below — D in one, C in
+the other.
+
+Never put both briefs into a single session. An agent given two tasks
+interleaves them, and the ownership boundary that makes running them together
+safe stops meaning anything.
 
 ### Task D · Import (screen 01) + period rollover
 ```
