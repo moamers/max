@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useDebouncedCommit } from "@/components/useDebouncedCommit";
+import { useState } from "react";
 import { Button, NumericField, Sheet } from "@/components/ui";
 import { WEEKLY_CATEGORIES, WEEKLY_CATEGORY_TITLES, type WeeklyCategory } from "@/lib/transactions";
 import { setDefaultIncomeAction, setGoalAction } from "@/app/goals/actions";
@@ -15,52 +16,19 @@ export interface GoalsViewProps {
 
 export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const { commit } = useDebouncedCommit();
   const [goals, setGoals] = useState(initialGoals);
   const [income, setIncome] = useState(initialDefaultIncome ?? 0);
   const total = weeklyGoalTotal(WEEKLY_CATEGORIES.map((category) => goals[category]));
 
-  /**
-   * Typing "260" used to fire three server actions, each writing to the
-   * database and revalidating three routes — so a three-digit target queued a
-   * burst of re-renders and the page fell over. The field stays instant
-   * because local state updates on every keystroke; only the write waits until
-   * typing stops.
-   */
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-
-  const commitLater = useCallback((key: string, run: () => Promise<void>) => {
-    const pending = timers.current.get(key);
-    if (pending) clearTimeout(pending);
-    timers.current.set(
-      key,
-      setTimeout(() => {
-        timers.current.delete(key);
-        startTransition(async () => {
-          await run();
-        });
-      }, 600)
-    );
-  }, [startTransition]);
-
-  // A timer still holding an unsaved edit when the sheet closes would drop it
-  // silently, so anything outstanding is flushed on the way out.
-  useEffect(() => {
-    const map = timers.current;
-    return () => {
-      for (const timer of map.values()) clearTimeout(timer);
-      map.clear();
-    };
-  }, []);
-
   function changeGoal(category: WeeklyCategory, amount: number) {
     setGoals((current) => ({ ...current, [category]: amount }));
-    commitLater(`goal:${category}`, () => setGoalAction(category, amount));
+    commit(`goal:${category}`, () => setGoalAction(category, amount));
   }
 
   function changeIncome(amount: number) {
     setIncome(amount);
-    commitLater("income", () => setDefaultIncomeAction(amount));
+    commit("income", () => setDefaultIncomeAction(amount));
   }
 
   return (

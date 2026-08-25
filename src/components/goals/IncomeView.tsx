@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, useCallback, useEffect, useRef } from "react";
+import { useDebouncedCommit } from "@/components/useDebouncedCommit";
+import { useState } from "react";
 import { Button, NumericField, Sheet } from "@/components/ui";
 import type { IncomeSource } from "@/lib/queries";
 import { setIncomeForPeriodAction } from "@/app/income/actions";
@@ -25,47 +26,18 @@ export interface IncomeViewProps {
 
 export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const { commit } = useDebouncedCommit();
   const [amounts, setAmounts] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, month.amount ?? 0])));
   const [sources, setSources] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, { source: month.source, setByUser: month.setByUser }])));
   const currentMonth = new Date().getMonth();
   const isCurrentYear = year === new Date().getFullYear();
-
-  /**
-   * The write waits until typing stops. Every keystroke firing a server action
-   * meant a four-digit income queued four database writes and twelve route
-   * revalidations, which is what took the goals screen down.
-   */
-  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
-
-  const commitLater = useCallback((key: string, run: () => Promise<void>) => {
-    const pending = timers.current.get(key);
-    if (pending) clearTimeout(pending);
-    timers.current.set(
-      key,
-      setTimeout(() => {
-        timers.current.delete(key);
-        startTransition(async () => {
-          await run();
-        });
-      }, 600)
-    );
-  }, [startTransition]);
-
-  useEffect(() => {
-    const map = timers.current;
-    return () => {
-      for (const timer of map.values()) clearTimeout(timer);
-      map.clear();
-    };
-  }, []);
 
   function changeMonth(month: IncomeMonthView, amount: number) {
     if (month.periodId === null) return;
     setAmounts((current) => ({ ...current, [month.monthIndex]: amount }));
     // A value typed here is a specific period override, regardless of its previous tier.
     setSources((current) => ({ ...current, [month.monthIndex]: { source: "month", setByUser: true } }));
-    commitLater(`month:${month.monthIndex}`, () => setIncomeForPeriodAction(month.periodId!, amount));
+    commit(`month:${month.monthIndex}`, () => setIncomeForPeriodAction(month.periodId!, amount));
   }
 
   return (

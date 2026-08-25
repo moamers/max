@@ -74,7 +74,28 @@ Write `.sql` files into `drizzle/` with the next ordinal. A human applies them.
 Migrations must carry rows across, never rebuild them, and should abort rather
 than guess.
 
-**8 · No new dependencies** without saying so explicitly and justifying it.
+**8 · Never write to the database from a keystroke.**
+A controlled input's `onChange` fires per character. Calling a server action
+there means a write and a route revalidation each time — and revalidating `/`
+re-runs the home screen's queries. This took production down: typing a
+three-digit target queued three writes and eighteen queries in a second.
+Update local state on change so the field stays instant, then hand the write to
+`useDebouncedCommit()`. Enforced by `src/lib/__tests__/no-write-per-keystroke.test.ts`.
+
+**9 · No new dependencies** without saying so explicitly and justifying it.
+
+---
+
+## A note on what the four gates cannot see
+
+Every gate passed on the keystroke bug. It typechecked, linted, tested green and
+built — and fell over on first contact with a real database. The gates check
+that code is *correct*; they say nothing about how often it runs, how much it
+writes, or what it costs on a real network.
+
+So when you touch anything that writes: say in your report **when** the write
+fires and how many happen per user action. "On every change" is an answer that
+needs justifying, not a description.
 
 ---
 
