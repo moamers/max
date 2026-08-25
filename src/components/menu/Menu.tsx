@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 import { Row } from "@/components/ui/Row";
 import { Scrim } from "@/components/ui/Scrim";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { MaxMark } from "@/components/home/MaxMark";
+import { clearDataAction } from "./actions";
 
 interface MenuProps {
+  periodCount: number;
   onDismiss: () => void;
 }
 
@@ -17,7 +22,26 @@ interface MenuProps {
  * drawer is a third shape it doesn't offer, so this composes `Scrim`
  * directly the same way `Sheet`'s bottom variant does internally.
  */
-export function Menu({ onDismiss }: MenuProps) {
+export function Menu({ periodCount, onDismiss }: MenuProps) {
+  const router = useRouter();
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
+
+  async function clearData() {
+    setClearing(true);
+    setClearError(null);
+    try {
+      await clearDataAction();
+      onDismiss();
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setClearError("I couldn’t confirm whether that finished. Refresh to check.");
+      setClearing(false);
+    }
+  }
+
   return (
     <div style={{ position: "absolute", top: 46, left: 0, right: 0, bottom: 0, zIndex: 6 }}>
       <Scrim onDismiss={onDismiss} />
@@ -80,29 +104,63 @@ export function Menu({ onDismiss }: MenuProps) {
             </Row>
           </Link>
 
-          {/*
-            The prototype's own "Clear data" row just closes the menu (onClick={{back}})
-            — there is no clear-data mutation anywhere in the query/store layer to call,
-            so this matches the prototype's actual behaviour rather than inventing one.
-          */}
-          <Row
-            interactive
-            divider
-            padding="16px 0"
-            onClick={onDismiss}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: "1px solid var(--hairline-2)",
-              cursor: "pointer",
-            }}
-          >
-            <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--bar-over)" }}>Clear data</span>
-            <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
-              &rsaquo;
-            </span>
-          </Row>
+          {!confirmingClear ? (
+            <button
+              type="button"
+              onClick={() => setConfirmingClear(true)}
+              style={{ padding: 0, border: 0, background: "none", color: "inherit", textAlign: "left" }}
+            >
+              <Row
+                interactive
+                divider
+                padding="16px 0"
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderBottom: "1px solid var(--hairline-2)",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--bar-over)" }}>Clear data</span>
+                <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+                  &rsaquo;
+                </span>
+              </Row>
+            </button>
+          ) : (
+            <div
+              role="group"
+              aria-label="Confirm clearing data"
+              style={{
+                padding: "18px 0",
+                borderBottom: "1px solid var(--hairline-2)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "var(--bar-over)" }}>Clear data?</span>
+                <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--text-secondary)" }}>
+                  This removes {periodCount} {periodCount === 1 ? "period" : "periods"} and every transaction in {periodCount === 1 ? "it" : "them"}. Your account, goals and default income stay.
+                </span>
+              </div>
+              {clearError && (
+                <span role="alert" style={{ fontSize: 12, lineHeight: 1.45, color: "var(--bar-over)" }}>
+                  {clearError}
+                </span>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Button variant="destructive" height={54} disabled={clearing} onClick={() => void clearData()}>
+                  {clearing ? "Clearing…" : "Yes, clear everything"}
+                </Button>
+                <Button variant="secondary" height={54} disabled={clearing} onClick={() => setConfirmingClear(false)}>
+                  Keep my data
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

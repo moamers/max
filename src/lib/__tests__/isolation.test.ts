@@ -52,6 +52,7 @@ const {
   weeklyTotalsForPeriod,
   sectionTotalsForPeriod,
   deletePeriod,
+  clearUserPeriods,
   getPeriodByLabel,
   savePeriod,
 } = await import("../store");
@@ -137,6 +138,18 @@ describe("per-user scoping · writes and deletes", () => {
     await expect(deletePeriod(USER_B, PERIOD_OWNED_BY_A)).resolves.toBe(false);
   });
 
+  it("clearUserPeriods deletes only periods owned by the caller", async () => {
+    reset([[1], [2]]);
+    await expect(clearUserPeriods(USER_B)).resolves.toBe(2);
+
+    expect(hoisted.queries).toHaveLength(1);
+    const [q] = hoisted.queries;
+    expect(q.sql).toMatch(/^delete from "periods"/i);
+    expect(q.sql).toMatch(USER_ID_PREDICATE);
+    expect(q.params).toContain(USER_B as string);
+    expect(q.params).not.toContain(USER_A as string);
+  });
+
   it("savePeriod stamps the owner on the period row and upserts within that user", async () => {
     // The first statement is the period upsert, whose RETURNING id the rest of
     // the transaction depends on.
@@ -191,6 +204,8 @@ describe("per-user scoping · enforced by the type system, not by discipline", (
       await lineItemsForPeriod(PERIOD_OWNED_BY_A);
       // @ts-expect-error -- deleting by id alone must not compile
       await deletePeriod(PERIOD_OWNED_BY_A);
+      // @ts-expect-error -- clearing without a branded user scope must not compile
+      await clearUserPeriods();
     };
     expect(typeof neverRun).toBe("function");
   });

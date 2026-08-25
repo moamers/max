@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import { FAB } from "@/components/ui/FAB";
 import { IconButton } from "@/components/ui/IconButton";
 import { ChevronDownIcon, HamburgerIcon } from "@/components/ui/icons";
 import { Menu } from "@/components/menu/Menu";
@@ -18,8 +17,7 @@ import { RolloverPrompt } from "./RolloverPrompt";
 
 /**
  * README screen 02, assembled. Everything below the month bar is a card in
- * a 22px-gap column (README: "Vertical scroll, 20px gutter, 22px gaps,
- * 108px bottom padding for the FAB").
+ * a 22px-gap column (README: "Vertical scroll, 20px gutter, 22px gaps").
  *
  * Rendered as a fixed, viewport-filling frame rather than inline page
  * content: `Sheet` (used by the month picker) and this screen's own menu
@@ -41,7 +39,7 @@ export function HomeScreen({ data }: { data: HomeData }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
       <div style={{ flex: 1, overflowY: "auto" }}>
-        <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 20px 108px", display: "flex", flexDirection: "column", gap: 22 }}>
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 20px 32px", display: "flex", flexDirection: "column", gap: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>
             <button
               type="button"
@@ -90,24 +88,6 @@ export function HomeScreen({ data }: { data: HomeData }) {
         </div>
       </div>
 
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          padding: "14px 20px 20px",
-          background: "linear-gradient(to top, var(--bg) 62%, transparent)",
-          display: "flex",
-          justifyContent: "flex-end",
-          pointerEvents: "none",
-        }}
-      >
-        <Link href="/add" style={{ pointerEvents: "auto" }}>
-          <FAB aria-label="Add" />
-        </Link>
-      </div>
-
       {monthPickerOpen && (
         <ChangeMonthSheet
           yearsByValue={data.yearsByValue}
@@ -117,7 +97,7 @@ export function HomeScreen({ data }: { data: HomeData }) {
         />
       )}
 
-      {menuOpen && <Menu onDismiss={() => setMenuOpen(false)} />}
+      {menuOpen && <Menu periodCount={data.periodOptions.length} onDismiss={() => setMenuOpen(false)} />}
     </div>
   );
 }

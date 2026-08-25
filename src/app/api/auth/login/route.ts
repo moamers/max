@@ -2,13 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/schema";
-import { fakeVerifyPassword, normalizeEmail, toUserId, verifyPassword } from "@/lib/auth";
+import {
+  createLoginRateLimiter,
+  fakeVerifyPassword,
+  normalizeEmail,
+  toUserId,
+  verifyPassword,
+} from "@/lib/auth";
 import { createSession } from "@/lib/session";
 
 export const runtime = "nodejs";
 
 /** One message for every failure mode — wrong address, wrong password, locked row. */
 const GENERIC_FAILURE = "Email or password is incorrect.";
+const RATE_LIMIT_FAILURE = "Too many login attempts. Try again in a few minutes.";
+const loginRateLimiter = createLoginRateLimiter();
+
+function clientIp(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return (forwarded || req.headers.get("x-real-ip")?.trim() || "unknown").slice(0, 128);
+}
 
 export async function POST(req: NextRequest) {
   let body: { email?: unknown; password?: unknown };
@@ -24,6 +37,15 @@ export async function POST(req: NextRequest) {
 
   const email = normalizeEmail(body.email);
   const password = body.password;
+  const ip = clientIp(req);
+  const rateLimit = loginRateLimiter.take(ip, email);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: RATE_LIMIT_FAILURE },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
 
   // Bound the scrypt work an anonymous caller can buy with one request.
   if (password.length > 1024) {
@@ -46,6 +68,7 @@ export async function POST(req: NextRequest) {
   }
 
   await createSession(toUserId(user.id));
+  loginRateLimiter.reset(ip, email);
 
   return NextResponse.json({ user: { id: user.id, email: user.email } });
 }

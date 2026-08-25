@@ -207,3 +207,89 @@ export function validateCredentials(email: string, password: string): Credential
 
   return problems;
 }
+
+// -------------------------------------------------------- login throttling
+
+export interface LoginRateLimitResult {
+  allowed: boolean;
+  retryAfterSeconds: number;
+}
+
+export interface LoginRateLimiter {
+  take(ip: string, email: string, now?: number): LoginRateLimitResult;
+  reset(ip: string, email: string): void;
+}
+
+interface LoginAttemptWindow {
+  attempts: number;
+  resetsAt: number;
+}
+
+interface LoginRateLimiterOptions {
+  maxAttempts?: number;
+  windowMs?: number;
+  maxKeys?: number;
+}
+
+/**
+ * A small fixed-window limiter for the Node process serving login. The route
+ * owns one instance; this factory keeps the boundary deterministic and tested.
+ * It deliberately fails closed when its bounded key store is full.
+ */
+export function createLoginRateLimiter({
+  maxAttempts = 5,
+  windowMs = 15 * 60 * 1000,
+  maxKeys = 10_000,
+}: LoginRateLimiterOptions = {}): LoginRateLimiter {
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) throw new Error("maxAttempts must be positive");
+  if (!Number.isFinite(windowMs) || windowMs < 1) throw new Error("windowMs must be positive");
+  if (!Number.isInteger(maxKeys) || maxKeys < 1) throw new Error("maxKeys must be positive");
+
+  const windows = new Map<string, LoginAttemptWindow>();
+  const keyFor = (ip: string, email: string) => `${ip.trim() || "unknown"}\u0000${normalizeEmail(email)}`;
+
+  function pruneExpired(now: number) {
+    for (const [key, value] of windows) {
+      if (value.resetsAt <= now) windows.delete(key);
+    }
+  }
+
+  return {
+    take(ip, email, now = Date.now()) {
+      const key = keyFor(ip, email);
+      let window = windows.get(key);
+
+      if (window && window.resetsAt <= now) {
+        windows.delete(key);
+        window = undefined;
+      }
+
+      if (!window) {
+        if (windows.size >= maxKeys) pruneExpired(now);
+        if (windows.size >= maxKeys) {
+          const earliestReset = Math.min(...Array.from(windows.values(), (value) => value.resetsAt));
+          return {
+            allowed: false,
+            retryAfterSeconds: Math.max(1, Math.ceil((earliestReset - now) / 1000)),
+          };
+        }
+        windows.set(key, { attempts: 1, resetsAt: now + windowMs });
+        return { allowed: true, retryAfterSeconds: 0 };
+      }
+
+      if (window.attempts >= maxAttempts) {
+        return {
+          allowed: false,
+          retryAfterSeconds: Math.max(1, Math.ceil((window.resetsAt - now) / 1000)),
+        };
+      }
+
+      window.attempts += 1;
+      return { allowed: true, retryAfterSeconds: 0 };
+    },
+
+    reset(ip, email) {
+      windows.delete(keyFor(ip, email));
+    },
+  };
+}

@@ -27,7 +27,7 @@ export function RecurringView({ periodId, monthLabel, recurring }: RecurringView
   const [openGroup, setOpenGroup] = useState<RecurringCategory | null>("bills");
 
   return (
-    <MoneySheet addHref={`/add?period=${periodId}&kind=recurring&category=housing`}>
+    <MoneySheet addHref={`/add?period=${periodId}&kind=recurring`}>
       <div
         style={{
           flex: 1,

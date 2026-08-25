@@ -368,6 +368,20 @@ export async function deletePeriod(userId: UserId, periodId: number): Promise<bo
   return deleted.length > 0;
 }
 
+/**
+ * R-19: clear the signed-in user's period-backed records in one scoped
+ * statement. Transactions, budgets, summaries and per-period income rows all
+ * cascade from `periods`; the account, goals and default income do not.
+ */
+export async function clearUserPeriods(userId: UserId): Promise<number> {
+  const db = getDb();
+  const deleted = await db
+    .delete(periods)
+    .where(eq(periods.userId, userId))
+    .returning({ id: periods.id });
+  return deleted.length;
+}
+
 export async function getPeriodByLabel(userId: UserId, label: string) {
   const db = getDb();
   const [row] = await db

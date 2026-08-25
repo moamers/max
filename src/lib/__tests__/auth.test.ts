@@ -14,6 +14,7 @@ import {
   isSessionExpired,
   normalizeEmail,
   validateCredentials,
+  createLoginRateLimiter,
   SESSION_TTL_MS,
   UNUSABLE_PASSWORD_HASH,
   MIN_PASSWORD_LENGTH,
@@ -143,5 +144,53 @@ describe("credential validation", () => {
   it("rejects an unbounded password — scrypt cost is paid per attempt", () => {
     const problems = validateCredentials("person@example.com", "x".repeat(MAX_PASSWORD_LENGTH + 1));
     expect(problems.some((p) => p.field === "password")).toBe(true);
+  });
+});
+
+describe("login rate limiting", () => {
+  it("allows five attempts for an IP and email, then returns a retry time", () => {
+    const limiter = createLoginRateLimiter({ maxAttempts: 5, windowMs: 60_000 });
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect(limiter.take("203.0.113.8", "person@example.com", 1_000)).toEqual({
+        allowed: true,
+        retryAfterSeconds: 0,
+      });
+    }
+    expect(limiter.take("203.0.113.8", "person@example.com", 1_000)).toEqual({
+      allowed: false,
+      retryAfterSeconds: 60,
+    });
+  });
+
+  it("keeps IP-and-email pairs separate", () => {
+    const limiter = createLoginRateLimiter({ maxAttempts: 1, windowMs: 60_000 });
+    expect(limiter.take("203.0.113.8", "one@example.com", 0).allowed).toBe(true);
+    expect(limiter.take("203.0.113.8", "one@example.com", 0).allowed).toBe(false);
+    expect(limiter.take("203.0.113.8", "two@example.com", 0).allowed).toBe(true);
+    expect(limiter.take("203.0.113.9", "one@example.com", 0).allowed).toBe(true);
+  });
+
+  it("normalises email case and spacing before making the key", () => {
+    const limiter = createLoginRateLimiter({ maxAttempts: 1 });
+    expect(limiter.take("203.0.113.8", " Person@Example.COM ", 0).allowed).toBe(true);
+    expect(limiter.take("203.0.113.8", "person@example.com", 0).allowed).toBe(false);
+  });
+
+  it("opens a fresh window after expiry and resets after success", () => {
+    const limiter = createLoginRateLimiter({ maxAttempts: 1, windowMs: 1_000 });
+    expect(limiter.take("203.0.113.8", "person@example.com", 0).allowed).toBe(true);
+    expect(limiter.take("203.0.113.8", "person@example.com", 999).allowed).toBe(false);
+    expect(limiter.take("203.0.113.8", "person@example.com", 1_000).allowed).toBe(true);
+    limiter.reset("203.0.113.8", "person@example.com");
+    expect(limiter.take("203.0.113.8", "person@example.com", 1_000).allowed).toBe(true);
+  });
+
+  it("fails closed when the bounded key store is full", () => {
+    const limiter = createLoginRateLimiter({ maxAttempts: 1, windowMs: 60_000, maxKeys: 1 });
+    expect(limiter.take("203.0.113.8", "one@example.com", 0).allowed).toBe(true);
+    expect(limiter.take("203.0.113.9", "two@example.com", 0)).toEqual({
+      allowed: false,
+      retryAfterSeconds: 60,
+    });
   });
 });

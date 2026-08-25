@@ -21,7 +21,8 @@ function postFile(
   file: File,
   mode: "preview" | "save",
   dates: ImportDateProposal[],
-  onProgress: (value: number) => void
+  onProgress: (value: number) => void,
+  onUploadComplete: () => void
 ): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -30,6 +31,7 @@ function postFile(
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(Math.max(4, Math.round((event.loaded / event.total) * 88)));
     };
+    xhr.upload.onload = onUploadComplete;
     xhr.onload = () => {
       const response = (xhr.response ?? {}) as UploadResponse;
       if (xhr.status >= 200 && xhr.status < 300) resolve(response);
@@ -86,15 +88,17 @@ export function ImportScreen() {
   const [dates, setDates] = useState<ImportDateProposal[]>([]);
   const [result, setResult] = useState<UploadResult | null>(null);
   const [progress, setProgress] = useState(0);
+  const [uploadComplete, setUploadComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function inspect(selected: File) {
     setFile(selected);
     setPhase("reading");
     setProgress(2);
+    setUploadComplete(false);
     setError(null);
     try {
-      const response = await postFile(selected, "preview", [], setProgress);
+      const response = await postFile(selected, "preview", [], setProgress, () => setUploadComplete(true));
       if (!response.preview) throw new Error("Max couldn't describe this file.");
       setPreview(response.preview);
       setDates(response.preview.dates);
@@ -110,9 +114,10 @@ export function ImportScreen() {
     if (!file || !preview) return;
     setPhase("saving");
     setProgress(2);
+    setUploadComplete(false);
     setError(null);
     try {
-      const response = await postFile(file, "save", dates, setProgress);
+      const response = await postFile(file, "save", dates, setProgress, () => setUploadComplete(true));
       if (!response.preview || !response.attention) throw new Error("Max couldn't finish this import.");
       setProgress(100);
       setResult({ preview: response.preview, attention: response.attention });
@@ -171,7 +176,9 @@ export function ImportScreen() {
         <ReadingRows preview={preview} />
         <div style={{ marginTop: "auto", paddingTop: 32 }}>
           <div style={{ height: 4, borderRadius: 99, background: "var(--surface-inset)", overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, background: "var(--lime-fill)", transition: "width .15s linear" }} /></div>
-          <span style={{ display: "block", marginTop: 8, textAlign: "right", fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>{progress}%</span>
+          <span style={{ display: "block", marginTop: 8, textAlign: "right", fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+            {uploadComplete ? "Reading your file…" : `${progress}% uploaded`}
+          </span>
         </div>
       </main>
     );
