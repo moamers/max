@@ -19,7 +19,7 @@ export default async function LoginPage() {
             You are signed in as {user.email}.
           </p>
           <p>
-            <Link href="/dashboard">Go to your dashboard</Link>
+            <Link href="/">Go to your money</Link>
           </p>
           <SignOutButton />
         </div>

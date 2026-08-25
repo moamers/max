@@ -19,7 +19,7 @@ export default async function SignupPage() {
       {user ? (
         <p>
           You are already signed in as {user.email}.{" "}
-          <Link href="/dashboard">Go to your dashboard</Link>.
+          <Link href="/">Go to your money</Link>.
         </p>
       ) : (
         <SignupForm />
