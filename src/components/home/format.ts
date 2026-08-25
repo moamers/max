@@ -6,21 +6,29 @@
  */
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
 
-const GBP_WHOLE = new Intl.NumberFormat("en-GB", {
+/**
+ * Pence when the figure has them, whole pounds when it doesn't.
+ *
+ * This was pinned to zero decimal places to match the design's round examples,
+ * which meant every real figure was silently rounded on screen while the
+ * database held the exact amount. A budgeting app that shows £199 for £199.47
+ * is asking to be checked against a spreadsheet and found wrong.
+ */
+const GBP = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 });
 
-/** "£703", "£2,975" — the whole-pound style used everywhere in the design. */
 export function formatGBP(amount: number): string {
-  return GBP_WHOLE.format(amount);
+  return GBP.format(amount);
 }
 
 /** "+£1,108" / "-£240" — the year strip's signed net position. */
 export function formatSignedGBP(amount: number): string {
   const sign = amount < 0 ? "-" : "+";
-  return `${sign}${GBP_WHOLE.format(Math.abs(amount))}`;
+  return `${sign}${GBP.format(Math.abs(amount))}`;
 }
 
 const MONTH_SHORT = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" });

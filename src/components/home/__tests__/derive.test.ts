@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildWeekViews, weekCountForWindow } from "../derive";
-import { dominantMonth } from "../format";
+import { dominantMonth, formatGBP, formatSignedGBP } from "../format";
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
 
 const utc = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));
@@ -113,5 +113,25 @@ describe("dominantMonth", () => {
 
   it("gives an exact split to the month it began in", () => {
     expect(dominantMonth(d(2026, 3, 16), d(2026, 4, 15)).getUTCMonth()).toBe(3);
+  });
+});
+
+describe("money on screen keeps the pence the database stores", () => {
+  it("shows pence when a figure has them", () => {
+    // The database stores numeric(12,2); rounding to whole pounds on screen
+    // made the app disagree with the founder's own spreadsheet.
+    expect(formatGBP(199.47)).toBe("£199.47");
+    expect(formatGBP(-30.02)).toBe("-£30.02");
+    expect(formatGBP(6938.03)).toBe("£6,938.03");
+  });
+
+  it("still shows whole pounds without a trailing .00", () => {
+    expect(formatGBP(260)).toBe("£260");
+    expect(formatGBP(0)).toBe("£0");
+  });
+
+  it("keeps pence in the year strip's signed figure too", () => {
+    expect(formatSignedGBP(1108.5)).toBe("+£1,108.5");
+    expect(formatSignedGBP(-240.25)).toBe("-£240.25");
   });
 });

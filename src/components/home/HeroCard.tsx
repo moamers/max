@@ -29,11 +29,15 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
     : heroTodaySentence(hero.daysRemaining);
   // Below zero is the one case where the hero must not look like good news.
   const isOver = spare !== null && spare < 0;
+  // On the gradient the colour is the card. Off it, the number carries the
+  // verdict itself: lime when there is room, red when there isn't.
   const ink1 = forecast
     ? "var(--hero-ink-1)"
-    : isOver
-      ? "var(--bar-over)"
-      : "var(--text-primary)";
+    : spare === null
+      ? "var(--text-primary)"
+      : isOver
+        ? "var(--bar-over)"
+        : "var(--lime-ink)";
   const ink2 = forecast ? "var(--hero-ink-2)" : "var(--text-secondary)";
   const ink3 = forecast ? "var(--hero-ink-3)" : "var(--text-tertiary)";
 
