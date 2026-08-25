@@ -65,22 +65,42 @@ is not a colour question.
 
 ### What the data says
 
-The founder's twelve real periods are far more regular than he assumed. Measured:
+Measured across the founder's twelve real periods, with no exceptions:
 
-- Every period is **exactly 28 or 35 days** — 4 or 5 whole weeks, never anything else.
-- Every period starts **exactly one day after the previous one ends.** Twelve for twelve.
+- **Every week runs Monday to Sunday.** Every period starts on a Monday and ends
+  on a Sunday, 12 for 12. This is structural, not coincidence: a week is grocery,
+  transport and a two-day weekend, so the week *is* Mon–Sun.
+- **Every period is exactly 4 or 5 whole weeks** — 28 or 35 days, never anything
+  between.
+- **Every period starts exactly one day after the previous ends.** No gaps, no
+  overlaps.
 
-So the only free variable is **4 weeks or 5**. There is no reliable rule for
-which — a "nearest to one month later" test reproduces most of his history but
-not all of it, and he describes the choice as deliberately imprecise.
+So the only free variable is **4 weeks or 5**, and it is decided by where the end
+lands in the calendar. Testing every day-of-month as a target:
+
+| Rule | Reproduces |
+|---|---|
+| End on the Sunday nearest **the 1st/2nd** | **11 of 12** |
+| End on the Sunday nearest the 3rd | 10 of 12 |
+| End on the Sunday nearest the 8th | 4 of 12 |
+
+**The 8th does not fit.** The founder believes he aligns to his card cycle on the
+8th; his actual periods align to the *month boundary*. Worth knowing, because
+building to the stated intent rather than the observed behaviour would have
+produced a rule that disagreed with two thirds of his own history.
+
+So: **pick 4 or 5 whole Mon–Sun weeks, whichever ends nearest the 1st.** It is a
+default, not a law — it disagrees with him once in twelve, which is exactly why
+it is shown and adjustable rather than applied silently.
 
 ### The behaviour
 
 - Max knows today's date. When today passes the current period's end, **the next
   period becomes the default view** — the app moves on by itself, the way opening
   a new spreadsheet does.
-- The next period is **created, not requested**: it starts the day after the last
-  one ended and runs **4 weeks by default**, which matches 8 of his 12 periods.
+- The next period is **created, not requested**: it starts the Monday after the
+  last one ended, and runs 4 or 5 whole weeks — whichever ends on the Sunday
+  nearest the 1st.
 - The proposed end date is **shown and adjustable** — one tap to make it 5 weeks.
   This is the import rule applied to time: *show the assumption, don't ask the
   question.* Never open with an empty date picker.
