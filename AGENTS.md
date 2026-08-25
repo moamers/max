@@ -52,8 +52,13 @@ vocabulary. Free text in, verbatim out.
 
 **4 · User-facing copy passes the tone gate.**
 `src/lib/tone.ts` rejects a banned vocabulary (overspending, waste, should have,
-bad habit, behind, failed, too much…). The design's copy is final and already
-passes. If you write new copy, check it.
+bad habit, behind, failed, too much…). Run it over any copy you write.
+
+**The design handoff is not exempt, and is not entirely clean.** Screen 07
+specifies the word "Overspent", which the gate bans. Where the design and the
+gate disagree, **the gate wins** — precedence is `TONE > METHOD`, and a feature
+that conflicts with a doctrine is the thing that is wrong. State the fact
+without the verdict word and flag it in your report.
 
 **5 · A number the user can't trace is a number they have to take on faith.**
 This parser has misread real data twice (`F-1`, `F-3` in
