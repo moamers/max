@@ -13,15 +13,20 @@ groups tasks by that rule, not by how big they are.
 |---|---|---|---|
 | 1 | A · Goals (11) + Income (12) | `app/goals`, `app/income`, `components/goals` | ✅ Done |
 | 1 | B · Recurring (05) + One-offs (06) | `app/recurring`, `app/one-offs`, `components/money` | ✅ Done |
-| **2** | **C · Export to spreadsheet** | `src/lib/export/**`, `src/app/api/export/**` | Next |
+| — | C · Export to spreadsheet | `src/lib/export/**`, `src/app/api/export/**` | ⏸ Paused — founder preparing the template spec |
 | **2** | **E · Year round-up (07)** | `src/app/year/**`, `src/components/year/**`, `src/lib/queries/year.ts` | Next |
 | **2** | **G · Empty states + period consolidation** | `app/recurring/page.tsx`, `app/one-offs/page.tsx`, `src/lib/queries/period-meta.ts`, `src/app/(home)/lib/**`, `src/app/page.tsx`, `components/money/resolve-period.ts` | Next |
 | 3 | D · Import (01) | `app/import`, `components/import`, **`src/lib/store.ts`**, `src/lib/parser.ts` | After batch 2 |
 | 4 | F · Loose ends | `components/menu`, `ui/Button.tsx`, `app/layout.tsx`, **`src/lib/store.ts`** | After batch 3 |
 
-**Three at once in batch 2.** C, E and G write into separate directories. One
-rule keeps them apart: **E must not edit `src/lib/queries/index.ts`** — import
-`year.ts` directly instead, because G owns that file.
+**Batch 2 is E and G, running together.** They write into separate
+directories. One rule keeps them apart: **E must not edit
+`src/lib/queries/index.ts`** — import `year.ts` directly instead, because G
+owns that file.
+
+Export (C) is paused at the founder's request while he specs the template, and
+Import (D) is held back for his own review — it is the screen where the
+parser's uncertainty is shown to the user, which is a judgement worth his eyes.
 
 **Why D waits.** Import has to start populating `periods.start_date`, which
 means editing `src/lib/store.ts`. Let batch 2 land first rather than have three
