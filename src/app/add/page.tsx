@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { listPeriodSummaries } from "@/lib/store";
+import { resolveSummaryOrderedPeriodId } from "@/lib/queries";
 import {
   isTransactionKind,
   isRecurringCategory,
@@ -8,25 +8,12 @@ import {
   type TransactionCategory,
   type TransactionKind,
 } from "@/lib/transactions";
-import type { UserId } from "@/lib/auth";
 import { AddView } from "./AddView";
 
 type SearchParams = { [key: string]: string | string[] | undefined };
 
 function single(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
-}
-
-/** Same fallback the week screen uses — see its page.tsx for why. */
-async function resolvePeriodId(userId: UserId, searchParams: SearchParams): Promise<number | null> {
-  const str = single(searchParams.period);
-  if (str) {
-    const n = Number(str);
-    if (Number.isFinite(n)) return n;
-  }
-  const summaries = await listPeriodSummaries(userId);
-  if (summaries.length === 0) return null;
-  return summaries[summaries.length - 1].periodId;
 }
 
 function resolveKind(searchParams: SearchParams): TransactionKind {
@@ -56,7 +43,7 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
   const user = await requireUser();
   const sp = await searchParams;
 
-  const periodId = await resolvePeriodId(user.id, sp);
+  const periodId = await resolveSummaryOrderedPeriodId(user.id, sp, "finite");
   if (periodId === null) notFound();
 
   const kind = resolveKind(sp);

@@ -1,9 +1,16 @@
 import { requireUser } from "@/lib/session";
-import { monthOverview, weeklyBreakdown, recurringForPeriod, oneOffsForPeriod } from "@/lib/queries";
-import { listPeriodsMeta, pickCurrentPeriodId, findPeriod } from "./(home)/lib/period-meta";
-import { buildYearData, yearsWithData, type YearData } from "./(home)/lib/year-overview";
+import {
+  monthOverview,
+  weeklyBreakdown,
+  recurringForPeriod,
+  oneOffsForPeriod,
+  listPeriodsMeta,
+  pickCurrentPeriodId,
+  findPeriod,
+} from "@/lib/queries";
+import { buildYearData, yearsWithData, type YearData } from "@/lib/queries/year";
 import { HomeScreen } from "@/components/home/HomeScreen";
-import { EmptyState } from "@/components/home/EmptyState";
+import { EmptyState } from "@/components/EmptyState";
 import { buildWeekViews } from "@/components/home/derive";
 import { formatDayMonth, monthAbbr, monthName, weekCounterLabel } from "@/components/home/format";
 import type { HomeData, MonthTileView, PeriodOptionView, YearView } from "@/components/home/types";
