@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildWeekViews, weekCountForWindow } from "../derive";
-import { dominantMonth, formatGBP, formatSignedGBP } from "../format";
+import { dominantMonth, formatGBP, formatSignedGBP, moneyColor } from "../format";
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
 
 const utc = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));
@@ -133,5 +133,32 @@ describe("money on screen keeps the pence the database stores", () => {
   it("keeps pence in the year strip's signed figure too", () => {
     expect(formatSignedGBP(1108.5)).toBe("+£1,108.5");
     expect(formatSignedGBP(-240.25)).toBe("-£240.25");
+  });
+});
+
+describe("money colour follows the sign, not the label", () => {
+  const LIME = "var(--lime-ink)";
+  const RED = "var(--bar-over)";
+  const MUTED = "var(--text-tertiary)";
+
+  it("colours by which side of zero a figure sits", () => {
+    expect(moneyColor(1200)).toBe(LIME);
+    expect(moneyColor(-30.02)).toBe(RED);
+  });
+
+  it("treats break-even as not-negative", () => {
+    expect(moneyColor(0)).toBe(LIME);
+  });
+
+  it("mutes an unknown rather than calling it bad news", () => {
+    expect(moneyColor(null)).toBe(MUTED);
+    expect(moneyColor(undefined)).toBe(MUTED);
+  });
+
+  it("does not care what the figure is called", () => {
+    // The regression: "worst month" was painted red whether or not it was
+    // negative, so a year where every month finished ahead still showed red.
+    const worstMonthButStillPositive = 640;
+    expect(moneyColor(worstMonthButStillPositive)).toBe(LIME);
   });
 });

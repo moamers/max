@@ -25,6 +25,22 @@ export function formatGBP(amount: number): string {
   return GBP.format(amount);
 }
 
+/**
+ * The colour of a money figure, decided by which side of zero it sits — never
+ * by what the figure is called.
+ *
+ * "Worst month" was painted red whether or not it was negative, so a year in
+ * which every month finished ahead still showed a red number at the bottom of
+ * the screen. A label is a description; the sign is the fact, and only the fact
+ * should choose the colour.
+ *
+ * An unknown is neither: it is muted, because an absent figure is not bad news.
+ */
+export function moneyColor(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined) return "var(--text-tertiary)";
+  return amount < 0 ? "var(--bar-over)" : "var(--lime-ink)";
+}
+
 /** "+£1,108" / "-£240" — the year strip's signed net position. */
 export function formatSignedGBP(amount: number): string {
   const sign = amount < 0 ? "-" : "+";

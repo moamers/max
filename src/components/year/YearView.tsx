@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { formatGBP, formatSignedGBP, monthAbbr } from "@/components/home/format";
+import { formatGBP, formatSignedGBP, moneyColor, monthAbbr } from "@/components/home/format";
 import { Caret } from "@/components/ui/Accordion";
 import { BackArrowIcon } from "@/components/ui/icons";
 import type { YearMonth, YearOverview } from "@/lib/queries/year";
@@ -49,7 +49,7 @@ function ShareBar({ data }: { data: YearOverview }) {
 
 function MonthRow({ month }: { month: YearMonth }) {
   const [open, setOpen] = useState(false);
-  const tone = month.position === null ? "var(--text-tertiary)" : month.position >= 0 ? "var(--lime-ink)" : "var(--bar-over)";
+  const tone = moneyColor(month.position);
   // A month with nothing imported still gets a row — the absence is the
   // information — but it does not pretend to open onto anything.
   const expandable = month.present;
@@ -111,7 +111,7 @@ function RunningPosition({ data }: { data: YearOverview }) {
     <div style={{ background: "var(--surface)", borderRadius: "var(--radius-card-sm)", padding: "20px 18px 16px", display: "flex", flexDirection: "column", gap: 12, marginTop: 6 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Running position</span>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--bar-over)" }}>
+        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: moneyColor(data.kpis.lowPoint?.amount) }}>
           {data.kpis.lowPoint ? `low ${formatSignedGBP(data.kpis.lowPoint.amount)}` : "—"}
         </span>
       </div>
@@ -135,9 +135,11 @@ function RunningPosition({ data }: { data: YearOverview }) {
 
 function Kpis({ data }: { data: YearOverview }) {
   const rows = [
-    ["best month", data.kpis.best ? monthAbbr(data.kpis.best.monthIndex) : "—", data.kpis.best?.position ?? null, "var(--lime-ink)"],
-    ["worst month", data.kpis.worst ? monthAbbr(data.kpis.worst.monthIndex) : "—", data.kpis.worst?.position ?? null, "var(--bar-over)"],
-    ["average month", "", data.kpis.averagePosition, (data.kpis.averagePosition ?? 0) >= 0 ? "var(--lime-ink)" : "var(--bar-over)"],
+    // Colour comes from the sign in every row. "Worst month" is still the worst
+    // month when it finished ahead — it just isn't red.
+    ["best month", data.kpis.best ? monthAbbr(data.kpis.best.monthIndex) : "—", data.kpis.best?.position ?? null, moneyColor(data.kpis.best?.position)],
+    ["worst month", data.kpis.worst ? monthAbbr(data.kpis.worst.monthIndex) : "—", data.kpis.worst?.position ?? null, moneyColor(data.kpis.worst?.position)],
+    ["average month", "", data.kpis.averagePosition, moneyColor(data.kpis.averagePosition)],
   ] as const;
   return (
     <div style={{ display: "flex", flexDirection: "column", padding: "0 2px" }}>
@@ -161,7 +163,7 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
   const yearIndex = availableYears.indexOf(data.year);
   const previous = yearIndex > 0 ? availableYears[yearIndex - 1] : null;
   const next = yearIndex >= 0 && yearIndex < availableYears.length - 1 ? availableYears[yearIndex + 1] : null;
-  const netColor = data.netPosition === null || data.netPosition >= 0 ? "var(--lime-ink)" : "var(--bar-over)";
+  const netColor = moneyColor(data.netPosition);
 
   return (
     <div style={{ position: "fixed", inset: 0, maxWidth: 480, margin: "0 auto", background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
