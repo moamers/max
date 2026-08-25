@@ -324,6 +324,14 @@ what makes the app usable.
     gets a dot in the needs-a-look colour. Pending rows do NOT get a dot. No
     counts, no badge numbers.
 
+RUNNING IN PARALLEL WITH EXPORT — read this. Another agent is building the
+export path against parseWorkbook's output at the same time as you. You own
+src/lib/parser.ts, so you can change it; but DO NOT CHANGE THE SHAPE of what
+parseWorkbook returns. Adding a field is fine. Renaming, removing or
+restructuring one is not, because their round-trip test is written against it
+and git will not catch a semantic break. If you believe the shape has to change,
+say so in your report and leave it alone.
+
 Do not apply the migration. Write the .sql and say so in your report.
 ```
 
@@ -369,6 +377,13 @@ Automated, with exceljs, over the committed templates. Not a nice-to-have.
 Also state the G-4 limitation in the export UI: a round trip loses the
 recurring group, because the sheet has one flat bills list and Max has four.
 Do not imply a lossless round trip.
+
+RUNNING IN PARALLEL WITH IMPORT — read this. Another agent owns
+src/lib/parser.ts and src/lib/store.ts and is editing them while you work. They
+have been told not to change the shape of parseWorkbook's output, only to add to
+it. So: read from the parser, never modify it, and if your round-trip test needs
+a change there, put it in your report rather than making it. Do not touch
+src/lib/store.ts at all.
 
 YEAR CSV: one row per period. The columns and maths are in 14-export-spec.md
 § "The year round-up export" — they were reverse-engineered from the founder's
