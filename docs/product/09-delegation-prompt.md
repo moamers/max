@@ -311,41 +311,44 @@ src/app/api/auth/login/route.ts, src/components/home/EmptyState.tsx
     the remaining 12%. Change the label instead so the pause reads as a stage
     rather than a stall — e.g. "Reading your file…" once the upload completes.
 
-6 · SCOPE THE + BUTTON TO A CONTEXT.
+6 · SCOPE THE + BUTTON TO A CONTEXT. Two jobs, and the first is the bigger one.
+
+    6a · HIDE IT ALMOST EVERYWHERE.
 
     THE RULE: the + (floating circle, bottom right) appears ONLY on a screen
-    showing a LIST of transactions, where the thing being added is unambiguous.
+    showing a LIST of transactions, where what is being added is unambiguous.
     It must never ask the user what they meant — the screen already knows.
 
-    KEEP it, and make sure each passes full context to /add:
-      - A specific week — src/app/week/[weekNumber]/WeekView.tsx.
-        Currently passes ?week&period&kind=weekly. Good, but no category, so
-        /add still asks Everyday / Weekend / Transport. That is acceptable:
-        the week is known, the category genuinely isn't.
-      - One-offs — src/components/money/OneOffsView.tsx.
-        Passes ?period&kind=one_off. One-offs carry no category, so this is
-        already complete context. Leave it.
-      - Recurring — src/components/money/RecurringView.tsx. FIX THIS.
-        It currently hardcodes `&category=housing`, so tapping + anywhere on
-        that screen silently pre-selects Housing whatever the user meant. A
-        wrong default that looks like a decision is worse than no default.
-        Move the + into the expanded group so it knows its own category
-        (Housing / Childcare / Bills / Subscriptions), or keep one + on the
-        screen and pass NO category so /add asks. Either is fine; the hardcode
-        is not.
-
-    REMOVE it from:
-      - src/components/home/HomeScreen.tsx — Home has no week, kind or category,
-        so anything added there lands with no week recorded and export has to
-        guess which week tab it belongs on.
-      - Anywhere else it appears that is not a transaction list. The single
-        transaction view (src/app/transaction/[id]) correctly has none already
-        — leave it that way.
+    It currently appears on screens that fail that test. Audit every screen and
+    remove it from all of them except the three named in 6b. Specifically:
+      - src/components/home/HomeScreen.tsx — REMOVE. Home has no week, kind or
+        category, so a row added there lands with no week recorded and export
+        later has to guess which week tab it belongs on.
+      - The single transaction view (src/app/transaction/[id]) correctly has
+        none. Leave it that way.
+      - Goals, income, year, the month picker and the menu must not have one.
+        Check each; add nothing.
 
     This is a DELIBERATE DEVIATION from the design, which shows a + on Home.
     The founder decided against it: a + with no context creates a row nothing
     downstream can place. Note it in your report so it reads as a decision
     rather than a mistake.
+
+    6b · ON THE THREE THAT KEEP IT, PASS REAL CONTEXT.
+      - A specific week — src/app/week/[weekNumber]/WeekView.tsx.
+        Passes ?week&period&kind=weekly today. Good. No category, so /add asks
+        Everyday / Weekend / Transport — acceptable, because the week is known
+        and the category genuinely is not.
+      - One-offs — src/components/money/OneOffsView.tsx.
+        Passes ?period&kind=one_off. One-offs carry no category, so that is
+        already complete. Leave it.
+      - Recurring — src/components/money/RecurringView.tsx. FIX THIS.
+        It hardcodes `&category=housing`, so tapping + anywhere on that screen
+        silently pre-selects Housing whatever the user meant. A wrong default
+        that looks like a decision is worse than no default. Either move the +
+        into the expanded group so it knows its own category, or keep one + on
+        the screen and pass NO category so /add asks. The hardcode is not an
+        option.
 
     Extend your ownership for this job to: src/components/home/HomeScreen.tsx,
     src/app/week/[weekNumber]/WeekView.tsx, src/components/money/**.
