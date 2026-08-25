@@ -50,13 +50,17 @@ function ShareBar({ data }: { data: YearOverview }) {
 function MonthRow({ month }: { month: YearMonth }) {
   const [open, setOpen] = useState(false);
   const tone = month.position === null ? "var(--text-tertiary)" : month.position >= 0 ? "var(--lime-ink)" : "var(--bar-over)";
+  // A month with nothing imported still gets a row — the absence is the
+  // information — but it does not pretend to open onto anything.
+  const expandable = month.present;
   return (
-    <div style={{ background: "var(--surface)", borderRadius: "var(--radius-row)", overflow: "hidden" }}>
+    <div style={{ background: "var(--surface)", borderRadius: "var(--radius-row)", overflow: "hidden", opacity: expandable ? 1 : 0.55 }}>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        style={{ width: "100%", border: 0, background: "transparent", color: "inherit", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", cursor: "pointer", font: "inherit" }}
+        disabled={!expandable}
+        onClick={() => expandable && setOpen((value) => !value)}
+        aria-expanded={expandable ? open : undefined}
+        style={{ width: "100%", border: 0, background: "transparent", color: "inherit", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", cursor: expandable ? "pointer" : "default", font: "inherit" }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", minWidth: 34 }}>{monthAbbr(month.monthIndex)}</span>
@@ -70,10 +74,10 @@ function MonthRow({ month }: { month: YearMonth }) {
           <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color: tone }}>
             {month.position === null ? "—" : formatSignedGBP(month.position)}
           </span>
-          <Caret open={open} />
+          {expandable ? <Caret open={open} /> : <span style={{ width: 16 }} />}
         </span>
       </button>
-      {open && (
+      {open && expandable && (
         <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
           <div style={{ alignSelf: "flex-end", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
             {month.periodIds.map((periodId, index) => (
@@ -174,7 +178,7 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
       </header>
 
       <main style={{ flex: 1, overflowY: "auto", padding: "18px 20px 40px", display: "flex", flexDirection: "column", gap: 30 }}>
-        {data.periodCount < 2 ? (
+        {data.periodCount === 0 ? (
           <div style={{ minHeight: "55vh", display: "grid", placeItems: "center", textAlign: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{YEAR_EMPTY_COPY.title}</h1>

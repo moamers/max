@@ -48,11 +48,28 @@ describe("deriveYearOverview", () => {
       period({ periodId: 2, label: "Late January", income: 2_000, weekly: 200, recurring: 300, oneOff: 0 }),
     ]);
 
-    expect(result.months).toHaveLength(1);
-    expect(result.months[0].periodIds).toEqual([1, 2]);
-    expect(result.months[0].periodLabels).toEqual(["January", "Late January"]);
-    expect(result.months[0].income).toBe(6_000);
-    expect(result.months[0].position).toBe(3_000);
+    // Twelve rows always — the sheet has a row per period whether or not it is
+    // filled in, and an empty row says "nothing imported", which a missing row
+    // does not.
+    expect(result.months).toHaveLength(12);
+    expect(result.months.filter((m) => m.present)).toHaveLength(1);
+
+    const january = result.months[0];
+    expect(january.present).toBe(true);
+    expect(january.periodIds).toEqual([1, 2]);
+    expect(january.periodLabels).toEqual(["January", "Late January"]);
+    expect(january.income).toBe(6_000);
+    expect(january.position).toBe(3_000);
+
+    // Every other month reads as unknown, not as a month of zero spending.
+    for (const blank of result.months.slice(1)) {
+      expect(blank.present).toBe(false);
+      expect(blank.income).toBeNull();
+      expect(blank.position).toBeNull();
+    }
+
+    // And an unrecorded month must not drag the average toward zero.
+    expect(result.kpis.averagePosition).toBe(3_000);
   });
 
   it("keeps income-dependent figures unknown when any period income is unknown", () => {
@@ -140,6 +157,7 @@ describe("year data eligibility", () => {
 describe("buildCumulativeChart", () => {
   const month = (monthIndex: number, cumulativePosition: number): YearMonth => ({
     monthIndex,
+    present: true,
     periodIds: [monthIndex + 1],
     periodLabels: [String(monthIndex)],
     income: 0,
@@ -162,5 +180,31 @@ describe("buildCumulativeChart", () => {
   it("returns no invented points when cumulative data is unknown", () => {
     const unknown = { ...month(0, 0), cumulativePosition: null };
     expect(buildCumulativeChart([unknown]).points).toEqual([]);
+  });
+});
+
+describe("the year table always has twelve rows", () => {
+  // The founder's aggregates sheet has a row per period whether or not it is
+  // filled in. An empty row says "nothing imported for this month", which a
+  // missing row does not.
+  it("marks a month with no imported period as absent, not as zero", () => {
+    const blank: YearMonth = {
+      monthIndex: 4,
+      present: false,
+      periodIds: [],
+      periodLabels: [],
+      income: null,
+      weekly: 0,
+      recurring: 0,
+      oneOff: 0,
+      spent: 0,
+      position: null,
+      cumulativePosition: null,
+    };
+    // Position and income stay null so the row renders blank rather than £0,
+    // and nothing downstream can average it in as a real month.
+    expect(blank.position).toBeNull();
+    expect(blank.income).toBeNull();
+    expect(blank.present).toBe(false);
   });
 });

@@ -79,6 +79,15 @@ export interface YearPeriodInput {
 
 export interface YearMonth {
   monthIndex: number;
+  /**
+   * False for a month with no imported period. It still appears in the table —
+   * a year has twelve rows whether or not they are all filled — but its figures
+   * are null rather than zero, and it is excluded from every average.
+   *
+   * Nothing recorded is not the same claim as nothing spent, and folding the
+   * two together would quietly drag every average toward zero.
+   */
+  present: boolean;
   periodIds: number[];
   periodLabels: string[];
   income: number | null;
@@ -185,6 +194,7 @@ export function deriveYearOverview(year: number, rows: YearPeriodInput[]): YearO
       if (cumulativeKnown) cumulative += position ?? 0;
       return {
         monthIndex,
+        present: true,
         periodIds: monthRows.map((row) => row.periodId),
         periodLabels: monthRows.map((row) => row.label),
         income,
@@ -197,6 +207,26 @@ export function deriveYearOverview(year: number, rows: YearPeriodInput[]): YearO
         cumulativePosition: cumulativeKnown ? cumulative : null,
       };
     });
+
+  // Pad to a full calendar year. The founder's aggregates sheet has a row per
+  // period whether or not it is filled in, and an empty row is information —
+  // it says "nothing imported for this month", which a missing row does not.
+  const byIndex = new Map(months.map((month) => [month.monthIndex, month]));
+  const allMonths: YearMonth[] = Array.from({ length: 12 }, (_, monthIndex) =>
+    byIndex.get(monthIndex) ?? {
+      monthIndex,
+      present: false,
+      periodIds: [],
+      periodLabels: [],
+      income: null,
+      weekly: 0,
+      recurring: 0,
+      oneOff: 0,
+      spent: 0,
+      position: null,
+      cumulativePosition: null,
+    }
+  );
 
   const weekly = rows.reduce((sum, row) => sum + row.weekly, 0);
   const recurring = rows.reduce((sum, row) => sum + row.recurring, 0);
@@ -225,6 +255,8 @@ export function deriveYearOverview(year: number, rows: YearPeriodInput[]): YearO
   // expenditure categories still fill the proportional share bar rather than
   // overflowing it like a budget bar would.
   const barDenominator = Object.values(barAmounts).reduce((sum, amount) => sum + amount, 0);
+  // Averages divide by months with data, never by twelve — an unrecorded
+  // month is not a month of zero spending.
   const monthCount = Math.max(1, months.length);
   const shares = (Object.keys(SHARE_LABELS) as YearShare["key"][]).map((key) => {
     const amount = amounts[key];
@@ -259,7 +291,7 @@ export function deriveYearOverview(year: number, rows: YearPeriodInput[]): YearO
   return {
     year,
     periodCount: rows.length,
-    months,
+    months: allMonths,
     income,
     spent: { weekly, recurring, oneOff, total },
     netPosition,
