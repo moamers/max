@@ -22,7 +22,21 @@ function refreshIncomeSurfaces() {
  */
 export type SaveResult = { ok: true } | { ok: false; message: string };
 
+/**
+ * Next signals redirect() and notFound() by throwing a tagged error. Catching
+ * everything turns an expired session into "I couldn't save that" and leaves
+ * the user stuck on a screen that will never work — so those are re-thrown and
+ * only genuine failures are reported.
+ */
+function rethrowControlFlow(cause: unknown): void {
+  const digest = (cause as { digest?: unknown })?.digest;
+  if (typeof digest === "string" && (digest.startsWith("NEXT_REDIRECT") || digest === "NEXT_NOT_FOUND")) {
+    throw cause;
+  }
+}
+
 function failed(cause: unknown): SaveResult {
+  rethrowControlFlow(cause);
   const message = cause instanceof Error ? cause.message : String(cause);
   return { ok: false, message };
 }
