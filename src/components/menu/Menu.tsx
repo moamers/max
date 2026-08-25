@@ -67,6 +67,20 @@ export function Menu({ onDismiss }: MenuProps) {
           </Link>
 
           {/*
+            Export was built behind /api/export but had no way in, because the
+            agent that wrote it did not own this file. A feature nobody can
+            reach is not shipped.
+          */}
+          <Link href="/api/export" style={{ color: "inherit", textDecoration: "none" }}>
+            <Row interactive divider padding="16px 0" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Export your data</span>
+              <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+                &rsaquo;
+              </span>
+            </Row>
+          </Link>
+
+          {/*
             The prototype's own "Clear data" row just closes the menu (onClick={{back}})
             — there is no clear-data mutation anywhere in the query/store layer to call,
             so this matches the prototype's actual behaviour rather than inventing one.
