@@ -9,45 +9,33 @@
 Parallel work is safe when two agents never write the same file. The table below
 groups tasks by that rule, not by how big they are.
 
-| Batch | Task | Owns (writes) | Reads only |
+| Batch | Task | Owns (writes) | Status |
 |---|---|---|---|
-| **1** | **A · Goals (11) + Income (12)** | `src/app/goals/**`, `src/app/income/**`, `src/components/goals/**` | `store.ts`, `queries/` |
-| **1** | **B · Recurring (05) + One-offs (06)** | `src/app/recurring/**`, `src/app/one-offs/**`, `src/components/money/**` | `store.ts`, `queries/` |
-| **1** | **C · Export to spreadsheet** | `src/lib/export/**`, `src/app/api/export/**` | `parser.ts`, `store.ts`, `queries/` |
-| **2** | **D · Import (01)** | `src/app/import/**`, `src/components/import/**`, **`src/lib/store.ts`**, `src/lib/parser.ts` | — |
-| **2** | **E · Year round-up (07)** | `src/app/year/**`, `src/components/year/**`, `src/lib/queries/year.ts` + `index.ts` | `store.ts` |
-| **3** | **F · Loose ends** | `src/components/menu/**`, `src/components/ui/Button.tsx`, `src/app/layout.tsx`, `src/lib/store.ts`, `src/lib/queries/` | — |
+| 1 | A · Goals (11) + Income (12) | `app/goals`, `app/income`, `components/goals` | ✅ Done |
+| 1 | B · Recurring (05) + One-offs (06) | `app/recurring`, `app/one-offs`, `components/money` | ✅ Done |
+| **2** | **C · Export to spreadsheet** | `src/lib/export/**`, `src/app/api/export/**` | Next |
+| **2** | **E · Year round-up (07)** | `src/app/year/**`, `src/components/year/**`, `src/lib/queries/year.ts` | Next |
+| **2** | **G · Empty states + period consolidation** | `app/recurring/page.tsx`, `app/one-offs/page.tsx`, `src/lib/queries/period-meta.ts`, `src/app/(home)/lib/**`, `src/app/page.tsx`, `components/money/resolve-period.ts` | Next |
+| 3 | D · Import (01) | `app/import`, `components/import`, **`src/lib/store.ts`**, `src/lib/parser.ts` | After batch 2 |
+| 4 | F · Loose ends | `components/menu`, `ui/Button.tsx`, `app/layout.tsx`, **`src/lib/store.ts`** | After batch 3 |
 
-**Three at once in batch 1.** A, B and C write into completely separate
-directories and only *read* the shared data layer, so they cannot collide.
+**Three at once in batch 2.** C, E and G write into separate directories. One
+rule keeps them apart: **E must not edit `src/lib/queries/index.ts`** — import
+`year.ts` directly instead, because G owns that file.
 
-**Why D and E wait.** Import has to start populating `periods.start_date` /
-`end_date`, which means editing `src/lib/store.ts` — a file batch 1 reads. Let
-batch 1 land first so nobody rebases onto a moving data layer. D and E are safe
-together because Import owns `store.ts` and Year owns `queries/`.
+**Why D waits.** Import has to start populating `periods.start_date`, which
+means editing `src/lib/store.ts`. Let batch 2 land first rather than have three
+branches rebase onto a moving data layer.
 
-**Why F is alone.** It touches `Button`, `layout.tsx` and `store.ts` — files
-everything else depends on. Cheap, but it will conflict with anything running.
+**Why F is last and alone.** It also writes `store.ts`, plus `Button` and
+`layout.tsx` — files everything depends on. It also deletes `/dashboard`, which
+is only safe once its delete control has a replacement.
 
-### Reasoning effort per task
-
-Raise effort where a wrong answer is **expensive and hard to spot**; lower it
-where the spec is precise and the output is visibly right or wrong. Labels vary
-by product — map these onto whatever scale yours offers.
-
-| Task | Effort | Why |
-|---|---|---|
-| **A** Goals + Income | Medium | Precisely specified, backend exists, mistakes are visible on screen. The only judgement is surfacing which tier an income figure came from. |
-| **B** Recurring + One-offs | Medium | Same, with one trap: screen 05's share bar is *not* the budget bar. If effort is cheap, go High — that distinction is easy to miss and looks fine when wrong. |
-| **C** Export | **High / max** | No design to follow, round-trip correctness, real money, and a parser with a history of confident wrong answers. |
-| **D** Import | **High** | The "lines I couldn't place" step is real interaction design, and it edits `store.ts` and `parser.ts`. |
-| **E** Year round-up | Medium | Well specified; the empty-state judgement is the only soft part. |
-| **F** Loose ends | Medium, **High** for the delete | Mostly mechanical, but step 1 writes a destructive mutation against real financial data. |
-
-> **Consider keeping C (Export) in-house.** It has no design to follow, its
-> acceptance test is *parse → export → parse again yields identical data*, and
-> this parser has produced wrong numbers on real data twice. It is the task
-> where a confident-but-wrong result is hardest to spot.
+> **Export is delegated, but reviewed hardest.** It has no design to follow and
+> this parser has produced wrong numbers on real data twice. What makes it
+> safe to delegate is that its acceptance test is *mechanical*: parse → export
+> → parse again must yield identical data. An objective test is worth more than
+> a careful author.
 
 ---
 
@@ -60,15 +48,24 @@ You are contributing to Max, a personal finance web app. Repo:
 https://github.com/moamers/max
 
 ## Branching — read carefully
-`main` is 27 commits STALE. Do not branch from it and do not target it.
-Branch from `claude/budget-app-spending-insights-i5fnch`, which is the real
-trunk:
+Branch from **`v1/integration`**. That is the base for all V1 work.
 
     git fetch origin
-    git checkout -b codex/<short-task-name> origin/claude/budget-app-spending-insights-i5fnch
+    git checkout -b codex/<short-task-name> origin/v1/integration
 
 Commit your work, push your branch, and tell me the exact branch name when you
 are done. Do not open a pull request.
+
+**Do not push to any branch other than your own**, and never to
+`claude/budget-app-spending-insights-i5fnch` — that branch is wired to
+automatic deployment, and pushing to it ships unreviewed code and burns build
+credit. `main` is stale; ignore it entirely.
+
+A note on git, because this went wrong once: a branch moving forward to include
+your commit is a **fast-forward**, which is normal and loses nothing. Do not
+diagnose it as damage and do not propose a force-push to "repair" it. If
+something about the repository state looks wrong, describe what you observe and
+stop — do not rewrite history.
 
 ## Read these first, in this order
 1. https://github.com/moamers/max/blob/claude/budget-app-spending-insights-i5fnch/AGENTS.md
@@ -214,7 +211,38 @@ Two things you must not paper over:
   read as salary. Your export must reproduce that layout faithfully.
 ```
 
-### D · Import (01) — batch 2
+### G · Empty states and period-resolution consolidation — batch 2
+```
+Two small jobs that belong together because both are about "which period am I
+looking at".
+
+Own: src/app/recurring/page.tsx, src/app/one-offs/page.tsx,
+src/lib/queries/period-meta.ts (new), src/app/(home)/lib/** (remove),
+src/app/page.tsx, src/components/money/resolve-period.ts,
+src/lib/queries/index.ts
+
+1. FIX A REAL DEFECT. /recurring and /one-offs currently call notFound() when
+   the user has no periods, so a fresh account gets a hard 404 on two main
+   screens. notFound() is correct for a period id that is guessed or not owned;
+   it is wrong for "you have not imported anything yet". Keep notFound() for
+   the first case, and render an empty state for the second, consistent with
+   how Home already handles it (src/components/home/EmptyState.tsx). You may
+   move EmptyState somewhere shared if both need it — you own that decision,
+   just update every importer.
+
+2. CONSOLIDATE. "Which period am I looking at" is now answered in three
+   different places: src/app/(home)/lib/period-meta.ts, the week and add
+   screens, and src/components/money/resolve-period.ts. Move the canonical
+   version into src/lib/queries/period-meta.ts, export it from
+   src/lib/queries/index.ts, and update every importer. Delete the duplicates.
+   Behaviour must not change — if two of the three disagree about a fallback,
+   say so in your report rather than silently picking one.
+
+You own src/lib/queries/index.ts for this task; another agent has been told not
+to touch it.
+```
+
+### D · Import (01) — batch 3
 ```
 Build screen 01 (Import), all three states: invite, reading, result.
 
@@ -236,7 +264,7 @@ They are still null, so date logic falls back to parsing the label, which infers
 a year that may be wrong.
 ```
 
-### E · Year round-up (07) — batch 2
+### E · Year round-up (07) — batch 2 · do NOT edit src/lib/queries/index.ts
 ```
 Build screen 07 (Year round-up) from the design README.
 
@@ -254,7 +282,7 @@ it needs a year of data to say anything. If there is only one period, show an
 honest empty state rather than a chart of one point.
 ```
 
-### F · Loose ends — batch 3, run alone
+### F · Loose ends — batch 4, run alone
 ```
 Own: src/components/menu/**, src/components/ui/Button.tsx, src/app/layout.tsx,
 src/lib/store.ts, src/lib/queries/
