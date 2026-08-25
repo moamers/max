@@ -311,24 +311,44 @@ src/app/api/auth/login/route.ts, src/components/home/EmptyState.tsx
     the remaining 12%. Change the label instead so the pause reads as a stage
     rather than a stall — e.g. "Reading your file…" once the upload completes.
 
-6 · SCOPE THE + BUTTON TO A CONTEXT. Today the FAB also sits on Home, where
-    there is no week, kind or category to attach a new transaction to — so a row
-    added there has no week recorded, and export later has to guess which week
-    tab it belongs on.
-      - REMOVE the FAB from src/components/home/HomeScreen.tsx.
-      - KEEP it where context exists and is unambiguous: a specific week
-        (src/app/week/[weekNumber]/WeekView.tsx) and the recurring / one-offs
-        sheets (src/components/money/MoneySheet.tsx).
-      - Each remaining FAB must pass its context to /add, which already reads
-        `week`, `kind` and `category` from the query string. Verify each link
-        actually carries them.
-      - This is a DELIBERATE DEVIATION from the design: handoff screen 02 shows
-        a FAB on Home. The founder decided against it, because a + with no
-        context creates a row that nothing downstream can place. Note it in your
-        report so the deviation is recorded rather than looking like a mistake.
+6 · SCOPE THE + BUTTON TO A CONTEXT.
 
-Also extend your ownership for this job to: src/components/home/HomeScreen.tsx,
-src/app/week/[weekNumber]/WeekView.tsx, src/components/money/MoneySheet.tsx.
+    THE RULE: the + (floating circle, bottom right) appears ONLY on a screen
+    showing a LIST of transactions, where the thing being added is unambiguous.
+    It must never ask the user what they meant — the screen already knows.
+
+    KEEP it, and make sure each passes full context to /add:
+      - A specific week — src/app/week/[weekNumber]/WeekView.tsx.
+        Currently passes ?week&period&kind=weekly. Good, but no category, so
+        /add still asks Everyday / Weekend / Transport. That is acceptable:
+        the week is known, the category genuinely isn't.
+      - One-offs — src/components/money/OneOffsView.tsx.
+        Passes ?period&kind=one_off. One-offs carry no category, so this is
+        already complete context. Leave it.
+      - Recurring — src/components/money/RecurringView.tsx. FIX THIS.
+        It currently hardcodes `&category=housing`, so tapping + anywhere on
+        that screen silently pre-selects Housing whatever the user meant. A
+        wrong default that looks like a decision is worse than no default.
+        Move the + into the expanded group so it knows its own category
+        (Housing / Childcare / Bills / Subscriptions), or keep one + on the
+        screen and pass NO category so /add asks. Either is fine; the hardcode
+        is not.
+
+    REMOVE it from:
+      - src/components/home/HomeScreen.tsx — Home has no week, kind or category,
+        so anything added there lands with no week recorded and export has to
+        guess which week tab it belongs on.
+      - Anywhere else it appears that is not a transaction list. The single
+        transaction view (src/app/transaction/[id]) correctly has none already
+        — leave it that way.
+
+    This is a DELIBERATE DEVIATION from the design, which shows a + on Home.
+    The founder decided against it: a + with no context creates a row nothing
+    downstream can place. Note it in your report so it reads as a decision
+    rather than a mistake.
+
+    Extend your ownership for this job to: src/components/home/HomeScreen.tsx,
+    src/app/week/[weekNumber]/WeekView.tsx, src/components/money/**.
 
 Do not apply any migration you write.
 ```
