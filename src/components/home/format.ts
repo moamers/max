@@ -172,11 +172,26 @@ export function weeksRemaining(daysRemaining: number): number {
  * v1.dc.html, the forecast and today hero blocks) — copy is final, only
  * the week count and month name are live.
  */
-export function heroForecastSentence(daysRemaining: number, month: string): string {
+export function heroForecastSentence(
+  daysRemaining: number,
+  month: string,
+  /** Weekly allowance not yet spent, and what is left after everything else. */
+  detail?: { weeklyRemaining: number; leftToday: number | null }
+): string {
   const weeks = weeksRemaining(daysRemaining);
   if (weeks <= 0) return `This is where ${month} lands.`;
   const noun = weeks === 1 ? "week" : "weeks";
-  return `${weeks} ${noun} to go. Spend the weekly budget that's left and this is where ${month} lands.`;
+  const base = `${weeks} ${noun} to go. Spend the weekly budget that's left and this is where ${month} lands.`;
+
+  // When spending the whole allowance would take them under, say by how much
+  // and what would keep them level — a shortfall the user can't act on is just
+  // bad news.
+  if (detail && detail.leftToday !== null && detail.weeklyRemaining > detail.leftToday) {
+    return `${base} There's ${formatGBP(detail.weeklyRemaining)} of weekly budget left, and ${formatGBP(
+      detail.leftToday
+    )} of room — so ${formatGBP(detail.weeklyRemaining - detail.leftToday)} of it would come from somewhere else.`;
+  }
+  return base;
 }
 
 export function heroTodaySentence(daysRemaining: number): string {

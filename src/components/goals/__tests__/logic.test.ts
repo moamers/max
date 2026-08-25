@@ -5,7 +5,10 @@ describe("goal and income screen logic", () => {
   it("clamps server mutation values to the numeric-field contract", () => {
     expect(moneyInputAmount(-2)).toBe(0);
     expect(moneyInputAmount(100_000)).toBe(99_999);
-    expect(moneyInputAmount(123.9)).toBe(123);
+    // Pence are kept. The sheet is full of 28.65 and 96.76, and the amount
+    // column stores two decimal places — truncating discarded real money.
+    expect(moneyInputAmount(123.9)).toBe(123.9);
+    expect(moneyInputAmount(28.654)).toBe(28.65);
     expect(moneyInputAmount(Number.NaN)).toBe(0);
   });
 

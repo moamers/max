@@ -4,20 +4,29 @@
  *
  * The forecast rule, stated once so it can be argued with:
  *
- *   forecast = spent so far + (weekly run-rate x days remaining)
+ *   forecast = spent so far + whatever weekly allowance is still unspent
  *
- * Only *weekly* spend is projected forward. Recurring is the fixed floor — it
- * is charged once and projecting it would bill the user's rent twice — and
- * one-offs are by definition not a rate. Every input to the number is returned
- * alongside it (B-8), so the screen can show its working rather than assert a
- * total.
+ * This is the founder's own formula, lifted from his spreadsheet:
+ *   End of month forecast total = SUM(grand total, IF(weekly left < 0, 0, weekly left))
+ * It answers the question he actually asks — *if I spend the rest of my weekly
+ * allowance, where do I land?* — rather than extrapolating a run-rate, which
+ * quietly forgives a budget he has not yet spent and reads as safer than he is.
  *
- * When the period's dates can't be established there is no forecast: `forecast`
- * is null and the screen says so. A made-up denominator is worse than a gap.
+ * The floor at zero matters: a weekly budget already overspent does not earn
+ * credit back against the forecast.
+ *
+ * Only *weekly* spend is projected. Recurring is the fixed floor — it is
+ * charged once and projecting it would bill the rent twice — and one-offs are
+ * not a rate. Every input is returned alongside the number (B-8), so the screen
+ * shows its working rather than asserting a total.
+ *
+ * No dates or no weekly targets means no forecast: `forecast` is null and the
+ * screen says so. A made-up denominator is worse than a gap.
  */
 import { eq, and, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { periods, transactions } from "../schema";
+import { listGoals } from "../store";
 import type { UserId } from "../auth";
 import type { TransactionKind } from "../transactions";
 import { periodWindow, type PeriodWindow } from "./period-window";
@@ -44,9 +53,13 @@ export interface MonthOverview {
   /** The working behind `forecast`, so the number can be opened up. */
   forecastBasis: {
     weeklySpentSoFar: number;
+    /** Weekly targets x the number of weeks in this period. */
+    weeklyBudget: number;
+    /** Budget not yet spent, floored at zero. What the forecast adds on. */
+    weeklyRemaining: number;
+    weeksInPeriod: number;
     daysElapsed: number;
     daysRemaining: number;
-    dailyWeeklyRate: number;
   } | null;
   /** income − forecast. Null whenever either side is unknown. */
   projectedLeft: number | null;
@@ -104,17 +117,22 @@ export async function monthOverview(
   let forecast: number | null = null;
   let forecastBasis: MonthOverview["forecastBasis"] = null;
 
-  if (window) {
-    // Before the first day has finished there is no rate to extrapolate from,
-    // so the forecast is just what has been spent — an honest "too early to say
-    // more" rather than a division by zero dressed up as a projection.
-    const dailyWeeklyRate = window.daysElapsed > 0 ? weekly / window.daysElapsed : 0;
-    forecast = spent.total + dailyWeeklyRate * window.daysRemaining;
+  const weeklyTargets = await listGoals(userId);
+  const perWeek = weeklyTargets.reduce((sum, goal) => sum + goal.weeklyAmount, 0);
+
+  if (window && perWeek > 0) {
+    const weeksInPeriod = Math.max(1, Math.round(window.totalDays / 7));
+    const weeklyBudget = perWeek * weeksInPeriod;
+    // Floored at zero: an allowance already overspent is not credit.
+    const weeklyRemaining = Math.max(0, weeklyBudget - weekly);
+    forecast = spent.total + weeklyRemaining;
     forecastBasis = {
       weeklySpentSoFar: weekly,
+      weeklyBudget,
+      weeklyRemaining,
+      weeksInPeriod,
       daysElapsed: window.daysElapsed,
       daysRemaining: window.daysRemaining,
-      dailyWeeklyRate,
     };
   }
 

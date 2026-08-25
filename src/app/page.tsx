@@ -116,6 +116,9 @@ export default async function HomePage(props: PageProps<"/">) {
     weekCounter: weekCounterLabel(currentWeekNumber, weeks.length),
     hero: {
       monthName: monthLabel,
+      forecastDetail: overview.forecastBasis
+        ? { weeklyRemaining: overview.forecastBasis.weeklyRemaining, leftToday: overview.leftToday }
+        : undefined,
       endOfMonthLabel: window ? formatDayMonth(window.end) : "",
       daysRemaining: window?.daysRemaining ?? 0,
       today: { spare: overview.leftToday, spend: overview.spent.total },

@@ -25,7 +25,7 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
   const spend = forecast ? hero.forecast.spend : hero.today.spend;
   const eyebrow = forecast ? `Forecast · spare on ${hero.endOfMonthLabel}` : "Actual · spare today";
   const sentence = forecast
-    ? heroForecastSentence(hero.daysRemaining, hero.monthName)
+    ? heroForecastSentence(hero.daysRemaining, hero.monthName, hero.forecastDetail)
     : heroTodaySentence(hero.daysRemaining);
   // Below zero is the one case where the hero must not look like good news.
   const isOver = spare !== null && spare < 0;

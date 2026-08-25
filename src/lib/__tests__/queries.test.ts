@@ -203,17 +203,20 @@ describe("per-user scoping · the query layer inherits the store's rule", () => 
 });
 
 describe("monthOverview · the forecast shows its working", () => {
-  /** period row, then totals by kind, then the income lookup. */
-  function respond(kindRows: unknown[][], incomeRow: unknown[][]) {
+  /** period row, totals by kind, the income lookup, then the weekly targets. */
+  function respond(kindRows: unknown[][], incomeRow: unknown[][], goalRows: unknown[][] = [["everyday", "200"]]) {
     hoisted.responses.push(
       [[PERIOD_OWNED_BY_A, "Jun 30th - Aug 3rd", "2025-06-30", "2025-08-03"]],
       kindRows,
-      incomeRow
+      incomeRow,
+      goalRows
     );
   }
 
-  it("projects weekly spend forward and leaves recurring and one-offs alone", async () => {
-    // 15 days elapsed of 35. £300 weekly, £1000 recurring, £50 one-off.
+  it("adds the unspent weekly allowance, not a run-rate", async () => {
+    // 35-day period = 5 weeks at 200/week = 1000 of allowance. 300 spent, so
+    // 700 still to come. Recurring and one-offs are not projected forward —
+    // rent does not get charged twice.
     respond(
       [
         ["weekly", "300", "0"],
@@ -226,13 +229,33 @@ describe("monthOverview · the forecast shows its working", () => {
     const m = (await monthOverview(USER_A, PERIOD_OWNED_BY_A, new Date(Date.UTC(2025, 6, 14))))!;
 
     expect(m.spent).toMatchObject({ weekly: 300, recurring: 1000, oneOff: 50, total: 1350 });
-    // 300/15 = £20/day, 20 days left = £400 more weekly spend, and nothing more
-    // from the fixed floor — rent does not get charged twice.
-    expect(m.forecast).toBeCloseTo(1750, 6);
-    expect(m.forecastBasis).toMatchObject({ daysElapsed: 15, daysRemaining: 20, dailyWeeklyRate: 20 });
+    expect(m.forecast).toBeCloseTo(2050, 6);
+    expect(m.forecastBasis).toMatchObject({
+      weeklySpentSoFar: 300,
+      weeklyBudget: 1000,
+      weeklyRemaining: 700,
+      weeksInPeriod: 5,
+    });
     expect(m.income).toMatchObject({ amount: 2000, source: "period" });
     expect(m.leftToday).toBeCloseTo(650, 6);
-    expect(m.projectedLeft).toBeCloseTo(250, 6);
+    // Spending the rest of the allowance lands 50 under. The old run-rate rule
+    // reported this same month as comfortably positive.
+    expect(m.projectedLeft).toBeCloseTo(-50, 6);
+  });
+
+  it("does not credit back an allowance already overspent", async () => {
+    respond([["weekly", "1200", "0"]], [["2000", null, null, null]]);
+    const m = (await monthOverview(USER_A, PERIOD_OWNED_BY_A, new Date(Date.UTC(2025, 6, 14))))!;
+    expect(m.forecastBasis).toMatchObject({ weeklyRemaining: 0 });
+    expect(m.forecast).toBeCloseTo(1200, 6);
+  });
+
+  it("gives no forecast when no weekly target has been set", async () => {
+    respond([["weekly", "300", "0"]], [["2000", null, null, null]], []);
+    const m = (await monthOverview(USER_A, PERIOD_OWNED_BY_A, new Date(Date.UTC(2025, 6, 14))))!;
+    // A projection with no target is a guess wearing a number's clothes.
+    expect(m.forecast).toBeNull();
+    expect(m.projectedLeft).toBeNull();
   });
 
   it("says nothing about what is left when income is unknown", async () => {

@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createCommitScheduler, COMMIT_DELAY_MS } from "../commit-scheduler";
+import { sanitizeNumericInput } from "../../components/ui/NumericField";
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
@@ -83,5 +84,34 @@ describe("commit scheduler", () => {
     expect(s.pendingCount()).toBe(2);
     vi.advanceTimersByTime(COMMIT_DELAY_MS);
     expect(s.pendingCount()).toBe(0);
+  });
+});
+
+describe("money input accepts pence", () => {
+  it("keeps two decimal places", () => {
+    expect(sanitizeNumericInput("28.65")).toBe(28.65);
+    expect(sanitizeNumericInput("96.76")).toBe(96.76);
+  });
+
+  it("still handles whole pounds and empty input", () => {
+    expect(sanitizeNumericInput("260")).toBe(260);
+    expect(sanitizeNumericInput("")).toBe(0);
+  });
+
+  it("strips currency symbols and stray characters", () => {
+    expect(sanitizeNumericInput("£1,234.50")).toBe(1234.5);
+  });
+
+  it("treats a second point as a typo rather than losing what follows", () => {
+    expect(sanitizeNumericInput("12.3.4")).toBe(12.34);
+  });
+
+  it("truncates beyond pence rather than rounding up a third digit", () => {
+    expect(sanitizeNumericInput("10.999")).toBe(10.99);
+  });
+
+  it("survives a lone decimal point mid-typing", () => {
+    expect(sanitizeNumericInput(".")).toBe(0);
+    expect(sanitizeNumericInput(".5")).toBe(0.5);
   });
 });

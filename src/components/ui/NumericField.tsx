@@ -5,11 +5,25 @@ const MIN = 0;
 const MAX = 99_999;
 
 /** Strips everything but digits and clamps into [0, 99999] — the rule for every numeric input in the app. */
+/**
+ * Money, not integers. The founder's own sheet is full of 28.65 and 96.76 and
+ * the amount column stores pence, so stripping the decimal point silently
+ * rounded away real money the user had typed.
+ *
+ * Keeps the first point and at most two places after it; everything else that
+ * isn't a digit goes.
+ */
 export function sanitizeNumericInput(raw: string): number {
-  const digitsOnly = raw.replace(/[^0-9]/g, "");
-  if (digitsOnly === "") return 0;
-  const n = parseInt(digitsOnly, 10);
-  return Math.min(MAX, Math.max(MIN, n));
+  const cleaned = raw.replace(/[^0-9.]/g, "");
+  const [whole = "", ...rest] = cleaned.split(".");
+  // A second point is a typo, not a second decimal — fold the digits in rather
+  // than discarding what follows it.
+  const fraction = rest.join("").slice(0, 2);
+  const text = rest.length > 0 ? `${whole || "0"}.${fraction}` : whole;
+  if (text === "" || text === ".") return 0;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(MAX, Math.max(MIN, Math.round(n * 100) / 100));
 }
 
 export interface NumericFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "size"> {

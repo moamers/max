@@ -3,9 +3,11 @@ import type { IncomeSource } from "@/lib/queries";
 export const MAX_MONEY_INPUT = 99_999;
 
 /** Server-side counterpart to NumericField's input guard. */
+/** Rounds to pence rather than truncating to pounds — see sanitizeNumericInput. */
 export function moneyInputAmount(value: number): number {
   if (!Number.isFinite(value)) return 0;
-  return Math.min(MAX_MONEY_INPUT, Math.max(0, Math.trunc(value)));
+  const pence = Math.round(value * 100) / 100;
+  return Math.min(MAX_MONEY_INPUT, Math.max(0, pence));
 }
 
 /** The design's weekly total is derived from its three editable targets. */

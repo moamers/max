@@ -29,6 +29,8 @@ export interface HeroView {
   monthName: string;
   endOfMonthLabel: string;
   daysRemaining: number;
+  /** Weekly allowance still unspent, and the room left after everything else. */
+  forecastDetail?: { weeklyRemaining: number; leftToday: number | null };
   today: {
     spare: number | null;
     spend: number;
