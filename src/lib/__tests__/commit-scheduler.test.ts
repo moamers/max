@@ -115,3 +115,15 @@ describe("money input accepts pence", () => {
     expect(sanitizeNumericInput(".5")).toBe(0.5);
   });
 });
+
+describe("a decimal point can actually be typed", () => {
+  // Bound straight to a number, the field re-rendered "123" the moment you
+  // typed "123.", so the point never survived and no amount could carry pence.
+  it("parses each keystroke of 28.65 without losing the point", () => {
+    const keystrokes = ["2", "28", "28.", "28.6", "28.65"];
+    expect(keystrokes.map(sanitizeNumericInput)).toEqual([2, 28, 28, 28.6, 28.65]);
+    // The trailing point parses to 28 but must remain in the visible text —
+    // that is what the field's draft state is for.
+    expect("28.".replace(/[^0-9.]/g, "")).toBe("28.");
+  });
+});

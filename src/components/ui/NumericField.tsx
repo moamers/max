@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes } from "react";
+import { useId, useState, type InputHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 const MIN = 0;
@@ -38,8 +38,13 @@ export interface NumericFieldProps extends Omit<InputHTMLAttributes<HTMLInputEle
 
 /**
  * Inset numeric field: "£" prefix, right-aligned value, no visible border,
- * digits only, clamped 0–99,999, applied on change (no explicit save
- * step — the surrounding sheet closes with "Done").
+ * clamped 0–99,999, with pence.
+ *
+ * `draft` exists so a decimal point can be typed at all. Bound directly to a
+ * number, the field re-rendered "123" the instant you typed "123." — the point
+ * never survived a keystroke, so no amount could ever carry pence. While the
+ * field is focused the text is the user's; the moment it isn't, the number is
+ * the truth again.
  */
 export function NumericField({
   value,
@@ -53,6 +58,8 @@ export function NumericField({
 }: NumericFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? String(value);
 
   return (
     <div
@@ -75,9 +82,18 @@ export function NumericField({
       <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text-disabled-2)" }}>£</span>
       <input
         id={inputId}
-        inputMode="numeric"
-        value={value}
-        onChange={(e) => onChange(sanitizeNumericInput(e.target.value))}
+        // "decimal" is what puts a point on a phone keypad; "numeric" does not.
+        inputMode="decimal"
+        value={text}
+        onFocus={() => setDraft(String(value))}
+        onChange={(e) => {
+          // Keep what was typed, including a trailing point mid-entry, and
+          // report the parsed value alongside it.
+          const raw = e.target.value.replace(/[^0-9.]/g, "");
+          setDraft(raw);
+          onChange(sanitizeNumericInput(raw));
+        }}
+        onBlur={() => setDraft(null)}
         style={{
           width: 76,
           flex: 1,
