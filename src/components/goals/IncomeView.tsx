@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useDebouncedCommit } from "@/components/useDebouncedCommit";
 import { useState } from "react";
 import { Button, NumericField, Sheet } from "@/components/ui";
 import type { IncomeSource } from "@/lib/queries";
@@ -26,9 +25,11 @@ export interface IncomeViewProps {
 
 export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
   const router = useRouter();
-  const { commit } = useDebouncedCommit();
   const [amounts, setAmounts] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, month.amount ?? 0])));
   const [sources, setSources] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, { source: month.source, setByUser: month.setByUser }])));
+  const [dirty, setDirty] = useState<Set<number>>(() => new Set());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const currentMonth = new Date().getMonth();
   const isCurrentYear = year === new Date().getFullYear();
 
@@ -37,7 +38,25 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
     setAmounts((current) => ({ ...current, [month.monthIndex]: amount }));
     // A value typed here is a specific period override, regardless of its previous tier.
     setSources((current) => ({ ...current, [month.monthIndex]: { source: "month", setByUser: true } }));
-    commit(`month:${month.monthIndex}`, () => setIncomeForPeriodAction(month.periodId!, amount));
+    setDirty((current) => new Set(current).add(month.monthIndex));
+  }
+
+  async function saveAndClose() {
+    setSaving(true);
+    setError(null);
+    try {
+      // Only the months actually edited, one at a time.
+      for (const monthIndex of dirty) {
+        const month = months.find((m) => m.monthIndex === monthIndex);
+        if (!month || month.periodId === null) continue;
+        await setIncomeForPeriodAction(month.periodId, amounts[monthIndex]);
+      }
+      router.back();
+      router.refresh();
+    } catch {
+      setError("I couldn't save that. Your numbers are still here — try Done again.");
+      setSaving(false);
+    }
   }
 
   return (
@@ -94,7 +113,14 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
           </div>
         </div>
         <div style={{ padding: "0 20px 22px", flexShrink: 0 }}>
-          <Button height={54} onClick={() => router.back()}>Done</Button>
+          {error && (
+            <p role="alert" style={{ margin: 0, fontSize: 14, color: "var(--bar-over)" }}>
+              {error}
+            </p>
+          )}
+          <Button height={54} disabled={saving} onClick={saveAndClose}>
+            {saving ? "Saving…" : "Done"}
+          </Button>
         </div>
       </Sheet>
     </div>

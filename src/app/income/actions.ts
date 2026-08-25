@@ -11,7 +11,7 @@ export async function setIncomeForPeriodAction(periodId: number, rawAmount: numb
   if (!Number.isInteger(periodId) || periodId < 1) throw new Error("That month isn't available.");
   const saved = await setIncomeForPeriod(user.id, periodId, moneyInputAmount(rawAmount));
   if (!saved) throw new Error("That month isn't available.");
+  // Only the home screen renders these figures. /goals and /income are
+  // force-dynamic, so revalidating them bought nothing and cost a round trip.
   revalidatePath("/");
-  revalidatePath("/goals");
-  revalidatePath("/income");
 }

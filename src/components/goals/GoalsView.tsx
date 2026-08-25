@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useDebouncedCommit } from "@/components/useDebouncedCommit";
 import { useState } from "react";
 import { Button, NumericField, Sheet } from "@/components/ui";
 import { WEEKLY_CATEGORIES, WEEKLY_CATEGORY_TITLES, type WeeklyCategory } from "@/lib/transactions";
@@ -16,19 +15,46 @@ export interface GoalsViewProps {
 
 export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps) {
   const router = useRouter();
-  const { commit } = useDebouncedCommit();
   const [goals, setGoals] = useState(initialGoals);
   const [income, setIncome] = useState(initialDefaultIncome ?? 0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const total = weeklyGoalTotal(WEEKLY_CATEGORIES.map((category) => goals[category]));
 
+  // Typing changes nothing but what is on screen. The screen has a Done
+  // button, so that is where the writing happens — a field that saves itself
+  // while you are still deciding is both surprising and, when every keystroke
+  // reached the database, the thing that took this page down.
   function changeGoal(category: WeeklyCategory, amount: number) {
     setGoals((current) => ({ ...current, [category]: amount }));
-    commit(`goal:${category}`, () => setGoalAction(category, amount));
   }
 
   function changeIncome(amount: number) {
     setIncome(amount);
-    commit("income", () => setDefaultIncomeAction(amount));
+  }
+
+  async function saveAndClose() {
+    setSaving(true);
+    setError(null);
+    try {
+      // Sequential on purpose: four parallel writes from a phone is the burst
+      // this screen is recovering from.
+      for (const category of WEEKLY_CATEGORIES) {
+        if (goals[category] !== initialGoals[category]) {
+          await setGoalAction(category, goals[category]);
+        }
+      }
+      if (income !== (initialDefaultIncome ?? 0)) {
+        await setDefaultIncomeAction(income);
+      }
+      router.back();
+      router.refresh();
+    } catch {
+      // A failed save must not take the page with it. The numbers stay on
+      // screen so nothing typed is lost.
+      setError("I couldn't save that. Your numbers are still here — try Done again.");
+      setSaving(false);
+    }
   }
 
   return (
@@ -82,7 +108,14 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
           </section>
         </div>
         <div style={{ padding: "0 20px 22px", flexShrink: 0 }}>
-          <Button height={54} onClick={() => router.back()}>Done</Button>
+          {error && (
+            <p role="alert" style={{ margin: 0, fontSize: 14, color: "var(--bar-over)" }}>
+              {error}
+            </p>
+          )}
+          <Button height={54} disabled={saving} onClick={saveAndClose}>
+            {saving ? "Saving…" : "Done"}
+          </Button>
         </div>
       </Sheet>
     </div>
