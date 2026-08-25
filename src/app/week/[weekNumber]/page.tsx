@@ -9,6 +9,7 @@ import {
 import { lineItemsForPeriod, listGoals } from "@/lib/store";
 import { WEEKLY_CATEGORIES, WEEKLY_CATEGORY_TITLES, type WeeklyCategory } from "@/lib/transactions";
 import { weekDateRange, formatWeekRange, monthNameOf } from "@/components/week/weekDateRange";
+import { highlightIdFrom } from "@/lib/routes";
 import { WeekView, type WeekTransactionItem } from "./WeekView";
 
 type SearchParams = { [key: string]: string | string[] | undefined };
@@ -74,6 +75,7 @@ export default async function WeekPage({
     <WeekView
       weekNumber={weekNumber}
       periodId={periodId}
+      highlightId={highlightIdFrom(sp.highlight)}
       monthName={range ? monthNameOf(range.start) : overview.label}
       rangeLabel={range ? formatWeekRange(range) : overview.label}
       week={week}

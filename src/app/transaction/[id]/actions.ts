@@ -69,7 +69,7 @@ export async function saveTransaction(
   // leaving must not stay on the history stack, or Back returns to a screen
   // for a row the user has finished with — and after a delete, to a row that
   // no longer exists, which renders as a bare 404.
-  redirect(transactionHome(kind, periodId, weekNumber), RedirectType.replace);
+  redirect(transactionHome(kind, periodId, weekNumber, id), RedirectType.replace);
 }
 
 export async function removeTransaction(id: number): Promise<never> {

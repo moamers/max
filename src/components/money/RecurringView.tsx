@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Accordion, Caret } from "@/components/ui/Accordion";
+import { JustChanged } from "@/components/ui/JustChanged";
 import { Pill } from "@/components/ui/Chip";
 import { Row } from "@/components/ui/Row";
 import type { RecurringBreakdown } from "@/lib/queries";
@@ -22,9 +23,22 @@ interface RecurringViewProps {
   periodId: number;
   monthLabel: string;
   recurring: RecurringBreakdown;
+  /** The row just added or edited, to mark it wherever its amount sorts it. */
+  highlightId?: number | null;
 }
-export function RecurringView({ periodId, monthLabel, recurring }: RecurringViewProps) {
-  const [openGroup, setOpenGroup] = useState<RecurringCategory | null>("bills");
+
+/** The group a just-changed row is filed under, so it isn't marked inside a closed accordion. */
+function groupHolding(recurring: RecurringBreakdown, id: number | null): RecurringCategory | null {
+  if (id === null) return null;
+  return recurring.groups.find((g) => g.items.some((i) => i.id === id))?.category ?? null;
+}
+
+export function RecurringView({ periodId, monthLabel, recurring, highlightId = null }: RecurringViewProps) {
+  // Opening on the highlighted row's group beats the default: a marked row
+  // inside a collapsed group is no more findable than an unmarked one.
+  const [openGroup, setOpenGroup] = useState<RecurringCategory | null>(
+    () => groupHolding(recurring, highlightId) ?? "bills"
+  );
 
   return (
     <MoneySheet addHref={`/add?period=${periodId}&kind=recurring`}>
@@ -97,8 +111,8 @@ export function RecurringView({ periodId, monthLabel, recurring }: RecurringView
                   </span>
                 ) : (
                   group.items.map((item) => (
+                    <JustChanged key={item.id} active={item.id === highlightId}>
                     <Link
-                      key={item.id}
                       href={`/transaction/${item.id}`}
                       style={{ color: "inherit", textDecoration: "none" }}
                     >
@@ -128,6 +142,7 @@ export function RecurringView({ periodId, monthLabel, recurring }: RecurringView
                         )}
                       </Row>
                     </Link>
+                    </JustChanged>
                   ))
                 )}
               </Accordion>

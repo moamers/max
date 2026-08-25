@@ -6,6 +6,7 @@ import { Pill } from "@/components/ui/Chip";
 import type { OneOffs } from "@/lib/queries";
 import { instalmentsStillDue } from "./derive";
 import { formatMoney } from "./format";
+import { JustChanged } from "@/components/ui/JustChanged";
 import { MoneySheet } from "./MoneySheet";
 
 interface SpareForecast {
@@ -20,9 +21,11 @@ interface OneOffsViewProps {
   monthLabel: string;
   oneOffs: OneOffs;
   spare: SpareForecast;
+  /** The row just added or edited, to mark it wherever its amount sorts it. */
+  highlightId?: number | null;
 }
 
-export function OneOffsView({ periodId, monthLabel, oneOffs, spare }: OneOffsViewProps) {
+export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId = null }: OneOffsViewProps) {
   return (
     <MoneySheet addHref={`/add?period=${periodId}&kind=one_off`}>
       <div
@@ -111,8 +114,8 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare }: OneOffsVie
             oneOffs.items.map((item) => {
               const due = item.pending ? instalmentsStillDue(item.note) : null;
               return (
+                <JustChanged key={item.id} active={item.id === highlightId}>
                 <Link
-                  key={item.id}
                   href={`/transaction/${item.id}`}
                   style={{ color: "inherit", textDecoration: "none" }}
                 >
@@ -154,6 +157,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare }: OneOffsVie
                     )}
                   </Card>
                 </Link>
+                </JustChanged>
               );
             })
           )}

@@ -18,17 +18,33 @@ export function periodHome(periodId: number): string {
   return `/?period=${periodId}`;
 }
 
+/**
+ * `highlightId` names the row that was just written, so the screen can mark it.
+ * Lists are ordered biggest-amount-first, so a saved row lands wherever its
+ * amount falls — without this, "it worked" and "I can see it worked" are not
+ * the same thing. Omitted after a delete: there is no row left to point at.
+ */
 export function transactionHome(
   kind: TransactionKind,
   periodId: number,
-  weekNumber: number | null
+  weekNumber: number | null,
+  highlightId?: number
 ): string {
-  if (kind === "recurring") return `/recurring?period=${periodId}`;
-  if (kind === "one_off") return `/one-offs?period=${periodId}`;
+  const mark = highlightId === undefined ? "" : `&highlight=${highlightId}`;
+  if (kind === "recurring") return `/recurring?period=${periodId}${mark}`;
+  if (kind === "one_off") return `/one-offs?period=${periodId}${mark}`;
   // A weekly row with no week number has no week screen to go back to — the
   // month is still the right place to land, and it is still *their* month.
-  if (weekNumber === null) return periodHome(periodId);
-  return `/week/${weekNumber}?period=${periodId}`;
+  if (weekNumber === null) return `${periodHome(periodId)}${mark}`;
+  return `/week/${weekNumber}?period=${periodId}${mark}`;
+}
+
+/** Reads `?highlight=` back, ignoring anything that isn't a real row id. */
+export function highlightIdFrom(value: string | string[] | undefined): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 /**

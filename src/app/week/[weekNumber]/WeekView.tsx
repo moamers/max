@@ -10,8 +10,9 @@ import { Row } from "@/components/ui/Row";
 import { Pill } from "@/components/ui/Chip";
 import { FAB } from "@/components/ui/FAB";
 import type { WeekTotals, WeeklyCategoryTotal } from "@/lib/queries";
-import type { WeeklyCategory } from "@/lib/transactions";
+import { WEEKLY_CATEGORIES, type WeeklyCategory } from "@/lib/transactions";
 import { formatGBP as gbp } from "@/lib/money";
+import { JustChanged } from "@/components/ui/JustChanged";
 
 export interface WeekTransactionItem {
   id: number;
@@ -29,6 +30,20 @@ export interface WeekViewProps {
   rangeLabel: string | null;
   week: WeekTotals;
   transactionsByCategory: Record<string, WeekTransactionItem[]>;
+  /** The row just added or edited, to mark it wherever its amount sorts it. */
+  highlightId?: number | null;
+}
+
+/** The category a just-changed row is filed under, so it isn't marked inside a closed accordion. */
+function categoryHolding(
+  byCategory: Record<string, WeekTransactionItem[]>,
+  id: number | null
+): WeeklyCategory | null {
+  if (id === null) return null;
+  for (const category of WEEKLY_CATEGORIES) {
+    if ((byCategory[category] ?? []).some((item) => item.id === id)) return category;
+  }
+  return null;
 }
 
 
@@ -42,9 +57,21 @@ function metaFor(spent: number, goal: number | null): string {
   return goal === null ? `${gbp(spent)} spent` : `of ${gbp(goal)} · ${gbp(spent)} spent`;
 }
 
-export function WeekView({ weekNumber, periodId, monthName, rangeLabel, week, transactionsByCategory }: WeekViewProps) {
+export function WeekView({
+  weekNumber,
+  periodId,
+  monthName,
+  rangeLabel,
+  week,
+  transactionsByCategory,
+  highlightId = null,
+}: WeekViewProps) {
   const router = useRouter();
-  const [openCategory, setOpenCategory] = useState<WeeklyCategory | null>(null);
+  // Open on the highlighted row's category: a marked row inside a collapsed
+  // accordion is no more findable than an unmarked one.
+  const [openCategory, setOpenCategory] = useState<WeeklyCategory | null>(() =>
+    categoryHolding(transactionsByCategory, highlightId)
+  );
 
   const headline = headlineFor(week.spent, week.goal, week.remaining);
   const meta = metaFor(week.spent, week.goal);
@@ -101,6 +128,7 @@ export function WeekView({ weekNumber, periodId, monthName, rangeLabel, week, tr
                   setOpenCategory((current) => (current === category.category ? null : category.category))
                 }
                 transactions={transactionsByCategory[category.category] ?? []}
+                highlightId={highlightId}
               />
             ))}
           </div>
@@ -122,11 +150,13 @@ function CategoryCard({
   open,
   onToggle,
   transactions,
+  highlightId,
 }: {
   category: WeeklyCategoryTotal;
   open: boolean;
   onToggle: () => void;
   transactions: WeekTransactionItem[];
+  highlightId: number | null;
 }) {
   const headline = headlineFor(category.spent, category.goal, category.remaining);
 
@@ -158,7 +188,8 @@ function CategoryCard({
         </Row>
       ) : (
         transactions.map((item, i) => (
-          <Link key={item.id} href={`/transaction/${item.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+          <JustChanged key={item.id} active={item.id === highlightId}>
+          <Link href={`/transaction/${item.id}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider={i > 0}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                 <span style={{ fontSize: 15, fontWeight: 500 }}>{item.merchant?.trim() || "Untitled"}</span>
@@ -191,6 +222,7 @@ function CategoryCard({
               )}
             </Row>
           </Link>
+          </JustChanged>
         ))
       )}
     </Accordion>

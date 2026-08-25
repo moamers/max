@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { highlightIdFrom } from "@/lib/routes";
 import { EmptyState } from "@/components/EmptyState";
 import { formatDayMonth, formatMonth } from "@/components/money/format";
 import { OneOffsView } from "@/components/money/OneOffsView";
@@ -35,6 +36,7 @@ export default async function OneOffsPage({
   return (
     <OneOffsView
       periodId={periodId}
+      highlightId={highlightIdFrom(sp.highlight)}
       monthLabel={overview.window ? formatMonth(overview.window.start) : overview.label}
       oneOffs={oneOffs}
       spare={{

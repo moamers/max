@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { RecurringView } from "@/components/money/RecurringView";
 import { formatMonth } from "@/components/money/format";
+import { highlightIdFrom } from "@/lib/routes";
 import { EmptyState } from "@/components/EmptyState";
 import {
   listPeriodsMeta,
@@ -35,6 +36,7 @@ export default async function RecurringPage({
   return (
     <RecurringView
       periodId={periodId}
+      highlightId={highlightIdFrom(sp.highlight)}
       monthLabel={overview.window ? formatMonth(overview.window.start) : overview.label}
       recurring={recurring}
     />

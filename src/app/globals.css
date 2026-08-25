@@ -354,3 +354,37 @@ a {
 .max-sheet--bottom {
   animation: sheetUp var(--duration-sheet) var(--ease-sheet) both;
 }
+
+/*
+  The row you just added or edited.
+
+  Lists are ordered biggest-amount-first, so a row you just saved can land
+  anywhere — the founder added a one-off and found it "in the middle", with no
+  way to tell which one was his. This marks it for a moment on the screen you
+  land on, then gets out of the way.
+
+  Deliberately calm: a cyan tint that fades over two seconds, no motion, no
+  border, nothing that reads as an alert. This app is for people who feel
+  judged by money apps; "here it is" must not look like "look at this".
+*/
+@keyframes justChangedFade {
+  from {
+    background-color: var(--cyan-tint-bg);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.just-changed {
+  border-radius: var(--radius-row);
+  animation: justChangedFade 2s ease-out 1 forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No fade, but the row is still marked — the point is finding it. */
+  .just-changed {
+    animation: none;
+    background-color: var(--cyan-tint-bg);
+  }
+}

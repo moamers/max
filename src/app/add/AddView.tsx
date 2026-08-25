@@ -76,7 +76,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 
     startSave(async () => {
       try {
-        await createTransaction({
+        const { id } = await createTransaction({
           periodId,
           kind,
           category,
@@ -88,7 +88,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
           pending,
           needsAttention,
         });
-        router.replace(transactionHome(kind, periodId, weekNumber));
+        router.replace(transactionHome(kind, periodId, weekNumber, id));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
       }
