@@ -6,6 +6,16 @@
  * on the row's own `user_id`. There is no unscoped variant of any of them.
  */
 export { periodWindow, type PeriodWindow } from "./period-window";
+export {
+  listPeriodsMeta,
+  pickCurrentPeriodId,
+  findPeriod,
+  periodParamValue,
+  resolveSummaryOrderedPeriodId,
+  type PeriodMeta,
+  type PeriodSearchParams,
+  type ExplicitPeriodPolicy,
+} from "./period-meta";
 export { incomeForPeriod, type PeriodIncome, type IncomeSource } from "./income";
 export { monthOverview, type MonthOverview, type MonthTotals } from "./month";
 export { weeklyBreakdown, type WeekTotals, type WeeklyCategoryTotal } from "./weeks";
@@ -18,3 +28,4 @@ export {
   type OneOffs,
   type TransactionRow,
 } from "./recurring";
+export * from "./year";

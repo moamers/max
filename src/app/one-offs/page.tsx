@@ -1,18 +1,30 @@
 import { notFound } from "next/navigation";
+import { EmptyState } from "@/components/EmptyState";
 import { formatDayMonth, formatMonth } from "@/components/money/format";
 import { OneOffsView } from "@/components/money/OneOffsView";
-import { resolveMoneyPeriodId, type MoneySearchParams } from "@/components/money/resolve-period";
-import { monthOverview, oneOffsForPeriod } from "@/lib/queries";
+import {
+  listPeriodsMeta,
+  monthOverview,
+  oneOffsForPeriod,
+  periodParamValue,
+  resolveSummaryOrderedPeriodId,
+  type PeriodSearchParams,
+} from "@/lib/queries";
 import { requireUser } from "@/lib/session";
 
 export default async function OneOffsPage({
   searchParams,
 }: {
-  searchParams: Promise<MoneySearchParams>;
+  searchParams: Promise<PeriodSearchParams>;
 }) {
   const user = await requireUser();
-  const periodId = await resolveMoneyPeriodId(user.id, await searchParams);
-  if (periodId === null) notFound();
+  const sp = await searchParams;
+  const periodId = await resolveSummaryOrderedPeriodId(user.id, sp, "positive-integer");
+  if (periodId === null) {
+    const periods = await listPeriodsMeta(user.id);
+    if (periods.length === 0 && !periodParamValue(sp)) return <EmptyState />;
+    notFound();
+  }
 
   const [overview, oneOffs] = await Promise.all([
     monthOverview(user.id, periodId),

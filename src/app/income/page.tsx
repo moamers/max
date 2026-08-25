@@ -1,7 +1,12 @@
 import { requireUser } from "@/lib/session";
 import { getDefaultMonthlyIncome } from "@/lib/store";
-import { incomeForPeriod, type PeriodIncome } from "@/lib/queries";
-import { listPeriodsMeta, pickCurrentPeriodId, type PeriodMeta } from "@/app/(home)/lib/period-meta";
+import {
+  incomeForPeriod,
+  listPeriodsMeta,
+  pickCurrentPeriodId,
+  type PeriodIncome,
+  type PeriodMeta,
+} from "@/lib/queries";
 import { IncomeView, type IncomeMonthView } from "@/components/goals/IncomeView";
 
 export const dynamic = "force-dynamic";
