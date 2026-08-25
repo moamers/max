@@ -12,7 +12,7 @@ import { buildYearData, yearsWithData, type YearData } from "@/lib/queries/year"
 import { HomeScreen } from "@/components/home/HomeScreen";
 import { EmptyState } from "@/components/EmptyState";
 import { buildWeekViews } from "@/components/home/derive";
-import { formatDayMonth, monthAbbr, monthName, weekCounterLabel } from "@/components/home/format";
+import { dominantMonth, formatDayMonth, monthAbbr, monthName, weekCounterLabel } from "@/components/home/format";
 import type { HomeData, MonthTileView, PeriodOptionView, YearView } from "@/components/home/types";
 import { isoDate, proposeNextPeriod } from "@/lib/periods";
 
@@ -87,10 +87,10 @@ export default async function HomePage(props: PageProps<"/">) {
 
   const periodOptions: PeriodOptionView[] = periodsMeta.map((p) => ({
     id: p.id,
-    monthLabel: p.window ? monthName(p.window.start) : p.label,
+    monthLabel: p.window ? monthName(dominantMonth(p.window.start, p.window.end)) : p.label,
   }));
 
-  const monthLabel = window ? monthName(window.start) : selected.label;
+  const monthLabel = window ? monthName(dominantMonth(window.start, window.end)) : selected.label;
 
   const latestDated = periodsMeta
     .filter((period) => period.window !== null)

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildWeekViews, weekCountForWindow } from "../derive";
+import { dominantMonth } from "../format";
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
 
 const utc = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d));
@@ -88,5 +89,29 @@ describe("buildWeekViews", () => {
     const { totalBudget, weeks } = buildWeekViews(noGoals, null, today);
     expect(totalBudget).toBeNull();
     expect(weeks[0].state.word).toBe("spent");
+  });
+});
+
+describe("dominantMonth", () => {
+  const d = (y: number, m: number, day: number) => new Date(Date.UTC(y, m, day));
+
+  it("names a period by the month holding most of its days", () => {
+    // "Jun 30th - Aug 3rd": 1 day in June, 31 in July, 3 in August.
+    expect(dominantMonth(d(2026, 5, 30), d(2026, 7, 3)).getUTCMonth()).toBe(6);
+  });
+
+  it("names a period that sits inside one month by that month", () => {
+    expect(dominantMonth(d(2026, 7, 4), d(2026, 7, 31)).getUTCMonth()).toBe(7);
+  });
+
+  it("crosses a year boundary without losing the month", () => {
+    // 1 Dec - 4 Jan: 31 days in December, 4 in January.
+    const m = dominantMonth(d(2025, 11, 1), d(2026, 0, 4));
+    expect(m.getUTCMonth()).toBe(11);
+    expect(m.getUTCFullYear()).toBe(2025);
+  });
+
+  it("gives an exact split to the month it began in", () => {
+    expect(dominantMonth(d(2026, 3, 16), d(2026, 4, 15)).getUTCMonth()).toBe(3);
   });
 });

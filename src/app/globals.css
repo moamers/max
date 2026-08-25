@@ -281,30 +281,38 @@ a {
   Component files apply the class names below; the rules stay here so every
   hover step is defined in one place alongside the tokens it uses.
 */
-.max-card--interactive:hover {
-  background: var(--surface-hover);
-}
+/*
+  Guarded by `hover: hover` on purpose. On a touch screen :hover latches after
+  a tap and stays until you touch something else, so tapping a week row left it
+  dimmed at 0.78 opacity and looking disabled. A phone has no hover state to
+  express; only a real pointer gets these.
+*/
+@media (hover: hover) {
+  .max-card--interactive:hover {
+    background: var(--surface-hover);
+  }
 
-.max-row--interactive:hover {
-  opacity: 0.78;
-}
+  .max-row--interactive:hover {
+    opacity: 0.78;
+  }
 
-.max-btn-primary:hover,
-.max-fab:hover {
-  background: var(--lime-fill-hover) !important;
-}
+  .max-btn-primary:hover,
+  .max-fab:hover {
+    background: var(--lime-fill-hover) !important;
+  }
 
-.max-btn-secondary:hover {
-  border-color: var(--text-disabled-2);
-}
+  .max-btn-secondary:hover {
+    border-color: var(--text-disabled-2);
+  }
 
-.max-icon-button:hover {
-  background: var(--surface-hover);
-}
+  .max-icon-button:hover {
+    background: var(--surface-hover);
+  }
 
-.max-chip--quiet:hover {
-  border-color: var(--lime-fill);
-  color: var(--lime-ink);
+  .max-chip--quiet:hover {
+    border-color: var(--lime-fill);
+    color: var(--lime-ink);
+  }
 }
 
 .max-caret {
