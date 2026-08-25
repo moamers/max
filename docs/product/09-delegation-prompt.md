@@ -269,22 +269,47 @@ EMPTY, not zero.
 
 ## 4 · After D and C are merged
 
-### Task F · Loose ends — LAST, run alone
+### Task F · Make it safe to hand over — LAST, run alone
 ```
-Own: src/components/menu/**, src/components/ui/Button.tsx, src/app/layout.tsx,
-src/lib/store.ts, src/lib/queries/
+Five jobs. All of them are about the app being safe to give to someone else.
 
-1. Wire or remove "Clear data" in the menu. It currently looks destructive and
-   does nothing. R-19 says a user must be able to delete their own records
-   without a console. If you wire it, scope the mutation by UserId and add a
-   confirm step.
-2. Then delete src/app/dashboard/** and the "Max | Upload | Dashboard |
-   Styleguide" nav in layout.tsx. Do this ONLY after step 1 — /dashboard
-   currently holds the only working delete control.
-3. Move src/app/(home)/lib/period-meta.ts into src/lib/queries/ and update its
-   importers. It was written where it was needed rather than where it belongs.
-4. Give Button an href mode that renders an anchor, and use it in
-   src/components/home/EmptyState.tsx, which hand-styles a lime pill because a
-   <button> inside an <a> is invalid HTML.
-5. Add rate limiting to POST /api/auth/login.
+Own: src/components/menu/**, src/components/ui/Button.tsx, src/app/layout.tsx,
+src/app/dashboard/** (delete), src/lib/store.ts, src/lib/auth.ts,
+src/app/api/auth/login/route.ts, src/components/home/EmptyState.tsx
+
+1 · CLEAR DATA — build it. The menu already shows a red "Clear data" row that
+    does nothing. It is a test-reset escape hatch: if an import or export goes
+    wrong, the founder wipes everything and starts again from a fresh import.
+    That is its whole purpose — it is not a GDPR feature and does not need to
+    be clever.
+      - A new store function scoped by UserId that deletes all of that user's
+        periods. transactions, budgets and period_summaries cascade from
+        periods, so one delete is enough — verify that in the schema first.
+      - Do NOT delete the user account or their goals and income settings. The
+        point is to re-import, not to start a new life.
+      - A confirmation step that states plainly what will be removed and how
+        many periods that is. Typed confirmation is overkill; a two-step
+        "Clear data → Yes, clear everything" is right.
+      - R-19: the user must be able to delete their own records without a
+        console. This is that.
+
+2 · RETIRE THE OLD DASHBOARD. Delete src/app/dashboard/** and the
+    "Max | Upload | Dashboard | Styleguide" nav in src/app/layout.tsx. Do this
+    only AFTER job 1 — /dashboard currently holds the only working delete
+    control. Keep /styleguide, but it does not need a nav link.
+
+3 · LOGIN RATE LIMITING on POST /api/auth/login. Nothing exists. In-memory
+    per-IP-and-email throttling is enough for now; say in your report that it
+    resets on deploy and does not span instances.
+
+4 · BUTTON href MODE. Give Button an href prop that renders an anchor styled
+    identically, and use it in EmptyState.tsx, which hand-styles a lime pill
+    because a <button> inside an <a> is invalid HTML.
+
+5 · IMPORT PROGRESS. The bar maps upload bytes to 0-88% then sits still while
+    the server parses, because ExcelJS parsing is not streamable. Do not fake
+    the remaining 12%. Change the label instead so the pause reads as a stage
+    rather than a stall — e.g. "Reading your file…" once the upload completes.
+
+Do not apply any migration you write.
 ```
