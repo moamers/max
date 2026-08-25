@@ -311,5 +311,24 @@ src/app/api/auth/login/route.ts, src/components/home/EmptyState.tsx
     the remaining 12%. Change the label instead so the pause reads as a stage
     rather than a stall — e.g. "Reading your file…" once the upload completes.
 
+6 · SCOPE THE + BUTTON TO A CONTEXT. Today the FAB also sits on Home, where
+    there is no week, kind or category to attach a new transaction to — so a row
+    added there has no week recorded, and export later has to guess which week
+    tab it belongs on.
+      - REMOVE the FAB from src/components/home/HomeScreen.tsx.
+      - KEEP it where context exists and is unambiguous: a specific week
+        (src/app/week/[weekNumber]/WeekView.tsx) and the recurring / one-offs
+        sheets (src/components/money/MoneySheet.tsx).
+      - Each remaining FAB must pass its context to /add, which already reads
+        `week`, `kind` and `category` from the query string. Verify each link
+        actually carries them.
+      - This is a DELIBERATE DEVIATION from the design: handoff screen 02 shows
+        a FAB on Home. The founder decided against it, because a + with no
+        context creates a row that nothing downstream can place. Note it in your
+        report so the deviation is recorded rather than looking like a mistake.
+
+Also extend your ownership for this job to: src/components/home/HomeScreen.tsx,
+src/app/week/[weekNumber]/WeekView.tsx, src/components/money/MoneySheet.tsx.
+
 Do not apply any migration you write.
 ```
