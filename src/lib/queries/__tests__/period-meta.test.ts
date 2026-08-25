@@ -2,16 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UserId } from "@/lib/auth";
 import type { PeriodWindow } from "../period-window";
 
-const { listPeriodSummaries } = vi.hoisted(() => ({ listPeriodSummaries: vi.fn() }));
+const { select } = vi.hoisted(() => ({ select: vi.fn() }));
 
-vi.mock("@/lib/store", () => ({ listPeriodSummaries }));
+vi.mock("@/lib/db", () => ({ getDb: () => ({ select }) }));
 
 import {
   findPeriod,
   periodMetaFromRow,
   periodParamValue,
   pickCurrentPeriodId,
-  resolveSummaryOrderedPeriodId,
+  resolvePeriodId,
   type PeriodMeta,
 } from "../period-meta";
 
@@ -101,31 +101,59 @@ describe("persisted date provenance", () => {
   });
 });
 
-describe("summary-ordered selection", () => {
+/** Rows as `listPeriodsMeta` reads them, in sheet order. */
+function mockPeriods(rows: { id: number; label: string; startDate: string | null; endDate: string | null }[]) {
+  select.mockReturnValue({
+    from: () => ({
+      where: () => ({ orderBy: () => Promise.resolve(rows.map((r) => ({ ...r, hasAttention: false }))) }),
+    }),
+  });
+}
+
+describe("resolvePeriodId — one policy for every screen", () => {
+  const JUNE = { id: 4, label: "Jun", startDate: "2026-06-01", endDate: "2026-06-28" };
+  const JULY = { id: 9, label: "Jul", startDate: "2026-06-29", endDate: "2026-07-26" };
+  const AUGUST = { id: 2, label: "Aug", startDate: "2026-07-27", endDate: "2026-08-30" };
+  const TODAY = utc(2026, 7, 10); // mid-August
+
   beforeEach(() => {
-    listPeriodSummaries.mockReset();
-    listPeriodSummaries.mockResolvedValue([{ periodId: 4 }, { periodId: 9 }]);
+    select.mockReset();
+    // Sheet order deliberately disagrees with date order: August was imported
+    // first, so the *last* summary row is July. This is the arrangement that
+    // sent the week screen to a different month than the dashboard.
+    mockPeriods([AUGUST, JUNE, JULY]);
   });
 
-  it("preserves Week/Add's finite-number explicit policy", async () => {
-    await expect(resolveSummaryOrderedPeriodId(USER_ID, { period: "2.5" }, "finite")).resolves.toBe(2.5);
-    expect(listPeriodSummaries).not.toHaveBeenCalled();
+  it("gives every screen the period that is actually running", async () => {
+    await expect(resolvePeriodId(USER_ID, {}, TODAY)).resolves.toBe(AUGUST.id);
   });
 
-  it("preserves Money's positive-integer explicit policy", async () => {
-    await expect(
-      resolveSummaryOrderedPeriodId(USER_ID, { period: "2.5" }, "positive-integer")
-    ).resolves.toBe(9);
-    expect(listPeriodSummaries).toHaveBeenCalledWith(USER_ID);
+  it("no longer answers with the last sheet in the workbook", async () => {
+    await expect(resolvePeriodId(USER_ID, {}, TODAY)).resolves.not.toBe(JULY.id);
   });
 
-  it("falls back to the final summary row when no explicit id is accepted", async () => {
-    await expect(resolveSummaryOrderedPeriodId(USER_ID, {}, "finite")).resolves.toBe(9);
+  it("honours an explicit period the user owns", async () => {
+    await expect(resolvePeriodId(USER_ID, { period: "4" }, TODAY)).resolves.toBe(JUNE.id);
   });
 
-  it("returns null when neither an explicit id nor a summary exists", async () => {
-    listPeriodSummaries.mockResolvedValue([]);
-    await expect(resolveSummaryOrderedPeriodId(USER_ID, {}, "finite")).resolves.toBeNull();
+  it("uses the first value when the param repeats", async () => {
+    await expect(resolvePeriodId(USER_ID, { period: ["4", "9"] }, TODAY)).resolves.toBe(JUNE.id);
+  });
+
+  it("falls back rather than showing an empty screen for a period that is gone", async () => {
+    // A bookmark from before a re-import: the id is real-looking but not theirs.
+    await expect(resolvePeriodId(USER_ID, { period: "777" }, TODAY)).resolves.toBe(AUGUST.id);
+  });
+
+  it("ignores a malformed id", async () => {
+    await expect(resolvePeriodId(USER_ID, { period: "2.5" }, TODAY)).resolves.toBe(AUGUST.id);
+    await expect(resolvePeriodId(USER_ID, { period: "-3" }, TODAY)).resolves.toBe(AUGUST.id);
+    await expect(resolvePeriodId(USER_ID, { period: "nope" }, TODAY)).resolves.toBe(AUGUST.id);
+  });
+
+  it("returns null when the user has no periods at all", async () => {
+    mockPeriods([]);
+    await expect(resolvePeriodId(USER_ID, { period: "4" }, TODAY)).resolves.toBeNull();
   });
 });
 

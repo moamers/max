@@ -66,9 +66,9 @@ export function HomeScreen({ data }: { data: HomeData }) {
 
           {data.rollover && <RolloverPrompt proposal={data.rollover} />}
 
-          <WeeksCard weeks={data.weeks} summary={data.weeksSummary} open={weeksOpen} onToggle={() => setWeeksOpen((v) => !v)} />
+          <WeeksCard weeks={data.weeks} periodId={data.selectedPeriodId} summary={data.weeksSummary} open={weeksOpen} onToggle={() => setWeeksOpen((v) => !v)} />
 
-          <Link href="/recurring" style={{ color: "inherit", textDecoration: "none" }}>
+          <Link href={`/recurring?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Card interactive>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
                 <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>Recurring</span>
@@ -77,7 +77,7 @@ export function HomeScreen({ data }: { data: HomeData }) {
             </Card>
           </Link>
 
-          <Link href="/one-offs" style={{ color: "inherit", textDecoration: "none" }}>
+          <Link href={`/one-offs?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Card interactive>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
                 <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>One-offs</span>

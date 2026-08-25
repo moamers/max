@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import {
   monthOverview,
-  resolveSummaryOrderedPeriodId,
+  resolvePeriodId,
   weeklyBreakdown,
   type WeekTotals,
 } from "@/lib/queries";
@@ -46,7 +46,7 @@ export default async function WeekPage({
   const weekNumber = Number(weekNumberParam);
   if (!Number.isFinite(weekNumber) || weekNumber < 1) notFound();
 
-  const periodId = await resolveSummaryOrderedPeriodId(user.id, sp, "finite");
+  const periodId = await resolvePeriodId(user.id, sp);
   if (periodId === null) notFound();
 
   const [weeks, items, goals, overview] = await Promise.all([

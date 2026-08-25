@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { resolveSummaryOrderedPeriodId } from "@/lib/queries";
+import { resolvePeriodId } from "@/lib/queries";
 import {
   isTransactionKind,
   isRecurringCategory,
@@ -43,7 +43,7 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
   const user = await requireUser();
   const sp = await searchParams;
 
-  const periodId = await resolveSummaryOrderedPeriodId(user.id, sp, "finite");
+  const periodId = await resolvePeriodId(user.id, sp);
   if (periodId === null) notFound();
 
   const kind = resolveKind(sp);

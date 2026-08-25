@@ -7,7 +7,7 @@ import {
   monthOverview,
   periodParamValue,
   recurringForPeriod,
-  resolveSummaryOrderedPeriodId,
+  resolvePeriodId,
   type PeriodSearchParams,
 } from "@/lib/queries";
 import { requireUser } from "@/lib/session";
@@ -19,7 +19,7 @@ export default async function RecurringPage({
 }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const periodId = await resolveSummaryOrderedPeriodId(user.id, sp, "positive-integer");
+  const periodId = await resolvePeriodId(user.id, sp);
   if (periodId === null) {
     const periods = await listPeriodsMeta(user.id);
     if (periods.length === 0 && !periodParamValue(sp)) return <EmptyState />;

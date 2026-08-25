@@ -8,6 +8,11 @@ import type { WeeksSummaryView, WeekView } from "./types";
 
 interface WeeksCardProps {
   weeks: WeekView[];
+  /**
+   * The period these weeks came from. Carried into the link because "week 2"
+   * means nothing on its own — without it the week screen picks its own month.
+   */
+  periodId: number;
   summary: WeeksSummaryView;
   open: boolean;
   onToggle: () => void;
@@ -18,7 +23,7 @@ interface WeeksCardProps {
  * *categories* use elsewhere) — the header carries the month's weekly
  * total, one roomy row per week underneath.
  */
-export function WeeksCard({ weeks, summary, open, onToggle }: WeeksCardProps) {
+export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCardProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "6px 16px 10px", background: "var(--surface)", borderRadius: "var(--radius-card-lg)" }}>
       <div
@@ -76,7 +81,7 @@ export function WeeksCard({ weeks, summary, open, onToggle }: WeeksCardProps) {
 
       {open &&
         weeks.map((week, i) => (
-          <Link key={week.weekNumber} href={`/week/${week.weekNumber}`} style={{ color: "inherit", textDecoration: "none" }}>
+          <Link key={week.weekNumber} href={`/week/${week.weekNumber}?period=${periodId}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider={i > 0} padding="22px 4px 24px" style={{ gap: 16 }}>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>

@@ -11,10 +11,9 @@ export {
   pickCurrentPeriodId,
   findPeriod,
   periodParamValue,
-  resolveSummaryOrderedPeriodId,
+  resolvePeriodId,
   type PeriodMeta,
   type PeriodSearchParams,
-  type ExplicitPeriodPolicy,
 } from "./period-meta";
 export { incomeForPeriod, type PeriodIncome, type IncomeSource } from "./income";
 export { monthOverview, type MonthOverview, type MonthTotals } from "./month";

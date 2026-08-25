@@ -2,7 +2,6 @@ import { asc, eq, sql } from "drizzle-orm";
 import type { UserId } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { periods, transactions } from "@/lib/schema";
-import { listPeriodSummaries } from "@/lib/store";
 import { periodWindow, type PeriodWindow } from "./period-window";
 
 export interface PeriodMeta {
@@ -81,8 +80,9 @@ export async function listPeriodsMeta(userId: UserId, today: Date = new Date()):
 }
 
 /**
- * Home's date-aware selection policy. It is intentionally distinct from
- * `resolveSummaryOrderedPeriodId`, which preserves Week/Add/Money behaviour.
+ * Which period is "now": the one currently running, else the latest to have
+ * ended. Every screen goes through `resolvePeriodId` to get here — this is not
+ * Home's private rule any more.
  */
 export function pickCurrentPeriodId(list: PeriodMeta[]): number | null {
   if (list.length === 0) return null;
@@ -110,43 +110,41 @@ export function findPeriod(list: PeriodMeta[], id: number | null): PeriodMeta | 
   return list.find((period) => period.id === id) ?? null;
 }
 
-export type ExplicitPeriodPolicy = "finite" | "positive-integer";
-
 /** The first value Next exposes for `?period=`, matching the existing callers. */
 export function periodParamValue(searchParams: PeriodSearchParams): string | undefined {
   const raw = searchParams.period;
   return Array.isArray(raw) ? raw[0] : raw;
 }
 
-function explicitPeriodId(
-  searchParams: PeriodSearchParams,
-  policy: ExplicitPeriodPolicy
-): number | null {
+function explicitPeriodId(searchParams: PeriodSearchParams): number | null {
   const value = periodParamValue(searchParams);
   if (!value) return null;
-
   const periodId = Number(value);
-  if (policy === "positive-integer") {
-    return Number.isInteger(periodId) && periodId > 0 ? periodId : null;
-  }
-  return Number.isFinite(periodId) ? periodId : null;
+  return Number.isInteger(periodId) && periodId > 0 ? periodId : null;
 }
 
 /**
- * Week/Add/Money's legacy selection policy: accept an explicit id according to
- * the caller's existing validation, otherwise use the final summary row.
+ * Which period a screen is showing. One policy, for every screen.
  *
- * This deliberately does not use `pickCurrentPeriodId`: summary rows are
- * ordered by sheet order then id, while Home selects from period dates.
+ * There used to be two. Home picked by date (the live period, else the latest
+ * to end); Week, Add, Recurring and One-offs picked the last row of the
+ * imported workbook by sheet order. Those two answers are the same only while
+ * the newest sheet is also the current month — so the dashboard would show
+ * August, you would tap a week inside it, and land on the same week *number*
+ * of some other month. The screens weren't disagreeing about the data; they
+ * were each choosing their own month and not saying so.
+ *
+ * An explicit `?period=` still wins, but only if the user actually owns it: a
+ * stale id (a bookmark from before a re-import, say) falls back to the current
+ * period rather than rendering an empty screen for a period that is gone. Every
+ * screen names its month in the header, so the fallback is visible, not silent.
  */
-export async function resolveSummaryOrderedPeriodId(
+export async function resolvePeriodId(
   userId: UserId,
   searchParams: PeriodSearchParams,
-  explicitPolicy: ExplicitPeriodPolicy
+  today: Date = new Date()
 ): Promise<number | null> {
-  const explicit = explicitPeriodId(searchParams, explicitPolicy);
-  if (explicit !== null) return explicit;
-
-  const summaries = await listPeriodSummaries(userId);
-  return summaries.at(-1)?.periodId ?? null;
+  const list = await listPeriodsMeta(userId, today);
+  if (list.length === 0) return null;
+  return findPeriod(list, explicitPeriodId(searchParams))?.id ?? pickCurrentPeriodId(list);
 }
