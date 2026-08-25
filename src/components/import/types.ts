@@ -32,7 +32,14 @@ export interface ImportedAttention {
   attentionReason: string;
 }
 
+/** One period the import wrote, in the order the workbook listed them. */
+export interface SavedPeriod {
+  label: string;
+  periodId: number;
+}
+
 export interface UploadResult {
   preview: ImportPreview;
   attention: ImportedAttention[];
+  saved: SavedPeriod[];
 }

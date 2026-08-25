@@ -11,6 +11,7 @@ import { TextField } from "@/components/capture/TextField";
 import { LabelField } from "@/components/capture/LabelField";
 import { validateAddDraft, categoryStillValidForKind } from "@/components/capture/validation";
 import { KIND_TITLES, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
+import { transactionHome } from "@/lib/routes";
 import { createTransaction } from "./actions";
 
 export interface AddViewProps {
@@ -87,11 +88,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
           pending,
           needsAttention,
         });
-        if (kind === "weekly" && weekNumber !== null) {
-          router.push(`/week/${weekNumber}?period=${periodId}`);
-        } else {
-          router.push("/");
-        }
+        router.push(transactionHome(kind, periodId, weekNumber));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
       }
@@ -182,12 +179,11 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 }
 
 /**
- * Out of scope: another agent owns import/upload. This renders screen 08's
- * Upload tab shape (drop target, "Read it" CTA) but wires the CTA to Home
- * rather than a real parse, per this task's brief.
+ * Screen 08's Upload tab shape (drop target, "Read it" CTA). Reading a file
+ * here isn't wired up; the CTA goes to /import, which does work — it used to
+ * go to Home, which answered "read this file" by showing the dashboard.
  */
 function UploadTab() {
-  const router = useRouter();
   return (
     <div
       style={{
@@ -205,9 +201,9 @@ function UploadTab() {
     >
       <span style={{ fontSize: 15, fontWeight: 600 }}>Drop a file, or paste</span>
       <span style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 260, textWrap: "pretty" }}>
-        Reading files isn&apos;t wired up here yet — add it by hand on the Type it tab for now.
+        Reading a file here isn&apos;t wired up yet. Import takes spreadsheets, or add this one by hand on the Type it tab.
       </span>
-      <Button variant="primary" style={{ width: "auto", padding: "0 24px" }} onClick={() => router.push("/")}>
+      <Button variant="primary" href="/import" style={{ width: "auto", padding: "0 24px" }}>
         Read it
       </Button>
     </div>

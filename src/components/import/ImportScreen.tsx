@@ -14,6 +14,7 @@ type Phase = "invite" | "reading" | "dates" | "saving" | "result";
 interface UploadResponse {
   preview?: ImportPreview;
   attention?: UploadResult["attention"];
+  saved?: UploadResult["saved"];
   error?: string;
 }
 
@@ -120,7 +121,7 @@ export function ImportScreen() {
       const response = await postFile(file, "save", dates, setProgress, () => setUploadComplete(true));
       if (!response.preview || !response.attention) throw new Error("Max couldn't finish this import.");
       setProgress(100);
-      setResult({ preview: response.preview, attention: response.attention });
+      setResult({ preview: response.preview, attention: response.attention, saved: response.saved ?? [] });
       setPhase("result");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Couldn't finish this import.");
@@ -208,7 +209,13 @@ export function ImportScreen() {
   }
 
   if (!result) return null;
-  const { preview: done, attention } = result;
+  const { preview: done, attention, saved } = result;
+
+  // Import an old month and Max should show you that month, not whichever one
+  // happens to be current. Several periods in one workbook: the last the file
+  // listed, which is the newest in every sheet this has been run against.
+  const importedPeriodId = saved.at(-1)?.periodId ?? null;
+  const continueHref = importedPeriodId === null ? "/" : `/?period=${importedPeriodId}`;
   const showInline = attention.length > 0 && attention.length <= 5;
   const stats = [["Income", done.income], ["Recurring", done.recurring], ["Your week", done.weekly], ["Labels kept", done.labels.length]] as const;
 
@@ -222,7 +229,7 @@ export function ImportScreen() {
       {done.labels.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Your words, not mine</span><div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>{done.labels.slice(0, 8).map((label) => <Pill key={label} tone="cyan">{label}</Pill>)}{done.labels.length > 8 && <Pill tone="cyan">+ {done.labels.length - 8} names</Pill>}</div></div>}
       {showInline && <div style={{ border: "1px solid var(--hairline-4)", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--attention-ink)" }}>{attention.length} I placed by guessing</span>{attention.map((row) => <AttentionCard key={row.id} row={row} />)}<span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", lineHeight: 1.5 }}>everything else I filed myself — correct me later if I got one wrong</span></div>}
       {attention.length >= 6 && <p style={{ margin: "20px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>{attention.length} I placed by guessing. <Link href="/review" style={{ color: "var(--text-secondary)" }}>Review them</Link></p>}
-      <Link href="/" style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>Continue</span></Link>
+      <Link href={continueHref} style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>Continue</span></Link>
     </main>
   );
 }

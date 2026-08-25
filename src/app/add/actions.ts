@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { addTransaction } from "@/lib/store";
+import { pathsAffectedBy } from "@/lib/routes";
 import {
   isValidKindCategory,
   USER_ATTENTION_REASON,
@@ -58,9 +59,6 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   if (id === null) throw new Error("Couldn't save — that period isn't yours.");
 
-  revalidatePath("/");
-  if (input.kind === "weekly" && input.weekNumber !== null) {
-    revalidatePath(`/week/${input.weekNumber}`);
-  }
+  for (const path of pathsAffectedBy(input.kind, input.weekNumber)) revalidatePath(path);
   return { id };
 }

@@ -54,7 +54,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
     setError(null);
     startSave(async () => {
       try {
-        await saveTransaction(detail.id, detail.kind, {
+        await saveTransaction(detail.id, detail.kind, detail.periodId, detail.weekNumber, {
           merchant,
           occurredOn: occurredOn || null,
           category,

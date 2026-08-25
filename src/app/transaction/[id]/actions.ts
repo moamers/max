@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { updateTransaction, deleteTransaction } from "@/lib/store";
+import { pathsAffectedBy, transactionHome } from "@/lib/routes";
+import { getTransactionDetail } from "./data";
 import {
   isValidKindCategory,
   USER_ATTENTION_REASON,
@@ -29,7 +31,13 @@ export interface SaveTransactionInput {
  * `updateTransaction` describes exactly this: re-filing within the
  * transaction's existing kind, not switching kinds.
  */
-export async function saveTransaction(id: number, kind: TransactionKind, input: SaveTransactionInput): Promise<{ ok: true }> {
+export async function saveTransaction(
+  id: number,
+  kind: TransactionKind,
+  periodId: number,
+  weekNumber: number | null,
+  input: SaveTransactionInput
+): Promise<never> {
   const user = await requireUser();
 
   if (!(input.amount > 0)) throw new Error("Add an amount before saving.");
@@ -51,13 +59,29 @@ export async function saveTransaction(id: number, kind: TransactionKind, input: 
 
   if (!ok) throw new Error("Couldn't save this transaction — it may no longer exist.");
 
+  // Only the transaction's own page was revalidated before, so a corrected
+  // amount left every total that included it stale until something else
+  // happened to refresh them.
   revalidatePath(`/transaction/${id}`);
-  return { ok: true };
+  for (const path of pathsAffectedBy(kind, weekNumber)) revalidatePath(path);
+
+  redirect(transactionHome(kind, periodId, weekNumber));
 }
 
-export async function removeTransaction(id: number): Promise<void> {
+export async function removeTransaction(id: number): Promise<never> {
   const user = await requireUser();
+
+  // Read the row's home *before* deleting it: afterwards there is no period,
+  // kind or week to derive one from, which is why this used to fall back to `/`
+  // and drop the user into whatever month happened to be current.
+  const detail = await getTransactionDetail(user.id, id);
+  if (!detail) throw new Error("Couldn't delete this transaction — it may no longer exist.");
+
   const ok = await deleteTransaction(user.id, id);
   if (!ok) throw new Error("Couldn't delete this transaction — it may no longer exist.");
-  redirect("/");
+
+  revalidatePath(`/transaction/${id}`);
+  for (const path of pathsAffectedBy(detail.kind, detail.weekNumber)) revalidatePath(path);
+
+  redirect(transactionHome(detail.kind, detail.periodId, detail.weekNumber));
 }
