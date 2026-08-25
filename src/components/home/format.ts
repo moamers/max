@@ -4,6 +4,7 @@
  * rules (the one piece of real logic these screens have, per the README's
  * chart-grammar and week-row rules) are unit-testable on their own.
  */
+export { dominantMonth } from "@/lib/periods";
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
 
 /**
@@ -128,33 +129,6 @@ export interface MoneyState {
  * hasn't started yet (nothing to be "left" of), and a plain "spent" total
  * when there is no goal to measure against at all.
  */
-/**
- * The month a period actually belongs to — the one holding most of its days,
- * not the one it happens to start in.
- *
- * "Jun 30th - Aug 3rd" starts in June and spends one day there; the other
- * thirty-four are July and August. Naming it "June" made the home screen say
- * June above a list of July weeks. Periods here are pay periods, so they cross
- * month boundaries by design and the start date is not a label.
- */
-export function dominantMonth(start: Date, end: Date): Date {
-  const days = new Map<string, { count: number; date: Date }>();
-  const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
-  while (cursor.getTime() <= end.getTime()) {
-    const key = `${cursor.getUTCFullYear()}-${cursor.getUTCMonth()}`;
-    const seen = days.get(key);
-    if (seen) seen.count += 1;
-    else days.set(key, { count: 1, date: new Date(cursor.getTime()) });
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  let best: { count: number; date: Date } | null = null;
-  for (const entry of days.values()) {
-    // Ties go to the earlier month, so a period split exactly in half is named
-    // by where it began rather than by iteration order.
-    if (!best || entry.count > best.count) best = entry;
-  }
-  return best ? best.date : start;
-}
 
 export function moneyState(spent: number, goal: number | null, remaining: number | null, isFuture: boolean): MoneyState {
   if (goal === null || remaining === null) {

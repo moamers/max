@@ -143,3 +143,35 @@ export function isWholeMondayToSundayPeriod(startDateIso: string, endDateIso: st
   const days = Math.round((end.getTime() - start.getTime()) / DAY_MS) + 1;
   return days === 28 || days === 35;
 }
+
+/**
+ * The month a period actually belongs to — the one holding most of its days,
+ * not the one it happens to start in.
+ *
+ * "Jun 29th - Aug 2nd" starts in June and spends two days there; the other
+ * thirty-three are July and August. Naming it June put "July" in the month bar
+ * and "Jun" on the calendar tile for the same period, because the two were
+ * asking the question differently.
+ *
+ * Periods here are pay periods. They cross month boundaries by design, so the
+ * start date is not a name — and every surface that names a period must use
+ * this one function, or they will disagree again.
+ */
+export function dominantMonth(start: Date, end: Date): Date {
+  const days = new Map<string, { count: number; date: Date }>();
+  const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  while (cursor.getTime() <= end.getTime()) {
+    const key = `${cursor.getUTCFullYear()}-${cursor.getUTCMonth()}`;
+    const seen = days.get(key);
+    if (seen) seen.count += 1;
+    else days.set(key, { count: 1, date: new Date(cursor.getTime()) });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  let best: { count: number; date: Date } | null = null;
+  for (const entry of days.values()) {
+    // Ties go to the earlier month, so a period split exactly in half is named
+    // by where it began rather than by iteration order.
+    if (!best || entry.count > best.count) best = entry;
+  }
+  return best ? best.date : start;
+}

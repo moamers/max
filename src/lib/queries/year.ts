@@ -3,6 +3,7 @@ import type { UserId } from "../auth";
 import { getDb } from "../db";
 import { periods, transactions } from "../schema";
 import type { TransactionKind } from "../transactions";
+import { dominantMonth } from "../periods";
 import { incomeForPeriod } from "./income";
 import { monthOverview } from "./month";
 import type { PeriodMeta } from "./period-meta";
@@ -47,7 +48,9 @@ export async function buildYearData(
     net: null,
   }));
   inYear.forEach((period, index) => {
-    const monthIndex = period.window.start.getUTCMonth();
+    // Same rule the month bar uses, so a period cannot be July at the top of
+    // the screen and June on the calendar tile.
+    const monthIndex = dominantMonth(period.window.start, period.window.end).getUTCMonth();
     months[monthIndex] = { monthIndex, periodId: period.id, net: nets[index] };
   });
   const available = months.filter((month): month is MonthTile & { net: number } => month.net !== null);
@@ -348,7 +351,10 @@ export async function yearOverview(
       return {
         periodId: period.id,
         label: period.label,
-        monthIndex: period.recordedStart!.getUTCMonth(),
+        monthIndex: (period.window
+          ? dominantMonth(period.window.start, period.window.end)
+          : period.recordedStart!
+        ).getUTCMonth(),
         income: incomes[index].amount,
         weekly: kinds?.get("weekly") ?? 0,
         recurring: kinds?.get("recurring") ?? 0,
