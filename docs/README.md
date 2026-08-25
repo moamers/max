@@ -21,6 +21,7 @@ They're living documents. When a decision changes, the document changes.
 | 7 | **[V1 Delivery Plan](./product/07-v1-delivery-plan.md)** | What V1 is, the data model every agent builds against, and who owns which file. **Read before touching V1 code.** |
 | 8 | **[Design Handoff](./design/handoff/README.md)** | The twelve-screen V1 design: both themes, tokens, copy, and the one chart grammar. The specification, not a mood board. |
 | 9 | **[Contributor Guide](./product/08-contributor-guide.md)** | Onboarding for anyone joining cold — where the build is, the traps already hit, and a self-contained brief per remaining task. **Start here to pick up work.** |
+| 10 | **[Delegation Prompt](./product/09-delegation-prompt.md)** | A ready-to-paste brief for an outside agent, plus which tasks can safely run in parallel and why. |
 
 ## Doctrine
 
