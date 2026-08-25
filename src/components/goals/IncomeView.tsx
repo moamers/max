@@ -49,12 +49,14 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
       for (const monthIndex of dirty) {
         const month = months.find((m) => m.monthIndex === monthIndex);
         if (!month || month.periodId === null) continue;
-        await setIncomeForPeriodAction(month.periodId, amounts[monthIndex]);
+        const result = await setIncomeForPeriodAction(month.periodId, amounts[monthIndex]);
+        if (!result.ok) throw new Error(result.message);
       }
       router.back();
       router.refresh();
-    } catch {
-      setError("I couldn't save that. Your numbers are still here — try Done again.");
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : String(cause);
+      setError(`I couldn't save that — your numbers are still here. (${reason})`);
       setSaving(false);
     }
   }

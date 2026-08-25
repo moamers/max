@@ -41,18 +41,22 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
       // this screen is recovering from.
       for (const category of WEEKLY_CATEGORIES) {
         if (goals[category] !== initialGoals[category]) {
-          await setGoalAction(category, goals[category]);
+          const result = await setGoalAction(category, goals[category]);
+          if (!result.ok) throw new Error(result.message);
         }
       }
       if (income !== (initialDefaultIncome ?? 0)) {
-        await setDefaultIncomeAction(income);
+        const result = await setDefaultIncomeAction(income);
+        if (!result.ok) throw new Error(result.message);
       }
       router.back();
       router.refresh();
-    } catch {
+    } catch (cause) {
       // A failed save must not take the page with it. The numbers stay on
-      // screen so nothing typed is lost.
-      setError("I couldn't save that. Your numbers are still here — try Done again.");
+      // screen so nothing typed is lost, and the reason is shown rather than
+      // swallowed — an unexplained failure is impossible to act on.
+      const reason = cause instanceof Error ? cause.message : String(cause);
+      setError(`I couldn't save that — your numbers are still here. (${reason})`);
       setSaving(false);
     }
   }
