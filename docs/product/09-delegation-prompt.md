@@ -29,6 +29,21 @@ together because Import owns `store.ts` and Year owns `queries/`.
 **Why F is alone.** It touches `Button`, `layout.tsx` and `store.ts` — files
 everything else depends on. Cheap, but it will conflict with anything running.
 
+### Reasoning effort per task
+
+Raise effort where a wrong answer is **expensive and hard to spot**; lower it
+where the spec is precise and the output is visibly right or wrong. Labels vary
+by product — map these onto whatever scale yours offers.
+
+| Task | Effort | Why |
+|---|---|---|
+| **A** Goals + Income | Medium | Precisely specified, backend exists, mistakes are visible on screen. The only judgement is surfacing which tier an income figure came from. |
+| **B** Recurring + One-offs | Medium | Same, with one trap: screen 05's share bar is *not* the budget bar. If effort is cheap, go High — that distinction is easy to miss and looks fine when wrong. |
+| **C** Export | **High / max** | No design to follow, round-trip correctness, real money, and a parser with a history of confident wrong answers. |
+| **D** Import | **High** | The "lines I couldn't place" step is real interaction design, and it edits `store.ts` and `parser.ts`. |
+| **E** Year round-up | Medium | Well specified; the empty-state judgement is the only soft part. |
+| **F** Loose ends | Medium, **High** for the delete | Mostly mechanical, but step 1 writes a destructive mutation against real financial data. |
+
 > **Consider keeping C (Export) in-house.** It has no design to follow, its
 > acceptance test is *parse → export → parse again yields identical data*, and
 > this parser has produced wrong numbers on real data twice. It is the task
@@ -103,7 +118,17 @@ Add tests for anything with real logic.
 ## Stay in your lane
 Only write the files your task lists as owned. If you need a change elsewhere,
 put it in your report instead of making it — other agents are working in
-parallel in this repo.
+parallel in this repo, branched from the same commit, and none of you can see
+each other's work.
+
+In particular: there is a money and date formatting helper at
+`src/components/home/format.ts` (formatGBP, formatSignedGBP, moneyState,
+moneyToneColor and others). Read it and import from it if useful, but do NOT
+move, rename or refactor it — another agent depends on its current location. If
+it is missing something you need, add a local helper in your own directory and
+say so in your report. The same goes for anything else already shared: use it
+where it is, or work beside it. Do not promote, relocate or "tidy" a file that
+is not yours.
 
 ## Report back
 Short and blunt: the branch name, what you built, what you deviated from and
