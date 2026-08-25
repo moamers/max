@@ -32,7 +32,9 @@ import { RolloverPrompt } from "./RolloverPrompt";
  */
 export function HomeScreen({ data }: { data: HomeData }) {
   const [heroMode, setHeroMode] = useState<HeroMode>("forecast");
-  const [weeksOpen, setWeeksOpen] = useState(true);
+  // Collapsed by default: the home screen answers "where do I stand" first,
+  // and a five-week list pushes everything else below the fold.
+  const [weeksOpen, setWeeksOpen] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 

@@ -27,7 +27,13 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
   const sentence = forecast
     ? heroForecastSentence(hero.daysRemaining, hero.monthName)
     : heroTodaySentence(hero.daysRemaining);
-  const ink1 = forecast ? "var(--hero-ink-1)" : "var(--text-primary)";
+  // Below zero is the one case where the hero must not look like good news.
+  const isOver = spare !== null && spare < 0;
+  const ink1 = forecast
+    ? "var(--hero-ink-1)"
+    : isOver
+      ? "var(--bar-over)"
+      : "var(--text-primary)";
   const ink2 = forecast ? "var(--hero-ink-2)" : "var(--text-secondary)";
   const ink3 = forecast ? "var(--hero-ink-3)" : "var(--text-tertiary)";
 
@@ -36,7 +42,7 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
       size="hero"
       raised={!forecast}
       padding="18px 22px 22px"
-      style={forecast ? { background: "var(--hero-gradient)" } : undefined}
+      style={forecast ? { background: isOver ? "var(--hero-gradient-over)" : "var(--hero-gradient)" } : undefined}
     >
       <SegmentedControl
         tone={forecast ? "onGradient" : "default"}

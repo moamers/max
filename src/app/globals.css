@@ -76,6 +76,14 @@
 
   /* ---- hero gradient (unchanged across themes) ---- */
   --hero-gradient: linear-gradient(140deg, #c6ff3d, #4de0ff);
+  /*
+    The same 140deg two-stop construction, on the warm end of the palette, for
+    a forecast that lands below zero. A negative number on a lime-to-cyan field
+    read as good news; the gradient is the loudest thing on the screen and it
+    has to agree with the figure it is behind. Ink stays dark for contrast — the
+    stops are light enough to carry it, so the number is still legible.
+  */
+  --hero-gradient-over: linear-gradient(140deg, #f0904b, #e8736f);
   --hero-ink-1: #0f2118;
   --hero-ink-2: #123028;
   --hero-ink-3: #1e3a16;

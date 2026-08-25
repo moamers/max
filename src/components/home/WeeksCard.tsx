@@ -48,11 +48,18 @@ export function WeeksCard({ weeks, summary, open, onToggle }: WeeksCardProps) {
           {summary.left !== null ? (
             <>
               <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
-                <span style={{ fontSize: 25, fontWeight: 800, letterSpacing: "-0.035em", color: "var(--lime-ink)" }}>
-                  {formatGBP(summary.left)}
+                <span
+                  style={{
+                    fontSize: 25,
+                    fontWeight: 800,
+                    letterSpacing: "-0.035em",
+                    color: summary.left < 0 ? "var(--bar-over)" : "var(--lime-ink)",
+                  }}
+                >
+                  {formatGBP(summary.left < 0 ? -summary.left : summary.left)}
                 </span>
                 <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
-                  left
+                  {summary.left < 0 ? "over" : "left"}
                 </span>
               </div>
               <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-disabled-2)" }}>
