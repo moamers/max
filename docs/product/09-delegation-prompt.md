@@ -269,6 +269,114 @@ They are still null, so date logic falls back to parsing the label, which infers
 a year that may be wrong.
 ```
 
+### D · Import (01) + period rollover — ready to delegate
+```
+Build screen 01 (Import), its reconciliation model, and automatic period
+rollover.
+
+Route: /import. Own: src/app/import/**, src/components/import/**,
+src/app/review/**, src/lib/store.ts, src/lib/parser.ts, src/lib/periods.ts (new),
+drizzle/<next>.sql
+
+READ FIRST — these two are the specification, not background:
+  docs/design/13-import-reconciliation.md
+  docs/design/15-attention-and-periods.md
+They override the handoff README where they disagree with it.
+
+There is currently NO file-upload UI anywhere in the app. The old one was
+replaced by the new Home. Both the menu and the empty state link to /import,
+which does not exist, so a new account cannot get data in at all. This task is
+what makes the app usable.
+
+1 · THE IMPORT SCREEN — three states per the handoff README screen 01. The
+    prototype fakes progress on timers; use real parse progress. Backend exists:
+    POST /api/upload and parseWorkbook.
+
+2 · THE THIRD TRANSACTION STATE. Add to transactions:
+      needs_attention boolean NOT NULL DEFAULT false
+      attention_reason text
+      CHECK (NOT (pending AND needs_attention))
+    Screen 04's Final|Pending control becomes three-way:
+    Final | Pending | Needs a look. Mutually exclusive.
+    Colours are in 15-attention-and-periods.md §1. Add them as tokens in
+    globals.css alongside the existing amber — you own that addition for this
+    task only.
+
+3 · RECONCILIATION. Import never blocks, never discards, never asks a question
+    it can answer with a stated assumption. Uncertain rows land with Max's best
+    guess and a plain-English reason in attention_reason. 0 assumed → say
+    nothing. 1–5 → the handoff's inline cards. 6+ → one line plus a quiet link
+    to /review, with Continue still the primary button. /review sweeps them one
+    card at a time: Confirm, Change, Skip, and Skip all. A row Max cannot read
+    at all still lands, as a one-off, flagged.
+
+4 · PERIOD DATES. Populate periods.start_date and end_date on import. They are
+    still null, so date logic falls back to parsing the label.
+
+5 · PERIOD ROLLOVER (src/lib/periods.ts, pure and unit-tested). Weeks run
+    Monday to Sunday, always. A period is 4 or 5 whole weeks, starts the Monday
+    after the previous ends, and ends on the Sunday nearest the 1st of a month.
+    That rule reproduces 11 of the founder's 12 real periods — it is a proposal
+    shown with an adjustable end date, never applied silently. When today passes
+    the current period's end, the next period becomes the default view.
+
+6 · MONTH MARKERS. On the month picker, a period holding any needs-a-look row
+    gets a dot in the needs-a-look colour. Pending rows do NOT get a dot. No
+    counts, no badge numbers.
+
+Do not apply the migration. Write the .sql and say so in your report.
+```
+
+### C · Export to spreadsheet + year CSV — ready to delegate
+```
+Build export: regenerate the founder's monthly workbook from Max's data, plus a
+year round-up CSV.
+
+Own: src/lib/export/**, src/app/api/export/**
+Triggered from the menu. There is no design for this.
+
+READ FIRST — this is the specification:
+  docs/design/14-export-spec.md
+Two REAL templates are committed at docs/design/templates/ (a 4-week and a
+5-week period). Open them with exceljs and read their structure. They are the
+spec; nothing describes them better than they do.
+
+THE CENTRAL RULE: those templates are formula-driven, not value-driven. Week
+totals pull from the week tabs, the summary sums the blocks, the grand total
+sums those. So export writes LINE ITEMS AND FORMULAS, never computed totals.
+This is doctrine T-2 — the system must not do arithmetic it then states as
+fact — and it means the spreadsheet checks Max's numbers rather than
+inheriting them.
+
+GENERATE, DO NOT FILL. Do not open a template and write into its cells. Their
+formula ranges are fixed and hand-maintained (grocery is C2:C23, so a 30-row
+week would silently fall outside its own total) and inconsistent between tabs.
+Generate a fresh workbook matching the LAYOUT, sized to the real data, with
+formulas written to match the ranges you actually emit.
+
+COLUMN LAYOUT — read 14-export-spec.md carefully here. Line items live in
+columns A–D; a summary panel lives in G–H; COLUMN F IS EMPTY TOP TO BOTTOM and
+is what separates them. Reading across that gap is what caused defect F-3,
+where a rent line was read as salary. Reproduce the gap exactly.
+
+Emit as many week tabs as the period actually has. 4 vs 5 weeks is not two
+templates; it is one generator.
+
+THE ACCEPTANCE TEST IS THE DELIVERABLE:
+    parse(workbook) → export → parse(export) must equal the original parse
+Automated, with exceljs, over the committed templates. Not a nice-to-have.
+
+Also state the G-4 limitation in the export UI: a round trip loses the
+recurring group, because the sheet has one flat bills list and Max has four.
+Do not imply a lossless round trip.
+
+YEAR CSV: one row per period. The columns and maths are in 14-export-spec.md
+§ "The year round-up export" — they were reverse-engineered from the founder's
+own aggregates sheet and verified to the penny across all 12 of his periods.
+Reproduce exactly. A period with unknown income leaves its percentage columns
+EMPTY, not zero.
+```
+
 ### E · Year round-up (07) — batch 2 · do NOT edit src/lib/queries/index.ts
 ```
 Build screen 07 (Year round-up) from the design README.
