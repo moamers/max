@@ -19,7 +19,11 @@ export function Scrim({ onDismiss, className, style, ...rest }: ScrimProps) {
         position: "absolute",
         inset: 0,
         background: "var(--scrim)",
-        zIndex: 6,
+        // No z-index of its own. The wrapper that renders a Scrim already sits
+        // in its own layer, and an explicit z-index here lifted the dimming
+        // above the very panel it is meant to sit behind — which both greyed
+        // the panel out and swallowed every click as a dismiss.
+        zIndex: 0,
         ...style,
       }}
       {...rest}

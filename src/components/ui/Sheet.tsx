@@ -32,6 +32,7 @@ export function Sheet({ variant = "full", onBack, onDismiss, children, className
         variant === "full"
           ? {
               position: "absolute",
+              zIndex: 1,
               top: 46,
               left: 0,
               right: 0,
@@ -42,6 +43,8 @@ export function Sheet({ variant = "full", onBack, onDismiss, children, className
               ...style,
             }
           : {
+              position: "relative",
+              zIndex: 1,
               background: "var(--surface)",
               borderTop: "1px solid var(--hairline-3)",
               borderRadius: "var(--radius-sheet-top) var(--radius-sheet-top) 44px 44px",
