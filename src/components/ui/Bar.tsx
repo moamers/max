@@ -30,9 +30,11 @@ export interface BarProps {
  * anywhere else; every budget bar in the product should go through here.
  */
 export function Bar({ spend, budget, size = "category", strong = false, className, ...rest }: BarProps) {
-  const { widthPct, tone } = computeBarReading(spend, budget);
+  const { widthPct, tone, gradientSizePct } = computeBarReading(spend, budget);
   const height = HEIGHT[size];
-  const fillColor = tone === "over" ? (strong ? "var(--bar-over-strong)" : "var(--bar-over)") : "var(--bar-fill)";
+  // Over budget stays a single flat red: the ramp is about approaching a
+  // limit, and once it is passed there is nothing left to approach.
+  const overColor = strong ? "var(--bar-over-strong)" : "var(--bar-over)";
 
   return (
     <div
@@ -50,7 +52,13 @@ export function Bar({ spend, budget, size = "category", strong = false, classNam
         style={{
           height: "100%",
           width: `${widthPct}%`,
-          background: fillColor,
+          ...(tone === "over"
+            ? { background: overColor }
+            : {
+                backgroundImage: "var(--bar-ramp)",
+                backgroundSize: `${gradientSizePct}% 100%`,
+                backgroundRepeat: "no-repeat",
+              }),
           borderRadius: "var(--radius-pill)",
           transition: `width var(--duration-bar) ease, background-color var(--duration-bar) ease`,
         }}
