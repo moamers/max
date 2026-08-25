@@ -50,6 +50,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 
   const [amount, setAmount] = useState(0);
   const [pending, setPending] = useState(false);
+  const [needsAttention, setNeedsAttention] = useState(false);
   const [where, setWhere] = useState(initialWhere);
   const [kind, setKind] = useState<TransactionKind>(initialKind);
   const [category, setCategory] = useState<TransactionCategory | null>(initialCategory);
@@ -84,6 +85,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
           note,
           amount,
           pending,
+          needsAttention,
         });
         if (kind === "weekly" && weekNumber !== null) {
           router.push(`/week/${weekNumber}?period=${periodId}`);
@@ -120,7 +122,15 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 
           {tab === "type" ? (
             <>
-              <AmountEditor amount={amount} onAmountChange={setAmount} pending={pending} onPendingChange={setPending} showSlider />
+              <AmountEditor
+                amount={amount}
+                onAmountChange={setAmount}
+                pending={pending}
+                onPendingChange={setPending}
+                needsAttention={needsAttention}
+                onNeedsAttentionChange={setNeedsAttention}
+                showSlider
+              />
               {touched && validation.errors.amount && (
                 <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.amount}</span>
               )}

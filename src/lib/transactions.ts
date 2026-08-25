@@ -160,3 +160,13 @@ export function sectionForKindCategory(kind: string, category: string | null): S
   }
   return null;
 }
+
+/**
+ * Why a row is flagged when *the user* flagged it, rather than Max on import.
+ *
+ * `attention_reason` is what keeps the flag traceable (B-8) — a marker with no
+ * stated cause is just anxiety. Add and the transaction editor both write this
+ * one string, so a row flagged on the way in reads the same as one flagged
+ * later.
+ */
+export const USER_ATTENTION_REASON = "Marked for a look by you.";

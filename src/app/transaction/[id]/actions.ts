@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { updateTransaction, deleteTransaction } from "@/lib/store";
-import { isValidKindCategory, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
+import {
+  isValidKindCategory,
+  USER_ATTENTION_REASON,
+  type TransactionCategory,
+  type TransactionKind,
+} from "@/lib/transactions";
 
 export interface SaveTransactionInput {
   merchant: string;
@@ -40,7 +45,7 @@ export async function saveTransaction(id: number, kind: TransactionKind, input: 
     pending: input.pending,
     needsAttention: input.needsAttention,
     attentionReason: input.needsAttention
-      ? input.attentionReason ?? "Marked for a look by you."
+      ? input.attentionReason ?? USER_ATTENTION_REASON
       : null,
   });
 

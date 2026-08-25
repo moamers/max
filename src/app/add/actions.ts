@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { addTransaction } from "@/lib/store";
-import { isValidKindCategory, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
+import {
+  isValidKindCategory,
+  USER_ATTENTION_REASON,
+  type TransactionCategory,
+  type TransactionKind,
+} from "@/lib/transactions";
 
 export interface CreateTransactionInput {
   periodId: number;
@@ -15,6 +20,13 @@ export interface CreateTransactionInput {
   note: string;
   amount: number;
   pending: boolean;
+  /**
+   * The founder's sheet has an orange flag for "something here is wrong", and
+   * that judgement is often made at the moment of writing the row down — an
+   * unrecognised card charge, an amount that doesn't look right. The two states
+   * are mutually exclusive (schema CHECK `transactions_one_state`).
+   */
+  needsAttention: boolean;
 }
 
 /**
@@ -39,7 +51,9 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
     amount: input.amount,
     label: input.label.trim() || null,
     occurredOn: null,
-    pending: input.pending,
+    pending: input.needsAttention ? false : input.pending,
+    needsAttention: input.needsAttention,
+    attentionReason: input.needsAttention ? USER_ATTENTION_REASON : null,
   });
 
   if (id === null) throw new Error("Couldn't save — that period isn't yours.");

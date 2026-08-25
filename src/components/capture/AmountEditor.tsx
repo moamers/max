@@ -10,7 +10,11 @@ export interface AmountEditorProps {
   onAmountChange: (amount: number) => void;
   pending: boolean;
   onPendingChange: (pending: boolean) => void;
-  /** Optional so Add remains Final|Pending while screen 04 becomes three-way. */
+  /**
+   * Optional only so a caller can render a two-state control deliberately.
+   * Both Add and the transaction editor pass it: a row can be flagged when it
+   * is written down, not only afterwards (docs/design/15, §1).
+   */
   needsAttention?: boolean;
   onNeedsAttentionChange?: (needsAttention: boolean) => void;
   /** The add sheet shows the drag slider; the transaction editor doesn't (README screens 04 vs 08). */
