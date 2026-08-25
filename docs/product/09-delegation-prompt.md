@@ -1,46 +1,34 @@
 # Delegating Max work to an outside agent
 
-*A ready-to-paste prompt, and which tasks can safely run at the same time.*
+*The prompt to paste, the briefs to paste after it, and which can run together.*
 
 ---
 
-## 1 · What can run in parallel
+## 1 · What is left
 
-Parallel work is safe when two agents never write the same file. The table below
-groups tasks by that rule, not by how big they are.
+**Two tasks remain and they run in parallel. Paste the prompt in §2, then ONE
+brief from §3.**
 
-| Batch | Task | Owns (writes) | Status |
+| Task | Effort | Runs with | Owns (writes) |
 |---|---|---|---|
-| 1 | A · Goals (11) + Income (12) | `app/goals`, `app/income`, `components/goals` | ✅ Done |
-| 1 | B · Recurring (05) + One-offs (06) | `app/recurring`, `app/one-offs`, `components/money` | ✅ Done |
-| — | C · Export to spreadsheet | `src/lib/export/**`, `src/app/api/export/**` | ⏸ Paused — founder preparing the template spec |
-| **2** | **E · Year round-up (07)** | `src/app/year/**`, `src/components/year/**`, `src/lib/queries/year.ts` | Next |
-| **2** | **G · Empty states + period consolidation** | `app/recurring/page.tsx`, `app/one-offs/page.tsx`, `src/lib/queries/period-meta.ts`, `src/app/(home)/lib/**`, `src/app/page.tsx`, `components/money/resolve-period.ts` | Next |
-| 3 | D · Import (01) | `app/import`, `components/import`, **`src/lib/store.ts`**, `src/lib/parser.ts` | After batch 2 |
-| 4 | F · Loose ends | `components/menu`, `ui/Button.tsx`, `app/layout.tsx`, **`src/lib/store.ts`** | After batch 3 |
+| **D · Import + period rollover** | High | C | `app/import`, `components/import`, `app/review`, **`src/lib/store.ts`**, **`src/lib/parser.ts`**, `src/lib/periods.ts`, `drizzle/` |
+| **C · Export + year CSV** | High / max | D | `src/lib/export/**`, `src/app/api/export/**` |
+| F · Loose ends | Medium | *nothing* | `components/menu`, `ui/Button.tsx`, `app/layout.tsx`, **`src/lib/store.ts`** |
 
-**Batch 2 is E and G, running together.** They write into separate
-directories. One rule keeps them apart: **E must not edit
-`src/lib/queries/index.ts`** — import `year.ts` directly instead, because G
-owns that file.
+**D and C are safe together.** They never write the same file. But they share a
+seam git cannot police: export's round-trip test is written against
+`parseWorkbook`'s output, and import owns that file. Both briefs carry the rule —
+import may *add* to that output's shape but never rename, remove or restructure
+it; export reads the parser and never modifies it.
 
-Export (C) is paused at the founder's request while he specs the template, and
-Import (D) is held back for his own review — it is the screen where the
-parser's uncertainty is shown to the user, which is a judgement worth his eyes.
+**F waits until both are merged.** It writes `store.ts` (which D owns), plus
+`Button` and `layout.tsx` which everything depends on, and it deletes
+`/dashboard`, which is only safe once its delete control has a replacement.
 
-**Why D waits.** Import has to start populating `periods.start_date`, which
-means editing `src/lib/store.ts`. Let batch 2 land first rather than have three
-branches rebase onto a moving data layer.
-
-**Why F is last and alone.** It also writes `store.ts`, plus `Button` and
-`layout.tsx` — files everything depends on. It also deletes `/dashboard`, which
-is only safe once its delete control has a replacement.
-
-> **Export is delegated, but reviewed hardest.** It has no design to follow and
-> this parser has produced wrong numbers on real data twice. What makes it
-> safe to delegate is that its acceptance test is *mechanical*: parse → export
-> → parse again must yield identical data. An objective test is worth more than
-> a careful author.
+### Already delivered
+A · Goals + Income · B · Recurring + One-offs · E · Year round-up ·
+G · Empty states + period consolidation. Their briefs are in git history if
+needed.
 
 ---
 
@@ -144,132 +132,11 @@ real data" is a good line in a report, not a gap.
 ````
 
 ---
-
 ## 3 · Task briefs
 
-### A · Goals (11) and Income by month (12)
-```
-Build screens 11 (Budget goals) and 12 (Income by month) from the design README.
+**Paste exactly one of these** after the prompt above.
 
-Routes: /goals and /income — already linked from Home, so match exactly.
-Own: src/app/goals/**, src/app/income/**, src/components/goals/**
-
-The backend already exists — do not write SQL. Use listGoals, setGoal,
-getDefaultMonthlyIncome, setDefaultMonthlyIncome, setIncomeForPeriod from
-src/lib/store.ts, and incomeForPeriod from src/lib/queries/.
-
-Screen 11 is deliberately numbers only — no charts. Its weekly total is derived
-and never editable.
-
-incomeForPeriod returns a `source` field saying which tier the number came from
-(an explicit override, what the import read, or the user's default). Surface
-that rather than flattening it — a figure the user cannot trace is one they have
-to take on faith.
-
-Why this task matters: no goals exist yet, so every bar in the app currently has
-no target and the weeks section on Home cannot be judged. Done means setting a
-goal visibly changes the bars on Home.
-```
-
-### B · Recurring (05) and One-offs (06)
-```
-Build screens 05 (Recurring) and 06 (One-offs) from the design README.
-
-Routes: /recurring and /one-offs — already linked from Home, so match exactly.
-Own: src/app/recurring/**, src/app/one-offs/**, src/components/money/**
-
-Backend exists: recurringForPeriod and oneOffsForPeriod in src/lib/queries/.
-
-Neither screen has budget bars — there are no targets for recurring or one-off
-spend, and inventing one would break the chart grammar. Screen 05 uses a
-proportional SHARE bar in a grey ramp, which is a different thing from the
-budget bar; read that part of the README carefully.
-
-One-offs leads with what is left of genuinely spare money, and its rows carry
-the user's own free-text labels — never normalise, lowercase or remap a label.
-
-Rows on both screens open the transaction editor at /transaction/[id], which
-already exists. Link to it; do not import its components.
-```
-
-### C · Export to the founder's spreadsheet template
-```
-Build export: regenerate the user's monthly workbook from their data in Max.
-
-Own: src/lib/export/**, src/app/api/export/**
-There is no design for this — it is a download, triggered from the menu.
-
-Target shape (read src/lib/parser.ts, which documents the layout it reads):
-a "Month summary" tab holding bills, extras and a right-hand summary panel with
-income, plus one tab per week holding that week's grocery / weekend / transport.
-
-The acceptance test IS the deliverable: parse a workbook, export it, parse the
-export again, and the data must be identical. Write that as an automated test
-using exceljs, which is already a dependency.
-
-Two things you must not paper over:
-- A round trip LOSES the recurring group. Four recurring categories collapse
-  into the template's single bills block, because that is all the sheet has.
-  See G-4 in docs/00-open-decisions.md. Say so; do not imply losslessness.
-- The summary tab has two independent column blocks separated by an empty
-  column. Reading across that gap is what caused defect F-3, where rent was
-  read as salary. Your export must reproduce that layout faithfully.
-```
-
-### G · Empty states and period-resolution consolidation — batch 2
-```
-Two small jobs that belong together because both are about "which period am I
-looking at".
-
-Own: src/app/recurring/page.tsx, src/app/one-offs/page.tsx,
-src/lib/queries/period-meta.ts (new), src/app/(home)/lib/** (remove),
-src/app/page.tsx, src/components/money/resolve-period.ts,
-src/lib/queries/index.ts
-
-1. FIX A REAL DEFECT. /recurring and /one-offs currently call notFound() when
-   the user has no periods, so a fresh account gets a hard 404 on two main
-   screens. notFound() is correct for a period id that is guessed or not owned;
-   it is wrong for "you have not imported anything yet". Keep notFound() for
-   the first case, and render an empty state for the second, consistent with
-   how Home already handles it (src/components/home/EmptyState.tsx). You may
-   move EmptyState somewhere shared if both need it — you own that decision,
-   just update every importer.
-
-2. CONSOLIDATE. "Which period am I looking at" is now answered in three
-   different places: src/app/(home)/lib/period-meta.ts, the week and add
-   screens, and src/components/money/resolve-period.ts. Move the canonical
-   version into src/lib/queries/period-meta.ts, export it from
-   src/lib/queries/index.ts, and update every importer. Delete the duplicates.
-   Behaviour must not change — if two of the three disagree about a fallback,
-   say so in your report rather than silently picking one.
-
-You own src/lib/queries/index.ts for this task; another agent has been told not
-to touch it.
-```
-
-### D · Import (01) — batch 3
-```
-Build screen 01 (Import), all three states: invite, reading, result.
-
-Route: /import. Own: src/app/import/**, src/components/import/**,
-src/lib/store.ts, src/lib/parser.ts
-
-Backend exists: POST /api/upload and parseWorkbook in src/lib/parser.ts.
-
-The prototype fakes progress on timers — replace with real parse progress.
-
-The "lines I couldn't place" step is the most important part of this screen. It
-is where the parser's uncertainty becomes visible to the user instead of being
-guessed at silently. Silent guesses about someone's money are the expensive bug
-in this codebase — read the F-1 and F-3 entries in docs/00-open-decisions.md
-before designing that interaction.
-
-Also finish here: populate periods.start_date and periods.end_date on import.
-They are still null, so date logic falls back to parsing the label, which infers
-a year that may be wrong.
-```
-
-### D · Import (01) + period rollover — ready to delegate
+### Task D · Import (screen 01) + period rollover
 ```
 Build screen 01 (Import), its reconciliation model, and automatic period
 rollover.
@@ -335,7 +202,7 @@ say so in your report and leave it alone.
 Do not apply the migration. Write the .sql and say so in your report.
 ```
 
-### C · Export to spreadsheet + year CSV — ready to delegate
+### Task C · Export to spreadsheet + year round-up CSV
 ```
 Build export: regenerate the founder's monthly workbook from Max's data, plus a
 year round-up CSV.
@@ -392,25 +259,11 @@ Reproduce exactly. A period with unknown income leaves its percentage columns
 EMPTY, not zero.
 ```
 
-### E · Year round-up (07) — batch 2 · do NOT edit src/lib/queries/index.ts
-```
-Build screen 07 (Year round-up) from the design README.
+---
 
-Route: /year. Own: src/app/year/**, src/components/year/**,
-src/lib/queries/year.ts and its export line in src/lib/queries/index.ts
+## 4 · After D and C are merged
 
-Three logical groups per the README: net position, where income went (one
-stacked 100% share bar plus four tiles), and month by month.
-
-Note the share bar here is a proportional share, not a budget bar — do not use
-the budget-bar grammar for it.
-
-This screen is parity with the Aggregates tab of the founder's spreadsheet, but
-it needs a year of data to say anything. If there is only one period, show an
-honest empty state rather than a chart of one point.
-```
-
-### F · Loose ends — batch 4, run alone
+### Task F · Loose ends — LAST, run alone
 ```
 Own: src/components/menu/**, src/components/ui/Button.tsx, src/app/layout.tsx,
 src/lib/store.ts, src/lib/queries/
