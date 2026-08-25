@@ -73,16 +73,48 @@ function isSafeMethod(method: string): boolean {
   return method === "GET" || method === "HEAD" || method === "OPTIONS";
 }
 
-function isSameOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get("origin");
+/**
+ * The hosts this request could legitimately have been addressed to.
+ *
+ * `req.nextUrl.host` alone is wrong behind a reverse proxy. On Railway the app
+ * is reached at `max-production-f9e5.up.railway.app` but receives the request on
+ * an internal address, so comparing the browser's Origin against `nextUrl.host`
+ * never matched and every state-changing request from every browser was
+ * rejected as cross-origin — a 403 that Server Actions surface to the user as
+ * "an unexpected response was received from the server".
+ *
+ * `x-forwarded-host` is what the proxy records as the public hostname, and
+ * `host` is what the browser addressed. Both are the same value a genuine
+ * same-origin request carries, and neither can be set by a hostile page: a
+ * browser will not let script forge Origin, Host or X-Forwarded-Host.
+ */
+export function acceptableHosts(req: {
+  headers: { get(name: string): string | null };
+  nextUrl: { host: string };
+}): string[] {
+  const forwarded = req.headers.get("x-forwarded-host");
+  return [
+    // A proxy may forward a comma-separated chain; the first entry is the
+    // hostname the client actually asked for.
+    ...(forwarded ? forwarded.split(",").map((h) => h.trim()) : []),
+    req.headers.get("host") ?? "",
+    req.nextUrl.host,
+  ].filter(Boolean);
+}
+
+export function originIsAcceptable(origin: string | null, hosts: readonly string[]): boolean {
   // Non-browser clients (curl, the native app) send no Origin. They also can't
   // be driven by a hostile page, which is the threat this check addresses.
   if (!origin) return true;
   try {
-    return new URL(origin).host === req.nextUrl.host;
+    return hosts.includes(new URL(origin).host);
   } catch {
     return false;
   }
+}
+
+function isSameOrigin(req: NextRequest): boolean {
+  return originIsAcceptable(req.headers.get("origin"), acceptableHosts(req));
 }
 
 /**
