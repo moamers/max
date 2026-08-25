@@ -1,13 +1,6 @@
-const GBP = new Intl.NumberFormat("en-GB", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
+/** One money formatter, in `@/lib/money` — see the note there. */
+export { formatMoney } from "@/lib/money";
 
-/** Keeps pence when the source has them, while matching the design's whole-pound examples. */
-export function formatMoney(amount: number): string {
-  const sign = amount < 0 ? "−" : "";
-  return `${sign}£${GBP.format(Math.abs(amount))}`;
-}
 const MONTH = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" });
 const DAY_MONTH = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",

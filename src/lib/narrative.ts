@@ -9,6 +9,7 @@
 
 import type { InsightsResponse } from "./insights";
 import { assertToneCompliant } from "./tone";
+import { formatGBP, formatGBPApprox as approx } from "@/lib/money";
 
 export interface WeeklyTotal {
   weekNumber: number;
@@ -49,7 +50,6 @@ export interface NarrativeInput {
   insights: InsightsResponse;
 }
 
-const gbp = (n: number) => `£${Math.round(n).toLocaleString("en-GB")}`;
 
 function ordinalWeek(n: number) {
   return `week ${n}`;
@@ -73,7 +73,7 @@ function weekSpread(input: NarrativeInput): NarrativeSentence | null {
 
   return {
     id: "week-spread",
-    text: `Your weeks ranged from about ${gbp(low.total)} to ${gbp(high.total)} — ${ordinalWeek(
+    text: `Your weeks ranged from about ${approx(low.total)} to ${approx(high.total)} — ${ordinalWeek(
       high.weekNumber
     )} was the biggest.`,
     provenance: "fact",
@@ -92,9 +92,9 @@ function weekTrend(input: NarrativeInput): NarrativeSentence | null {
 
   return {
     id: "week-trend",
-    text: `The last three weeks climbed steadily — ${gbp(tail[0].total)}, then ${gbp(
+    text: `The last three weeks climbed steadily — ${formatGBP(tail[0].total)}, then ${formatGBP(
       tail[1].total
-    )}, then ${gbp(tail[2].total)}.`,
+    )}, then ${formatGBP(tail[2].total)}.`,
     provenance: "fact",
     weight: 80,
   };
@@ -114,7 +114,7 @@ function tagConcentration(input: NarrativeInput): NarrativeSentence | null {
 
   return {
     id: "tag-concentration",
-    text: `Most of the one-off spending was tagged “${top.tag}” — about ${gbp(top.total)} across ${
+    text: `Most of the one-off spending was tagged “${top.tag}” — about ${approx(top.total)} across ${
       top.count
     } ${top.count === 1 ? "item" : "items"}.`,
     provenance: "fact",
@@ -129,7 +129,7 @@ function weekdayVsWeekend(input: NarrativeInput): NarrativeSentence | null {
 
   return {
     id: "weekday-vs-weekend",
-    text: `Weekday running costs came to about ${gbp(weekday)}, and weekends about ${gbp(weekend)}.`,
+    text: `Weekday running costs came to about ${approx(weekday)}, and weekends about ${approx(weekend)}.`,
     provenance: "fact",
     weight: 30,
   };
@@ -153,7 +153,7 @@ function incomeLooksPartial(input: NarrativeInput): NarrativeSentence | null {
 
   return {
     id: "income-partial",
-    text: `The sheet records ${gbp(input.income)} coming in for this period. Is that the whole picture, or just part of it?`,
+    text: `The sheet records ${formatGBP(input.income)} coming in for this period. Is that the whole picture, or just part of it?`,
     provenance: "inference",
     weight: 95,
   };

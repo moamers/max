@@ -5,26 +5,10 @@
  * chart-grammar and week-row rules) are unit-testable on their own.
  */
 export { dominantMonth } from "@/lib/periods";
+/** One money formatter, in `@/lib/money` — see the note there. */
+export { formatGBP, formatSignedGBP } from "@/lib/money";
+import { formatGBP } from "@/lib/money";
 import type { PeriodWindow, WeekTotals } from "@/lib/queries";
-
-/**
- * Pence when the figure has them, whole pounds when it doesn't.
- *
- * This was pinned to zero decimal places to match the design's round examples,
- * which meant every real figure was silently rounded on screen while the
- * database held the exact amount. A budgeting app that shows £199 for £199.47
- * is asking to be checked against a spreadsheet and found wrong.
- */
-const GBP = new Intl.NumberFormat("en-GB", {
-  style: "currency",
-  currency: "GBP",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
-
-export function formatGBP(amount: number): string {
-  return GBP.format(amount);
-}
 
 /**
  * The colour of a money figure, decided by which side of zero it sits — never
@@ -40,12 +24,6 @@ export function formatGBP(amount: number): string {
 export function moneyColor(amount: number | null | undefined): string {
   if (amount === null || amount === undefined) return "var(--text-tertiary)";
   return amount < 0 ? "var(--bar-over)" : "var(--lime-ink)";
-}
-
-/** "+£1,108" / "-£240" — the year strip's signed net position. */
-export function formatSignedGBP(amount: number): string {
-  const sign = amount < 0 ? "-" : "+";
-  return `${sign}${GBP.format(Math.abs(amount))}`;
 }
 
 const MONTH_SHORT = new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" });

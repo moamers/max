@@ -11,6 +11,7 @@ import { Pill } from "@/components/ui/Chip";
 import { FAB } from "@/components/ui/FAB";
 import type { WeekTotals, WeeklyCategoryTotal } from "@/lib/queries";
 import type { WeeklyCategory } from "@/lib/transactions";
+import { formatGBP as gbp } from "@/lib/money";
 
 export interface WeekTransactionItem {
   id: number;
@@ -30,7 +31,6 @@ export interface WeekViewProps {
   transactionsByCategory: Record<string, WeekTransactionItem[]>;
 }
 
-const gbp = (n: number) => `£${Math.round(n).toLocaleString("en-GB")}`;
 
 function headlineFor(spent: number, goal: number | null, remaining: number | null): { text: string; color: string } {
   if (goal === null) return { text: `${gbp(spent)} spent`, color: "var(--text-primary)" };

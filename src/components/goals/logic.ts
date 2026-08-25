@@ -15,15 +15,8 @@ export function weeklyGoalTotal(values: readonly number[]): number {
   return values.reduce((total, value) => total + moneyInputAmount(value), 0);
 }
 
-/** Pence when present, whole pounds when not — see components/home/format.ts. */
-export function formatGBP(amount: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
+/** One money formatter, in `@/lib/money` — see the note there. */
+export { formatGBP } from "@/lib/money";
 
 /**
  * B-8: the income figure keeps the tier that supplied it visible in the UI.

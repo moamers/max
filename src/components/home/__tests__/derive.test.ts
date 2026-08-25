@@ -131,7 +131,9 @@ describe("money on screen keeps the pence the database stores", () => {
   });
 
   it("keeps pence in the year strip's signed figure too", () => {
-    expect(formatSignedGBP(1108.5)).toBe("+£1,108.5");
+    // Pence are all-or-nothing: £1,108.50 is money, "£1,108.5" is a number
+    // that happens to be about money.
+    expect(formatSignedGBP(1108.5)).toBe("+£1,108.50");
     expect(formatSignedGBP(-240.25)).toBe("-£240.25");
   });
 });
