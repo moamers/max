@@ -65,7 +65,7 @@ export default async function WeekPage({
   for (const item of items) {
     if (item.kind !== "weekly" || item.weekNumber !== weekNumber || !item.category) continue;
     const list = transactionsByCategory[item.category] ?? (transactionsByCategory[item.category] = []);
-    list.push({ id: item.id, merchant: item.merchant, note: item.note, amount: item.amount, pending: item.pending });
+    list.push({ id: item.id, merchant: item.merchant, note: item.note, amount: item.amount, pending: item.pending, needsAttention: item.needsAttention });
   }
 
   const range = overview.window ? weekDateRange(overview.window.start, overview.window.end, weekNumber) : null;

@@ -29,6 +29,7 @@ export interface TransactionRow {
   occurredOn: string | null;
   weekNumber: number | null;
   pending: boolean;
+  needsAttention: boolean;
 }
 
 export interface RecurringGroup {
@@ -61,6 +62,7 @@ async function itemsOfKind(
       occurredOn: transactions.occurredOn,
       weekNumber: transactions.weekNumber,
       pending: transactions.pending,
+      needsAttention: transactions.needsAttention,
     })
     .from(transactions)
     // The join to periods is the ownership check; the period id on its own
@@ -85,6 +87,7 @@ function toRow(r: {
   occurredOn: string | null;
   weekNumber: number | null;
   pending: boolean;
+  needsAttention: boolean;
 }): TransactionRow {
   return { ...r, amount: Number(r.amount) };
 }

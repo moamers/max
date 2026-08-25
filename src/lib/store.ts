@@ -15,7 +15,7 @@
  *    not private, not "just for the admin view". If one is ever added, this
  *    comment is the thing that should have stopped it.
  */
-import { eq, and, sql, desc, asc } from "drizzle-orm";
+import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
 import { getDb } from "./db";
 import { periods, transactions, budgets, periodSummaries, goals, incomeMonths, users } from "./schema";
 import { ParsedPeriod, summarizePeriod } from "./parser";
@@ -56,6 +56,8 @@ export async function savePeriod(
       .values({
         userId,
         label: parsed.label,
+        startDate: parsed.startDate ?? null,
+        endDate: parsed.endDate ?? null,
         income: incomeStr,
         incomeComponents: parsed.incomeComponents,
         source: "sheet",
@@ -68,6 +70,8 @@ export async function savePeriod(
         set: {
           income: incomeStr,
           incomeComponents: parsed.incomeComponents,
+          startDate: parsed.startDate ?? null,
+          endDate: parsed.endDate ?? null,
           sourceFilename,
           sourceSheetName: parsed.sheetName,
           sheetOrder: parsed.sheetOrder,
@@ -96,6 +100,10 @@ export async function savePeriod(
             note: item.note,
             amount: item.amount.toString(),
             label: item.tag,
+            pending: false,
+            needsAttention: item.needsAttention ?? false,
+            attentionReason: item.attentionReason ?? null,
+            rawImport: item.rawImport ?? null,
           };
         })
       );
@@ -300,6 +308,9 @@ export interface LineItemRow {
   label: string | null;
   occurredOn: string | null;
   pending: boolean;
+  needsAttention: boolean;
+  attentionReason: string | null;
+  rawImport: string | null;
 }
 
 /**
@@ -324,6 +335,9 @@ export async function lineItemsForPeriod(
       label: transactions.label,
       occurredOn: transactions.occurredOn,
       pending: transactions.pending,
+      needsAttention: transactions.needsAttention,
+      attentionReason: transactions.attentionReason,
+      rawImport: transactions.rawImport,
     })
     .from(transactions)
     .innerJoin(periods, eq(periods.id, transactions.periodId))
@@ -361,6 +375,44 @@ export async function getPeriodByLabel(userId: UserId, label: string) {
     .from(periods)
     .where(and(eq(periods.label, label), eq(periods.userId, userId)));
   return row;
+}
+
+export interface NewPeriodInput {
+  label: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** Creates an empty app-native period after the user has seen the rollover proposal. */
+export async function createPeriod(userId: UserId, input: NewPeriodInput): Promise<number> {
+  const db = getDb();
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: periods.id })
+      .from(periods)
+      .where(and(eq(periods.userId, userId), eq(periods.startDate, input.startDate), eq(periods.endDate, input.endDate)));
+    if (existing) return existing.id;
+
+    const [order] = await tx
+      .select({ value: sql<number>`coalesce(max(${periods.sheetOrder}), -1) + 1` })
+      .from(periods)
+      .where(eq(periods.userId, userId));
+    const [created] = await tx
+      .insert(periods)
+      .values({
+        userId,
+        label: input.label,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        source: "app",
+        sheetOrder: Number(order?.value ?? 0),
+      })
+      .returning({ id: periods.id });
+    if (!created) throw new Error("The next period could not be created.");
+
+    await tx.insert(periodSummaries).values({ periodId: created.id });
+    return created.id;
+  });
 }
 
 
@@ -463,6 +515,8 @@ export interface TransactionInput {
   label: string | null;
   occurredOn: string | null;
   pending?: boolean;
+  needsAttention?: boolean;
+  attentionReason?: string | null;
   rawImport?: string | null;
 }
 
@@ -496,6 +550,8 @@ export async function addTransaction(
       label: input.label,
       occurredOn: input.occurredOn,
       pending: input.pending ?? false,
+      needsAttention: input.needsAttention ?? false,
+      attentionReason: input.attentionReason ?? null,
       rawImport: input.rawImport ?? null,
     })
     .returning({ id: transactions.id });
@@ -530,7 +586,14 @@ export async function updateTransaction(
   if (patch.label !== undefined) set.label = patch.label;
   if (patch.occurredOn !== undefined) set.occurredOn = patch.occurredOn;
   if (patch.pending !== undefined) set.pending = patch.pending;
+  if (patch.needsAttention !== undefined) set.needsAttention = patch.needsAttention;
+  if (patch.attentionReason !== undefined) set.attentionReason = patch.attentionReason;
   if (patch.rawImport !== undefined) set.rawImport = patch.rawImport;
+  if (patch.pending === true) {
+    set.needsAttention = false;
+    set.attentionReason = null;
+  }
+  if (patch.needsAttention === true) set.pending = false;
   if (Object.keys(set).length === 0) return true;
 
   const updated = await db
@@ -556,4 +619,68 @@ export async function deleteTransaction(userId: UserId, transactionId: number): 
     .where(eq(transactions.id, transactionId))
     .returning({ id: transactions.id });
   return deleted.length > 0;
+}
+
+export interface AttentionTransactionRow {
+  id: number;
+  periodId: number;
+  periodLabel: string;
+  kind: TransactionKind;
+  category: TransactionCategory | null;
+  weekNumber: number | null;
+  merchant: string | null;
+  note: string | null;
+  amount: number;
+  label: string | null;
+  occurredOn: string | null;
+  rawImport: string | null;
+  attentionReason: string;
+}
+
+/** B-8: every unresolved placement stays openable with its original row and reason. */
+export async function listAttentionTransactions(
+  userId: UserId,
+  periodIds?: number[]
+): Promise<AttentionTransactionRow[]> {
+  const db = getDb();
+  const predicates = [eq(periods.userId, userId), eq(transactions.needsAttention, true)];
+  if (periodIds && periodIds.length > 0) predicates.push(inArray(transactions.periodId, periodIds));
+
+  const rows = await db
+    .select({
+      id: transactions.id,
+      periodId: transactions.periodId,
+      periodLabel: periods.label,
+      kind: transactions.kind,
+      category: transactions.category,
+      weekNumber: transactions.weekNumber,
+      merchant: transactions.merchant,
+      note: transactions.note,
+      amount: transactions.amount,
+      label: transactions.label,
+      occurredOn: transactions.occurredOn,
+      rawImport: transactions.rawImport,
+      attentionReason: transactions.attentionReason,
+    })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(...predicates))
+    .orderBy(asc(transactions.id));
+
+  return rows.map((row) => ({
+    ...row,
+    amount: Number(row.amount),
+    attentionReason: row.attentionReason ?? "This row still needs your judgement.",
+  }));
+}
+
+/** Confirming clears the state and its reason; skipping deliberately leaves both standing. */
+export async function confirmAttentionTransaction(
+  userId: UserId,
+  transactionId: number
+): Promise<boolean> {
+  return updateTransaction(userId, transactionId, {
+    needsAttention: false,
+    attentionReason: null,
+  });
 }

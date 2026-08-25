@@ -14,6 +14,11 @@ export interface ParsedLineItem {
   note: string | null;
   amount: number;
   tag: string | null;
+  /** Exact primitive row, retained so a placement can always be traced (B-8). */
+  rawImport?: string | null;
+  /** Additive reconciliation metadata; does not change the parser's output shape. */
+  needsAttention?: boolean;
+  attentionReason?: string | null;
 }
 
 export interface ParsedBudget {
@@ -33,6 +38,9 @@ export interface ParsedPeriod {
   incomeComponents: IncomeComponent[];
   lineItems: ParsedLineItem[];
   budgets: ParsedBudget[];
+  /** Set only after an import proposal has been shown/accepted; never inferred silently. */
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface RawGrid {
@@ -81,6 +89,24 @@ function norm(v: string | number | null): string {
 
 function isNumber(v: string | number | null): v is number {
   return typeof v === "number";
+}
+
+function isPeriodSummaryFormulaRow(row: (string | number | null)[]): boolean {
+  const labels = row.filter((cell): cell is string => typeof cell === "string").map(norm);
+  return labels.some(
+    (label) =>
+      /^week\s+\d+$/.test(label) ||
+      /^weekly total\b/.test(label) ||
+      /\b(?:gbp left|forecast|grand total|total weekly)\b/.test(label)
+  );
+}
+
+function rawImportFor(row: (string | number | null)[]): string | null {
+  const values = row
+    .filter((cell) => cell !== null)
+    .map((cell) => String(cell).trim())
+    .filter(Boolean);
+  return values.length > 0 ? values.join(" | ") : null;
 }
 
 function matchesSection(label: string): Section | null {
@@ -247,12 +273,11 @@ export function parsePeriodSheet(
       continue;
     }
 
-    if (!currentSection) continue;
-
     // Line item row: find amount (first numeric cell), description/note (string cells before it),
     // tag (string cell after it).
     const numericIdx = row.findIndex((c) => isNumber(c));
     if (numericIdx === -1) continue;
+    if (!currentSection && isPeriodSummaryFormulaRow(row)) continue;
     const amount = row[numericIdx] as number;
 
     const stringsBefore = row.slice(0, numericIdx).filter((c): c is string => typeof c === "string");
@@ -262,6 +287,39 @@ export function parsePeriodSheet(
     const note = stringsBefore[1] ?? null;
     const tag = stringsAfter[0] ?? null;
 
+    if (!currentSection) {
+      // B-9/T-7: an amount-bearing row outside a recognised block still lands.
+      // One-off is the least structurally specific placement, and the reason
+      // stays attached until the user confirms or changes it.
+      lineItems.push({
+        section: "extras",
+        weekNumber: null,
+        description,
+        note,
+        amount,
+        tag,
+        rawImport: rawImportFor(row),
+        needsAttention: true,
+        attentionReason: "I couldn't read where this belonged, so I put it in one-offs.",
+      });
+      continue;
+    }
+
+    if (description === null) {
+      lineItems.push({
+        section: "extras",
+        weekNumber: null,
+        description: null,
+        note,
+        amount,
+        tag,
+        rawImport: rawImportFor(row),
+        needsAttention: true,
+        attentionReason: "I couldn't read the name or where this belonged, so I put it in one-offs.",
+      });
+      continue;
+    }
+
     lineItems.push({
       section: currentSection,
       weekNumber: WEEKLY_SECTIONS.includes(currentSection) ? currentWeek : null,
@@ -269,6 +327,9 @@ export function parsePeriodSheet(
       note,
       amount,
       tag,
+      rawImport: rawImportFor(row),
+      needsAttention: false,
+      attentionReason: null,
     });
   }
 

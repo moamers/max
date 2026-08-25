@@ -10,6 +10,9 @@ export interface AmountEditorProps {
   onAmountChange: (amount: number) => void;
   pending: boolean;
   onPendingChange: (pending: boolean) => void;
+  /** Optional so Add remains Final|Pending while screen 04 becomes three-way. */
+  needsAttention?: boolean;
+  onNeedsAttentionChange?: (needsAttention: boolean) => void;
   /** The add sheet shows the drag slider; the transaction editor doesn't (README screens 04 vs 08). */
   showSlider?: boolean;
 }
@@ -22,7 +25,15 @@ export interface AmountEditorProps {
  * recurring bill or one-off can be far more than that, and every field is
  * meant to be exactly editable (see the transaction editor's own remit).
  */
-export function AmountEditor({ amount, onAmountChange, pending, onPendingChange, showSlider = false }: AmountEditorProps) {
+export function AmountEditor({
+  amount,
+  onAmountChange,
+  pending,
+  onPendingChange,
+  needsAttention = false,
+  onNeedsAttentionChange,
+  showSlider = false,
+}: AmountEditorProps) {
   // `draft` is non-null only while the field is focused. Outside that, the text
   // *is* the amount rather than a copy of it kept in step by an effect — so the
   // slider and a parent update can't race a stale mirror, and there is no
@@ -39,7 +50,7 @@ export function AmountEditor({ amount, onAmountChange, pending, onPendingChange,
               fontSize: 34,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: pending ? "var(--amber-ink)" : "var(--text-primary)",
+              color: needsAttention ? "var(--attention-ink)" : pending ? "var(--amber-ink)" : "var(--text-primary)",
             }}
           >
             £
@@ -63,17 +74,23 @@ export function AmountEditor({ amount, onAmountChange, pending, onPendingChange,
               fontSize: 34,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: pending ? "var(--amber-ink)" : "var(--text-primary)",
+              color: needsAttention ? "var(--attention-ink)" : pending ? "var(--amber-ink)" : "var(--text-primary)",
               padding: 0,
             }}
           />
         </div>
         <SegmentedControl
-          value={pending ? "pending" : "final"}
-          onChange={(v) => onPendingChange(v === "pending")}
+          value={needsAttention ? "attention" : pending ? "pending" : "final"}
+          onChange={(value) => {
+            onPendingChange(value === "pending");
+            onNeedsAttentionChange?.(value === "attention");
+          }}
           options={[
             { value: "final", label: "Final" },
             { value: "pending", label: "Pending", activeColor: "var(--amber-ink)" },
+            ...(onNeedsAttentionChange
+              ? [{ value: "attention" as const, label: "Needs a look", activeColor: "var(--attention-ink)", activeBackground: "var(--attention-tint-bg)" }]
+              : []),
           ]}
         />
       </div>

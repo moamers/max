@@ -1,7 +1,7 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import type { UserId } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { periods } from "@/lib/schema";
+import { periods, transactions } from "@/lib/schema";
 import { listPeriodSummaries } from "@/lib/store";
 import { periodWindow, type PeriodWindow } from "./period-window";
 
@@ -15,6 +15,8 @@ export interface PeriodMeta {
    * is safe for Year to display because it was not inferred from a label.
    */
   recordedStart: Date | null;
+  /** Pending is deliberately excluded; only unresolved placement/state marks a period. */
+  hasAttention?: boolean;
 }
 
 export type PeriodSearchParams = { [key: string]: string | string[] | undefined };
@@ -24,6 +26,7 @@ interface PeriodMetaRow {
   label: string;
   startDate: string | null;
   endDate: string | null;
+  hasAttention?: boolean;
 }
 
 function recordedDate(value: string | null): Date | null {
@@ -52,6 +55,7 @@ export function periodMetaFromRow(row: PeriodMetaRow, today: Date = new Date()):
       today
     ),
     recordedStart: recordedDate(row.startDate),
+    hasAttention: row.hasAttention ?? false,
   };
 }
 
@@ -63,6 +67,11 @@ export async function listPeriodsMeta(userId: UserId, today: Date = new Date()):
       label: periods.label,
       startDate: periods.startDate,
       endDate: periods.endDate,
+      hasAttention: sql<boolean>`exists (
+        select 1 from ${transactions}
+        where ${transactions.periodId} = ${periods.id}
+          and ${transactions.needsAttention} = true
+      )`,
     })
     .from(periods)
     .where(eq(periods.userId, userId))

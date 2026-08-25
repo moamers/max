@@ -14,6 +14,7 @@ import { MaxMark } from "./MaxMark";
 import type { HomeData } from "./types";
 import { WeeksCard } from "./WeeksCard";
 import { YearStrip } from "./YearStrip";
+import { RolloverPrompt } from "./RolloverPrompt";
 
 /**
  * README screen 02, assembled. Everything below the month bar is a card in
@@ -62,6 +63,8 @@ export function HomeScreen({ data }: { data: HomeData }) {
           </div>
 
           <HeroCard hero={data.hero} mode={heroMode} onModeChange={setHeroMode} />
+
+          {data.rollover && <RolloverPrompt proposal={data.rollover} />}
 
           <WeeksCard weeks={data.weeks} summary={data.weeksSummary} open={weeksOpen} onToggle={() => setWeeksOpen((v) => !v)} />
 

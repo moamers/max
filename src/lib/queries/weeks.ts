@@ -91,6 +91,10 @@ export async function weeklyBreakdown(
     weeks.set(week, byCategory);
   }
 
+  // An app-native rollover starts empty. Seed the presentation shape so Home
+  // still receives the user's goals and can draw every future week target.
+  if (weeks.size === 0) weeks.set(1, new Map());
+
   return [...weeks.entries()]
     .sort((a, b) => a[0] - b[0])
     .map(([weekNumber, byCategory]) => {

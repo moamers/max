@@ -132,6 +132,9 @@ export const transactions = pgTable(
     /** Nullable: the sheet gives a week, not a day, and inventing one would be a claim. */
     occurredOn: date("occurred_on"),
     pending: boolean("pending").notNull().default(false),
+    needsAttention: boolean("needs_attention").notNull().default(false),
+    /** Plain-English provenance for why this row still needs the user's judgement (B-8). */
+    attentionReason: text("attention_reason"),
     /** The source line this row was read from, kept so a figure can be opened up (B-8). */
     rawImport: text("raw_import"),
   },
@@ -144,6 +147,10 @@ export const transactions = pgTable(
       sql`(${table.kind} = 'weekly' AND ${table.category} IN ('everyday', 'weekend', 'transport'))
         OR (${table.kind} = 'recurring' AND ${table.category} IN ('housing', 'childcare', 'bills', 'subscriptions'))
         OR (${table.kind} = 'one_off' AND ${table.category} IS NULL)`
+    ),
+    check(
+      "transactions_one_state",
+      sql`NOT (${table.pending} AND ${table.needsAttention})`
     ),
   ]
 );

@@ -67,6 +67,11 @@ describe("findPeriod", () => {
 });
 
 describe("persisted date provenance", () => {
+  it("carries the needs-a-look marker without treating pending as attention", () => {
+    expect(periodMetaFromRow({ id: 1, label: "Aug", startDate: null, endDate: null, hasAttention: true }).hasAttention).toBe(true);
+    expect(periodMetaFromRow({ id: 2, label: "Sep", startDate: null, endDate: null }).hasAttention).toBe(false);
+  });
+
   it("does not expose the year inferred for a label-only window", () => {
     const meta = periodMetaFromRow(
       { id: 1, label: "Jun 30th - Aug 3rd", startDate: null, endDate: null },

@@ -57,10 +57,17 @@ export function ChangeMonthSheet({ yearsByValue, bounds, initialYear, onDismiss 
             opacity: available ? 1 : 0.4,
             textDecoration: "none",
             color: "inherit",
+            position: "relative",
           };
 
           const inner = (
             <>
+              {m.hasAttention && (
+                <span
+                  aria-label="Has rows that need a look"
+                  style={{ position: "absolute", top: 10, right: 10, width: 6, height: 6, borderRadius: 99, background: "var(--attention-ink)" }}
+                />
+              )}
               <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>{m.monthLabel}</span>
               <span
                 style={{

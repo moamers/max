@@ -247,6 +247,20 @@ describe("monthOverview · the forecast shows its working", () => {
   });
 });
 
+describe("weeklyBreakdown · an empty rolled-over period keeps its targets", () => {
+  it("returns a zero-spend seed week carrying the user's goals", async () => {
+    hoisted.responses.push([], [["everyday", "190"], ["weekend", "150"], ["transport", "80"]]);
+    const weeks = await weeklyBreakdown(USER_A, PERIOD_OWNED_BY_A);
+    expect(weeks).toHaveLength(1);
+    expect(weeks[0]).toMatchObject({ weekNumber: 1, spent: 0, goal: 420, remaining: 420 });
+    expect(weeks[0].categories.map((category) => [category.category, category.goal])).toEqual([
+      ["everyday", 190],
+      ["weekend", 150],
+      ["transport", 80],
+    ]);
+  });
+});
+
 describe("incomeForPeriod · a figure that says where it came from", () => {
   const cases = [
     { row: ["1500", "2400", true, "1800"], amount: 2400, source: "month" },

@@ -62,6 +62,10 @@
   --amber-ink: #8a5e00;
   --amber-tint-bg: #faf0d0;
 
+  /* ---- needs a look — unresolved placement/state, never a warning ---- */
+  --attention-ink: #9a4e06;
+  --attention-tint-bg: #fbe6d2;
+
   /* ---- label / tag (cyan) ---- */
   --cyan-ink: #0a7391;
   --cyan-tint-bg: #dff1f7;
@@ -153,6 +157,9 @@
     --amber-ink: #f0c64b;
     --amber-tint-bg: #1e1a0c;
 
+    --attention-ink: #f0904b;
+    --attention-tint-bg: #241606;
+
     --cyan-ink: #4de0ff;
     --cyan-tint-bg: #0f1d24;
 
@@ -200,6 +207,9 @@
 
   --amber-ink: #f0c64b;
   --amber-tint-bg: #1e1a0c;
+
+  --attention-ink: #f0904b;
+  --attention-tint-bg: #241606;
 
   --cyan-ink: #4de0ff;
   --cyan-tint-bg: #0f1d24;

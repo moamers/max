@@ -14,16 +14,18 @@ import { EmptyState } from "@/components/EmptyState";
 import { buildWeekViews } from "@/components/home/derive";
 import { formatDayMonth, monthAbbr, monthName, weekCounterLabel } from "@/components/home/format";
 import type { HomeData, MonthTileView, PeriodOptionView, YearView } from "@/components/home/types";
+import { isoDate, proposeNextPeriod } from "@/lib/periods";
 
 export const dynamic = "force-dynamic";
 
-function toYearView(data: YearData, currentPeriodId: number): YearView {
+function toYearView(data: YearData, currentPeriodId: number, attentionByPeriod: ReadonlyMap<number, boolean>): YearView {
   const months: MonthTileView[] = data.months.map((m) => ({
     monthIndex: m.monthIndex,
     monthLabel: monthAbbr(m.monthIndex),
     periodId: m.periodId,
     net: m.net,
     isCurrent: m.periodId !== null && m.periodId === currentPeriodId,
+    hasAttention: m.periodId !== null && (attentionByPeriod.get(m.periodId) ?? false),
   }));
   return { year: data.year, months, netPosition: data.netPosition, sparkline: data.sparkline };
 }
@@ -77,9 +79,10 @@ export default async function HomePage(props: PageProps<"/">) {
   const maxYear = Math.max(...yearSpan) + 1;
 
   const yearsByValue: Record<number, YearView> = {};
+  const attentionByPeriod = new Map(periodsMeta.map((period) => [period.id, Boolean(period.hasAttention)]));
   for (let y = minYear; y <= maxYear; y++) {
     const yearData = await buildYearData(user.id, periodsMeta, y);
-    yearsByValue[y] = toYearView(yearData, currentPeriodId);
+    yearsByValue[y] = toYearView(yearData, currentPeriodId, attentionByPeriod);
   }
 
   const periodOptions: PeriodOptionView[] = periodsMeta.map((p) => ({
@@ -88,6 +91,24 @@ export default async function HomePage(props: PageProps<"/">) {
   }));
 
   const monthLabel = window ? monthName(window.start) : selected.label;
+
+  const latestDated = periodsMeta
+    .filter((period) => period.window !== null)
+    .reduce<typeof periodsMeta[number] | null>((latest, period) => {
+      if (!period.window) return latest;
+      if (!latest?.window || period.window.end > latest.window.end) return period;
+      return latest;
+    }, null);
+  const next = latestDated?.window?.complete ? proposeNextPeriod(isoDate(latestDated.window.end)) : null;
+  const nextStartMs = next ? new Date(`${next.startDate}T00:00:00Z`).getTime() : 0;
+  const rollover = next
+    ? {
+        startDate: next.startDate,
+        fourWeekEnd: isoDate(new Date(nextStartMs + 27 * 86_400_000)),
+        fiveWeekEnd: isoDate(new Date(nextStartMs + 34 * 86_400_000)),
+        proposedWeeks: next.weekCount,
+      }
+    : null;
 
   const data: HomeData = {
     monthLabel,
@@ -115,6 +136,7 @@ export default async function HomePage(props: PageProps<"/">) {
     currentPeriodId,
     selectedPeriodId: selected.id,
     periodOptions,
+    rollover,
   };
 
   return <HomeScreen data={data} />;

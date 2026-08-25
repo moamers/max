@@ -18,6 +18,7 @@ export interface WeekTransactionItem {
   note: string | null;
   amount: number;
   pending: boolean;
+  needsAttention: boolean;
 }
 
 export interface WeekViewProps {
@@ -166,7 +167,7 @@ function CategoryCard({
                     style={{
                       fontSize: 15,
                       fontWeight: 600,
-                      color: item.pending ? "var(--amber-ink)" : "var(--text-primary)",
+                      color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
                     }}
                   >
                     {gbp(item.amount)}
@@ -174,6 +175,11 @@ function CategoryCard({
                   {item.pending && (
                     <Pill tone="amber" uppercase>
                       pending
+                    </Pill>
+                  )}
+                  {item.needsAttention && (
+                    <Pill uppercase style={{ color: "var(--attention-ink)", background: "var(--attention-tint-bg)" }}>
+                      needs a look
                     </Pill>
                   )}
                 </span>

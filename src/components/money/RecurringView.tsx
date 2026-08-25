@@ -107,6 +107,7 @@ export function RecurringView({ periodId, monthLabel, recurring }: RecurringView
                           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                             <span style={{ fontSize: 15, fontWeight: 500 }}>{item.merchant ?? "—"}</span>
                             {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
+                            {item.needsAttention && <Pill uppercase style={{ color: "var(--attention-ink)", background: "var(--attention-tint-bg)" }}>needs a look</Pill>}
                           </div>
                           <span
                             style={{
@@ -114,7 +115,7 @@ export function RecurringView({ periodId, monthLabel, recurring }: RecurringView
                               fontSize: 15,
                               fontWeight: 600,
                               letterSpacing: "-0.02em",
-                              color: item.pending ? "var(--amber-ink)" : "var(--text-primary)",
+                              color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
                             }}
                           >
                             {formatMoney(item.amount)}

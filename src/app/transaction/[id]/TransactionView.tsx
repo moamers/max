@@ -43,6 +43,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
   const [note, setNote] = useState(detail.note ?? "");
   const [amount, setAmount] = useState(detail.amount);
   const [pending, setPending] = useState(detail.pending);
+  const [needsAttention, setNeedsAttention] = useState(detail.needsAttention);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
   const [isDeleting, startDelete] = useTransition();
@@ -61,6 +62,8 @@ export function TransactionView({ detail }: TransactionViewProps) {
           note,
           amount,
           pending,
+          needsAttention,
+          attentionReason: needsAttention ? detail.attentionReason : null,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
@@ -100,7 +103,14 @@ export function TransactionView({ detail }: TransactionViewProps) {
             {detail.weekNumber !== null && <Pill tone="neutral">week {detail.weekNumber}</Pill>}
           </div>
 
-          <AmountEditor amount={amount} onAmountChange={setAmount} pending={pending} onPendingChange={setPending} />
+          <AmountEditor
+            amount={amount}
+            onAmountChange={setAmount}
+            pending={pending}
+            onPendingChange={setPending}
+            needsAttention={needsAttention}
+            onNeedsAttentionChange={setNeedsAttention}
+          />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {fieldLabel("Where")}
@@ -131,6 +141,12 @@ export function TransactionView({ detail }: TransactionViewProps) {
 
           {reasoning && (
             <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0, textWrap: "pretty" }}>{reasoning}</p>
+          )}
+
+          {needsAttention && detail.attentionReason && (
+            <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: 13, lineHeight: 1.45 }}>
+              {detail.attentionReason}
+            </div>
           )}
 
           {detail.rawImport && (

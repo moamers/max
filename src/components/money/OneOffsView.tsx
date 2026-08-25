@@ -123,6 +123,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare }: OneOffsVie
                           {item.merchant ?? "—"}
                         </span>
                         {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
+                        {item.needsAttention && <Pill uppercase style={{ color: "var(--attention-ink)", background: "var(--attention-tint-bg)" }}>needs a look</Pill>}
                       </div>
                       <span
                         style={{
@@ -130,7 +131,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare }: OneOffsVie
                           fontSize: 16,
                           fontWeight: 700,
                           letterSpacing: "-0.025em",
-                          color: item.pending ? "var(--amber-ink)" : "var(--text-primary)",
+                          color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
                         }}
                       >
                         {formatMoney(item.amount)}

@@ -14,6 +14,8 @@ export interface SaveTransactionInput {
   note: string;
   amount: number;
   pending: boolean;
+  needsAttention: boolean;
+  attentionReason: string | null;
 }
 
 /**
@@ -36,6 +38,10 @@ export async function saveTransaction(id: number, kind: TransactionKind, input: 
     note: input.note.trim() || null,
     amount: input.amount,
     pending: input.pending,
+    needsAttention: input.needsAttention,
+    attentionReason: input.needsAttention
+      ? input.attentionReason ?? "Marked for a look by you."
+      : null,
   });
 
   if (!ok) throw new Error("Couldn't save this transaction — it may no longer exist.");

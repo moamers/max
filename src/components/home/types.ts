@@ -52,6 +52,7 @@ export interface MonthTileView {
   periodId: number | null;
   net: number | null;
   isCurrent: boolean;
+  hasAttention: boolean;
 }
 
 export interface YearView {
@@ -81,4 +82,5 @@ export interface HomeData {
   currentPeriodId: number;
   selectedPeriodId: number;
   periodOptions: PeriodOptionView[];
+  rollover: import("./RolloverPrompt").RolloverView | null;
 }

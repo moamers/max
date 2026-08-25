@@ -28,6 +28,8 @@ export interface TransactionDetail {
   label: string | null;
   occurredOn: string | null;
   pending: boolean;
+  needsAttention: boolean;
+  attentionReason: string | null;
   rawImport: string | null;
 }
 
@@ -47,6 +49,8 @@ export async function getTransactionDetail(userId: UserId, id: number): Promise<
       label: transactions.label,
       occurredOn: transactions.occurredOn,
       pending: transactions.pending,
+      needsAttention: transactions.needsAttention,
+      attentionReason: transactions.attentionReason,
       rawImport: transactions.rawImport,
     })
     .from(transactions)
