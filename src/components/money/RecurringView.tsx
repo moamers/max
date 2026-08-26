@@ -9,6 +9,7 @@ import { Row } from "@/components/ui/Row";
 import type { RecurringBreakdown } from "@/lib/queries";
 import type { RecurringCategory } from "@/lib/transactions";
 import { formatMoney } from "./format";
+import { sheetParent } from "@/lib/routes";
 import { MoneySheet } from "./MoneySheet";
 import { ShareBar } from "./ShareBar";
 
@@ -41,7 +42,7 @@ export function RecurringView({ periodId, monthLabel, recurring, highlightId = n
   );
 
   return (
-    <MoneySheet addHref={`/add?period=${periodId}&kind=recurring`}>
+    <MoneySheet addHref={`/add?period=${periodId}&kind=recurring`} backHref={sheetParent(periodId)}>
       <div
         style={{
           flex: 1,

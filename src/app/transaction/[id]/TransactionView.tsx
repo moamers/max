@@ -12,6 +12,7 @@ import { LabelField } from "@/components/capture/LabelField";
 import { KIND_TITLES, type TransactionCategory } from "@/lib/transactions";
 import type { TransactionDetail } from "./data";
 import { reasoningFor } from "./reasoning";
+import { transactionHome } from "@/lib/routes";
 import { saveTransaction, removeTransaction } from "./actions";
 
 export interface TransactionViewProps {
@@ -54,7 +55,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
     setError(null);
     startSave(async () => {
       try {
-        await saveTransaction(detail.id, detail.kind, detail.periodId, detail.weekNumber, {
+        const { next } = await saveTransaction(detail.id, detail.kind, detail.periodId, detail.weekNumber, {
           merchant,
           occurredOn: occurredOn || null,
           category,
@@ -65,6 +66,9 @@ export function TransactionView({ detail }: TransactionViewProps) {
           needsAttention,
           attentionReason: needsAttention ? detail.attentionReason : null,
         });
+        // `replace`, not push: the editor is finished with, and after a delete
+        // it is a row that no longer exists — Back onto it renders a bare 404.
+        router.replace(next);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
       }
@@ -76,7 +80,8 @@ export function TransactionView({ detail }: TransactionViewProps) {
     setError(null);
     startDelete(async () => {
       try {
-        await removeTransaction(detail.id);
+        const { next } = await removeTransaction(detail.id);
+        router.replace(next);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't delete. Try again.");
       }
@@ -87,7 +92,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
 
   return (
     <div style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
-      <Sheet variant="full" onBack={() => router.back()}>
+      <Sheet variant="full" onBack={() => router.replace(transactionHome(detail.kind, detail.periodId, detail.weekNumber))}>
         <div
           style={{
             flex: 1,

@@ -97,7 +97,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 
   return (
     <div style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
-      <Sheet variant="full" onBack={() => router.back()}>
+      <Sheet variant="full" onBack={() => router.replace(transactionHome(initialKind, periodId, initialWeekNumber))}>
         <div
           style={{
             flex: 1,

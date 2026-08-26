@@ -7,11 +7,13 @@ import { Sheet } from "@/components/ui/Sheet";
 
 interface MoneySheetProps {
   addHref: string;
+  /** Where the back chevron dismisses to — see `sheetParent` in lib/routes.ts. */
+  backHref: string;
   children: ReactNode;
 }
 
 /** Shared fixed frame for screens 05 and 06. */
-export function MoneySheet({ addHref, children }: MoneySheetProps) {
+export function MoneySheet({ addHref, backHref, children }: MoneySheetProps) {
   const router = useRouter();
 
   return (
@@ -25,7 +27,7 @@ export function MoneySheet({ addHref, children }: MoneySheetProps) {
         color: "var(--text-primary)",
       }}
     >
-      <Sheet variant="full" onBack={() => router.back()}>
+      <Sheet variant="full" onBack={() => router.replace(backHref)}>
         {children}
         <div
           style={{

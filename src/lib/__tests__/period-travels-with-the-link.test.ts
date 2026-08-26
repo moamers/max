@@ -107,18 +107,75 @@ describe("a write leaves you in the month you made it in", () => {
   });
 
   /**
-   * A Server Action's `redirect` defaults to `push`, so the screen the user
-   * just finished with stays on the history stack. After a delete that screen
-   * is a row that no longer exists, and Back rendered a bare 404.
+   * A write must leave the screen it finished with off the history stack, or
+   * Back returns to it — and after a delete that is a row which no longer
+   * exists, rendering a bare 404. So: `replace`, never `push`.
    */
   it("leaves the finished screen behind rather than on the history stack", () => {
-    const editor = fs.readFileSync(path.join(ROOT, "app", "transaction", "[id]", "actions.ts"), "utf8");
-    const redirects = editor.split("\n").filter((l) => /\bredirect\(/.test(l) && !l.trimStart().startsWith("*"));
-    expect(redirects.length).toBeGreaterThanOrEqual(2);
-    for (const line of redirects) expect(line).toContain("RedirectType.replace");
+    const editor = fs.readFileSync(path.join(ROOT, "app", "transaction", "[id]", "TransactionView.tsx"), "utf8");
+    expect(editor).toContain("router.replace(next)");
+    expect(editor).not.toContain("router.push(next)");
 
     const add = fs.readFileSync(path.join(ROOT, "app", "add", "AddView.tsx"), "utf8");
     expect(add).toContain("router.replace(transactionHome(");
     expect(add).not.toContain("router.push(transactionHome(");
+  });
+
+  /**
+   * `redirect()` signals by throwing NEXT_REDIRECT. Every one of these actions
+   * is awaited inside a try/catch, so a redirect thrown here is caught by the
+   * view's own error handler and rendered to the user as the literal text
+   * "next_redirect", in red, next to the Save button. The action returns its
+   * destination instead and the client navigates.
+   */
+  it("no write action redirects out from under the view's error handler", () => {
+    for (const file of [
+      path.join(ROOT, "app", "transaction", "[id]", "actions.ts"),
+      path.join(ROOT, "app", "add", "actions.ts"),
+    ]) {
+      const src = fs.readFileSync(file, "utf8");
+      const calls = src
+        .split("\n")
+        .filter((l) => /(?:^|[^.\w])redirect\(/.test(l) && !l.trimStart().startsWith("*") && !l.trimStart().startsWith("//"));
+      expect(calls).toEqual([]);
+    }
+  });
+});
+
+/**
+ * Sheets dismiss to a known parent, not to whatever is behind them.
+ *
+ * A write replaces the editor with the list it came from, which leaves *two*
+ * adjacent entries for that list on the history stack — the one the user
+ * arrived on and the one the write landed on. `router.back()` then needs two
+ * presses to reach the dashboard. The parent of each of these sheets is
+ * known outright, so it should be navigated to rather than guessed at from
+ * history depth.
+ *
+ * `/goals`, `/income` and `/year` deliberately keep `router.back()`: nothing
+ * replaces-forward on them, so no duplicate accumulates, and they are opened
+ * without a period — going "back" to a bare `/` would drop the month the user
+ * was looking at, which is the very thing this file exists to prevent.
+ */
+const PERIOD_SHEETS = [
+  path.join(ROOT, "components", "money", "MoneySheet.tsx"),
+  path.join(ROOT, "app", "week", "[weekNumber]", "WeekView.tsx"),
+  path.join(ROOT, "app", "transaction", "[id]", "TransactionView.tsx"),
+  path.join(ROOT, "app", "add", "AddView.tsx"),
+];
+
+describe("a sheet dismisses to its parent, not into history", () => {
+  it.each(PERIOD_SHEETS.map((f) => [path.relative(ROOT, f), f] as const))(
+    "%s does not hand its back control to router.back()",
+    (_rel, file) => {
+      const src = fs.readFileSync(file, "utf8");
+      const backControl = src.split("\n").filter((l) => l.includes("onBack="));
+      expect(backControl.length).toBeGreaterThanOrEqual(1);
+      for (const line of backControl) expect(line).not.toContain("router.back()");
+    }
+  );
+
+  it("every one of those files still exists", () => {
+    for (const file of PERIOD_SHEETS) expect(fs.existsSync(file)).toBe(true);
   });
 });

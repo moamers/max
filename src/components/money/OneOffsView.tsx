@@ -7,6 +7,7 @@ import type { OneOffs } from "@/lib/queries";
 import { instalmentsStillDue } from "./derive";
 import { formatMoney } from "./format";
 import { JustChanged } from "@/components/ui/JustChanged";
+import { sheetParent } from "@/lib/routes";
 import { MoneySheet } from "./MoneySheet";
 
 interface SpareForecast {
@@ -27,7 +28,7 @@ interface OneOffsViewProps {
 
 export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId = null }: OneOffsViewProps) {
   return (
-    <MoneySheet addHref={`/add?period=${periodId}&kind=one_off`}>
+    <MoneySheet addHref={`/add?period=${periodId}&kind=one_off`} backHref={sheetParent(periodId)}>
       <div
         style={{
           flex: 1,

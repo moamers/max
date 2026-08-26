@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect, RedirectType } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/session";
 import { updateTransaction, deleteTransaction } from "@/lib/store";
@@ -26,6 +25,22 @@ export interface SaveTransactionInput {
 }
 
 /**
+ * Where the caller should go once the write has landed.
+ *
+ * These actions used to call `redirect()` themselves. A redirect is signalled
+ * by throwing NEXT_REDIRECT, and the view awaits the action inside a try/catch
+ * — so its own error handler caught the signal and printed "next_redirect" in
+ * red above the Save button, a moment before the navigation it was reporting
+ * actually happened. Returning the destination keeps the catch for real
+ * failures and leaves navigation to the client, which is what Add already did.
+ */
+export interface WriteResult {
+  ok: true;
+  /** Navigate here with `router.replace` — see `transactionHome`. */
+  next: string;
+}
+
+/**
  * Screen 04's Save. Every field is editable except `kind` — the design
  * only shows a category chip, and store.ts's own doc comment for
  * `updateTransaction` describes exactly this: re-filing within the
@@ -37,7 +52,7 @@ export async function saveTransaction(
   periodId: number,
   weekNumber: number | null,
   input: SaveTransactionInput
-): Promise<never> {
+): Promise<WriteResult> {
   const user = await requireUser();
 
   if (!(input.amount > 0)) throw new Error("Add an amount before saving.");
@@ -65,14 +80,10 @@ export async function saveTransaction(
   revalidatePath(`/transaction/${id}`);
   for (const path of pathsAffectedBy(kind, weekNumber)) revalidatePath(path);
 
-  // `replace`, not the Server Action default of `push`: the editor we are
-  // leaving must not stay on the history stack, or Back returns to a screen
-  // for a row the user has finished with — and after a delete, to a row that
-  // no longer exists, which renders as a bare 404.
-  redirect(transactionHome(kind, periodId, weekNumber, id), RedirectType.replace);
+  return { ok: true, next: transactionHome(kind, periodId, weekNumber, id) };
 }
 
-export async function removeTransaction(id: number): Promise<never> {
+export async function removeTransaction(id: number): Promise<WriteResult> {
   const user = await requireUser();
 
   // Read the row's home *before* deleting it: afterwards there is no period,
@@ -87,6 +98,6 @@ export async function removeTransaction(id: number): Promise<never> {
   revalidatePath(`/transaction/${id}`);
   for (const path of pathsAffectedBy(detail.kind, detail.weekNumber)) revalidatePath(path);
 
-  // See saveTransaction: Back must not land on the deleted row's page.
-  redirect(transactionHome(detail.kind, detail.periodId, detail.weekNumber), RedirectType.replace);
+  // No highlight: the row is gone, so there is nothing left to point at.
+  return { ok: true, next: transactionHome(detail.kind, detail.periodId, detail.weekNumber) };
 }

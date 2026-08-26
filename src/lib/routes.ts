@@ -59,3 +59,25 @@ export function pathsAffectedBy(kind: TransactionKind, weekNumber: number | null
   else if (weekNumber !== null) paths.push(`/week/${weekNumber}`);
   return paths;
 }
+
+/**
+ * What a sheet's back chevron means: dismiss to the screen this sheet opened
+ * over — not "browser back".
+ *
+ * `router.back()` looked equivalent and mostly behaved, until a write landed a
+ * second entry for the same screen on the stack (add from Recurring, save,
+ * replace back onto Recurring) and Back started taking two presses to reach the
+ * dashboard. History depth is not the product's concern; the parent screen is,
+ * and it is always known:
+ *
+ *   week / recurring / one-offs  ->  the dashboard, in the same period
+ *   a transaction                ->  the list it is filed in
+ *   add                          ->  the screen the + was pressed on
+ *
+ * That is not a guess. These sheets have exactly one entry point each — the
+ * dashboard links to the three lists, the three lists link to a transaction,
+ * and + is pressed from a list — so the derived parent is also the real origin.
+ */
+export function sheetParent(periodId: number): string {
+  return periodHome(periodId);
+}

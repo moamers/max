@@ -13,6 +13,7 @@ import type { WeekTotals, WeeklyCategoryTotal } from "@/lib/queries";
 import { WEEKLY_CATEGORIES, type WeeklyCategory } from "@/lib/transactions";
 import { formatGBP as gbp } from "@/lib/money";
 import { JustChanged } from "@/components/ui/JustChanged";
+import { sheetParent } from "@/lib/routes";
 
 export interface WeekTransactionItem {
   id: number;
@@ -78,7 +79,7 @@ export function WeekView({
 
   return (
     <div style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
-      <Sheet variant="full" onBack={() => router.back()}>
+      <Sheet variant="full" onBack={() => router.replace(sheetParent(periodId))}>
         <div
           style={{
             flex: 1,
