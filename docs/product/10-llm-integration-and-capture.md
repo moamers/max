@@ -53,6 +53,28 @@ are done. Do not open a pull request.
 deployment, and pushing to it ships unreviewed code and burns build credit.
 `main` and `v1/integration` are both stale; ignore them entirely.
 
+**Check the base before you write anything.** Run these three and confirm all
+three agree with what this brief says:
+
+    git fetch origin
+    git branch -r                                   # the base branch exists
+    git log --oneline -3 origin/claude/budget-app-spending-insights-i5fnch
+    git status                                      # you are on YOUR branch, clean
+
+If any of it does not match — the branch is missing or renamed, the fetch
+fails, you cannot authenticate, the history looks unrelated to what the brief
+describes — **stop and ask me which branch to use. Do not guess, do not fall
+back to `main` or `v1/integration`, and do not start work on a base you are not
+sure about.** Both of those branches are stale; work built on them will conflict
+on every file when it comes back. One question costs a minute; the wrong base
+costs the whole task.
+
+**Before you push, fetch again.** If the base has moved while you worked, rebase
+your branch onto it, re-run all four gates, and say in your report that you
+rebased and onto what. If the rebase produces a conflict you cannot resolve with
+confidence, **stop and ask me** — describe the conflicting files rather than
+picking a side. A conflict resolved wrongly in this codebase is a money bug.
+
 A note on git, because this went wrong once: a branch moving forward to include
 your commit is a **fast-forward**, which is normal and loses nothing. Do not
 diagnose it as damage and do not propose a force-push to "repair" it. If
@@ -214,8 +236,51 @@ Library, Take Photo, and Choose File.
   format the target device produces by default is not acceptable.
 - Show progress. Reading an image takes seconds, and a control that appears to
   do nothing gets tapped again.
-- A failure is a plain sentence and a retry, never a stack trace, never a raw
-  provider error string, and never a dead end.
+
+### Which files are allowed, and where that is enforced
+
+Accepted: **PNG, JPEG, WebP, and HEIC/HEIF**. Nothing else in this version — no
+PDFs, no multi-page documents. Say so in the interface rather than letting
+someone find out by failing.
+
+Enforce it in three places, because they do different jobs:
+
+1. **The `accept` attribute** narrows what the native picker offers. This is a
+   convenience, **not a security boundary** — it is trivially bypassed and some
+   pickers ignore it. Never treat it as validation.
+2. **A client-side check before upload**, so someone who picks a 40MB video or
+   a PDF is told immediately instead of waiting through an upload to be
+   rejected. Check type and size.
+3. **The server route is the real gate.** Validate independently of anything
+   the client claimed. Do not trust the `Content-Type` header or the file
+   extension — both are attacker-controlled and a renamed file declares
+   whatever you like. **Check the leading bytes** against the formats above and
+   reject on mismatch. The route must be safe when called directly with curl,
+   because it will be.
+
+An oversized or wrong-type file is rejected with a plain sentence naming what
+Max can read, and the user stays on the screen with their form intact.
+
+### Every way this fails, and what the user sees
+
+A control that only works when everything works is not finished. Handle each of
+these explicitly — a plain sentence, the form still intact, and a way forward.
+No stack trace, no raw provider error string, no dead end, and never a spinner
+that never stops.
+
+| What happened | What the user gets |
+|---|---|
+| Wrong file type or too large | Rejected before upload, naming what Max can read |
+| No network, or the upload drops | Say so, offer to try again — nothing is lost |
+| The provider is slow | A timeout you set, not one the browser picks. Then retry or type it by hand |
+| The provider errors or rate-limits | A plain sentence and a retry. Never surface the provider's own message |
+| The response is malformed or fails validation | Treat as "could not read this", not as a crash |
+| The image is legible but is not a transaction | Say Max could not find a transaction in it, and offer the form empty. **Do not invent a plausible one** |
+| Some fields read, others not | Fill what was read, leave the rest empty, flag the row. Partial is normal, not failure |
+| The user cancels the picker | Nothing happens. No error, no state change |
+
+Typing it by hand must stay available throughout. The capture control is a
+shortcut; it is never the only way in.
 
 ## Part 3 — what comes back, and what happens to it
 
@@ -275,8 +340,12 @@ quietly ship without one.
   (missing fields, a string where a number belongs, an absurd amount, prompt
   text echoed back as a merchant name).
 - Mock the provider at the module boundary. No test makes a real API call.
-- Test that the route rejects an unauthenticated request, an oversized file,
-  and a disallowed MIME type.
+- Test that the route rejects an unauthenticated request, an oversized file, a
+  disallowed MIME type, and **a file whose declared type does not match its
+  actual bytes** — a PDF renamed `.png` and sent as `image/png` must be
+  rejected by the server, not by the picker.
+- Test the failure table above where it is testable: provider timeout, provider
+  error, malformed response, and a valid response containing no transaction.
 
 ## In your report
 State the cost per extraction at the model you chose, and how many network
@@ -351,6 +420,13 @@ one per field per render.
   that would break a naive filter.
 - Test that a user only ever sees their own history. Isolation is the one thing
   in this app that cannot be got wrong twice.
+
+## Failure and empty states
+- No history yet: the field behaves exactly as it does today. No empty
+  dropdown, no "no suggestions" message, nothing to dismiss.
+- The suggestions fetch fails: the field still works. Typing is never blocked
+  by a failed lookup, and the user is not told about it — a missing convenience
+  is not an error worth interrupting someone for.
 
 ## In your report
 Say how many network calls fire per user action, and what happens on a form
