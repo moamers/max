@@ -1,31 +1,38 @@
-/**
- * The app icon's artwork, in one place so `icon` and `apple-icon` cannot drift.
- *
- * THIS IS A STAND-IN. The design handoff refers to a "logo mark" three times
- * (screens 01, 02 and the menu) and never draws one, so there is no logo to
- * use. Rather than a letter — which is what iOS falls back to, and what the
- * founder saw on his home screen — this draws the one visual idea the product
- * actually has: the bar. Track is the budget, fill is the spend, and it sits
- * a little under the line, which is where the app is trying to keep you.
- *
- * Replace this file when a real mark exists. Nothing else needs to change.
- *
- * Rendered by Satori (next/og), which supports a subset of CSS: flexbox only,
- * every element needs an explicit `display`, and there is no `border-radius`
- * on a percentage. Keep it to solid fills and plain boxes.
- */
+import {
+  MAX_MARK_BODY,
+  MAX_MARK_LEAF,
+  MAX_MARK_VIEWBOX,
+} from "@/components/home/max-mark-paths";
 
-/** Dark ground and brand lime, from globals.css. iOS composites a transparent icon onto black, so this is deliberately opaque. */
+/**
+ * The app icon: the Max mark on a dark ground.
+ *
+ * Same two paths the month bar and the menu draw — imported, not copied, so
+ * the mark on the phone's home screen cannot drift from the mark inside the
+ * app. The colours are literals because Satori (next/og) has no CSS variables;
+ * they are the dark theme's `--text-primary` and the brand `--lime-fill`,
+ * which is the same in both themes.
+ *
+ * The mark is delivered as a data-URI `<img>` rather than inline SVG: Satori's
+ * inline-SVG support is partial, and an image is the path it renders reliably.
+ */
 const GROUND = "#0e0f14";
-const TRACK = "#22262e";
-const FILL = "#c6ff3d";
+const BODY = "#f2f4ee";
+const LEAF = "#c6ff3d";
+
+function markDataUri(): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MAX_MARK_VIEWBOX}">` +
+    `<path d="${MAX_MARK_BODY}" fill="${BODY}"/>` +
+    `<path d="${MAX_MARK_LEAF}" fill="${LEAF}"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
 
 export function IconMark({ size }: { size: number }) {
-  // Proportions, not pixels, so the same artwork holds at 32px and 180px.
-  const pad = size * 0.2;
-  const barWidth = size - pad * 2;
-  const barHeight = size * 0.16;
-  const gap = size * 0.11;
+  // The mark's own artwork sits high in its 100×100 box (the leaf starts at
+  // y=3, the body ends at y=95), so it is centred as drawn rather than nudged.
+  const inner = Math.round(size * 0.62);
 
   return (
     <div
@@ -33,36 +40,13 @@ export function IconMark({ size }: { size: number }) {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         background: GROUND,
       }}
     >
-      {/* Three bars, filled to different points — the week rows of the home screen. */}
-      {[0.72, 0.45, 0.9].map((filled, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            width: barWidth,
-            height: barHeight,
-            marginTop: i === 0 ? 0 : gap,
-            borderRadius: barHeight / 2,
-            background: TRACK,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              width: barWidth * filled,
-              height: "100%",
-              borderRadius: barHeight / 2,
-              background: FILL,
-            }}
-          />
-        </div>
-      ))}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={markDataUri()} width={inner} height={inner} alt="" />
     </div>
   );
 }
