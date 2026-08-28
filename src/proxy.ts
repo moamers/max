@@ -134,7 +134,14 @@ function corsHeaders() {
 export const config = {
   // Everything except Next's own static output and file-looking requests.
   // Without this the auth redirect would also swallow CSS and images.
+  //
+  // `apple-icon`, `icon` and the manifest are named explicitly because they are
+  // generated routes with NO file extension, so the extension rule below does
+  // not reach them. Left protected, the phone asks for the home-screen icon,
+  // gets a redirect to /login, and falls back to a plain letter tile — which
+  // looks exactly like having no icon at all. They carry no user data; the
+  // login screen itself references them.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|woff|woff2|ttf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|apple-icon$|icon$|manifest\\.webmanifest$|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|map|woff|woff2|ttf)$).*)",
   ],
 };

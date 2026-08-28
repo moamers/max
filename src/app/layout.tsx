@@ -20,6 +20,14 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Max",
   description: "A personal wealth agent that reads your budget and tells you where you stand.",
+  // Added when "Add to Home Screen" produced a bare letter tile. The icon
+  // itself comes from `icon.tsx` / `apple-icon.tsx`, which Next links
+  // automatically; this is the name under it and how it launches.
+  appleWebApp: {
+    title: "Max",
+    capable: true,
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
