@@ -8,17 +8,34 @@
 
 | Task | Effort | Runs with | Owns (writes) |
 |---|---|---|---|
-| **H · LLM layer + screenshot capture** | High | *nothing, ideally* | `src/lib/llm/**`, `src/app/api/llm/**`, `src/app/add/**`, `src/app/transaction/[id]/**`, `src/components/capture/CaptureButton.tsx` (new), `.env.example` |
 | **I · Autocomplete on Where and label** | Medium | H, with a hard boundary | `src/components/capture/TextField.tsx`, `src/components/capture/LabelField.tsx`, `src/components/capture/suggestions.ts` (new), `src/lib/queries/suggestions.ts` (new) |
+| **H · LLM layer + screenshot capture** | High | I, with a hard boundary | `src/lib/llm/**`, `src/app/api/llm/**`, `src/app/add/**`, `src/app/transaction/[id]/**`, `src/components/capture/CaptureButton.tsx` (new), `.env.example` |
 
-**Run H first, then I.** Both land near the add/edit transaction screens, and H
-is the one with the architectural decisions in it.
+**Run I first.** Neither task depends on the other's code — the ownership lists
+do not overlap on a single file — so the order is a practical question, not a
+technical one, and it favours I:
 
-They *can* run together, but only under one rule: **task I never opens
-`AddView.tsx` or `TransactionView.tsx`.** Its two field components must fetch
-their own suggestions rather than receive them as props from a parent, or the
-two agents will collide on the same file. If that constraint is awkward, run
-them sequentially instead — it is not worth the merge.
+- **I is not blocked on anything.** H needs an API key, a funded account and a
+  provider decision before a line of it can be tested. I needs none of that and
+  can start now.
+- **I is worth having on its own.** Typing the same shop repeatedly is a real
+  cost of manual entry whether or not the screenshot reader ever ships.
+- **I is the cheaper calibration run.** It is medium-sized, self-contained, and
+  its UX is deliberately left open — a good way to see how an outside agent
+  handles judgement before handing it the task with the architecture in it.
+- **The order compounds slightly.** H's output lands in the same form as a
+  draft the user then corrects. Autocomplete already being there makes that
+  correction better; the reverse order gains nothing.
+
+They *can* run together, under one rule: **task I never opens `AddView.tsx` or
+`TransactionView.tsx`.** Its two field components must fetch their own
+suggestions rather than receive them as props from a parent, or the two agents
+will collide on a file H owns. If that constraint proves awkward, run them
+sequentially — it is not worth the merge.
+
+**Whichever runs second is told what the first one put on the screen.** Both
+add UI to the same short form: I adds a suggestion surface under two text
+fields, H adds a capture control. They should not fight for the same space.
 
 ### Why H is shaped the way it is
 
@@ -164,6 +181,10 @@ that needs justifying, not a description.
 
 Never put both briefs into a single session. An agent given two tasks
 interleaves them, and the ownership boundary stops meaning anything.
+
+Task I is below Task H in this document for readability — H is the longer
+brief and carries the shared context. That is document order, not run order:
+**start with I** (§1).
 
 ---
 
