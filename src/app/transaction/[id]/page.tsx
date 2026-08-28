@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { getTransactionDetail } from "./data";
+import { isCaptureConfigured } from "@/lib/llm/config";
 import { TransactionView } from "./TransactionView";
 
 export default async function TransactionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,5 +13,5 @@ export default async function TransactionPage({ params }: { params: Promise<{ id
   const detail = await getTransactionDetail(user.id, id);
   if (!detail) notFound();
 
-  return <TransactionView detail={detail} />;
+  return <TransactionView detail={detail} captureEnabled={isCaptureConfigured()} />;
 }

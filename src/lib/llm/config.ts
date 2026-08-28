@@ -40,3 +40,16 @@ export function getOpenAiConfig(): OpenAiRuntimeConfig {
       optionalPositiveNumber("OPENAI_OUTPUT_USD_PER_MILLION_TOKENS") ?? known?.output ?? null,
   };
 }
+
+/**
+ * Whether image capture can actually work right now.
+ *
+ * Without a key the control still renders, opens the picker, uploads, and then
+ * fails — which reads as a broken app rather than an unconfigured one. Max's
+ * whole posture is to say what it doesn't know instead of failing at you, so a
+ * feature that cannot work is not offered. Server-side only: the answer depends
+ * on an env var the browser must never see.
+ */
+export function isCaptureConfigured(): boolean {
+  return getOpenAiConfig().apiKey.length > 0;
+}

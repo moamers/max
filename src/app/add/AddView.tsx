@@ -21,6 +21,8 @@ export interface AddViewProps {
   initialKind: TransactionKind;
   initialCategory: TransactionCategory | null;
   initialWeekNumber: number | null;
+  /** False when no provider key is set — the control is hidden rather than offered and failing. */
+  captureEnabled?: boolean;
   initialWhere: string;
   initialLabel: string;
   initialAmount: number;
@@ -48,7 +50,7 @@ function fieldLabel(text: string) {
   );
 }
 
-export function AddView({ periodId, initialKind, initialCategory, initialWeekNumber, initialWhere, initialLabel, initialAmount }: AddViewProps) {
+export function AddView({ periodId, captureEnabled = false, initialKind, initialCategory, initialWeekNumber, initialWhere, initialLabel, initialAmount }: AddViewProps) {
   const router = useRouter();
   const [tab, setTab] = useState<"type" | "upload">("type");
 
@@ -220,7 +222,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
               </Button>
             </>
           ) : (
-            <UploadTab onDraft={handleCapturedDraft} />
+            <UploadTab onDraft={handleCapturedDraft} captureEnabled={captureEnabled} />
           )}
         </div>
       </Sheet>
@@ -229,7 +231,13 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
 }
 
 /** Screen 08's Upload tab: one image becomes an editable draft, never a write. */
-function UploadTab({ onDraft }: { onDraft: (draft: TransactionExtractionDraft) => void }) {
+function UploadTab({
+  onDraft,
+  captureEnabled,
+}: {
+  onDraft: (draft: TransactionExtractionDraft) => void;
+  captureEnabled: boolean;
+}) {
   return (
     <div
       style={{
@@ -247,11 +255,15 @@ function UploadTab({ onDraft }: { onDraft: (draft: TransactionExtractionDraft) =
     >
       <span style={{ fontSize: 15, fontWeight: 600 }}>Read a transaction image</span>
       <span style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 260, textWrap: "pretty" }}>
-        Choose a screenshot or photo. You will check every field before anything is saved.
+        {captureEnabled
+          ? "Choose a screenshot or photo. You will check every field before anything is saved."
+          : "Reading images isn't switched on yet. Add this one by hand on the Type it tab."}
       </span>
-      <div style={{ width: "100%", maxWidth: 320 }}>
-        <CaptureButton onDraft={onDraft} />
-      </div>
+      {captureEnabled && (
+        <div style={{ width: "100%", maxWidth: 320 }}>
+          <CaptureButton onDraft={onDraft} />
+        </div>
+      )}
     </div>
   );
 }

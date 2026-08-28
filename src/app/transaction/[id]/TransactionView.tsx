@@ -19,6 +19,8 @@ import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-
 
 export interface TransactionViewProps {
   detail: TransactionDetail;
+  /** False when no provider key is set — the control is hidden rather than offered and failing. */
+  captureEnabled?: boolean;
 }
 
 function fieldLabel(text: string) {
@@ -37,7 +39,7 @@ function fieldLabel(text: string) {
   );
 }
 
-export function TransactionView({ detail }: TransactionViewProps) {
+export function TransactionView({ detail, captureEnabled = false }: TransactionViewProps) {
   const router = useRouter();
   const [merchant, setMerchant] = useState(detail.merchant ?? "");
   const [occurredOn, setOccurredOn] = useState(detail.occurredOn ?? "");
@@ -135,7 +137,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
             {detail.weekNumber !== null && <Pill tone="neutral">week {detail.weekNumber}</Pill>}
           </div>
 
-          <CaptureButton onDraft={handleCapturedDraft} />
+          {captureEnabled && <CaptureButton onDraft={handleCapturedDraft} />}
 
           <AmountEditor
             amount={amount}

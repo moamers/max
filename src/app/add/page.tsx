@@ -8,6 +8,7 @@ import {
   type TransactionCategory,
   type TransactionKind,
 } from "@/lib/transactions";
+import { isCaptureConfigured } from "@/lib/llm/config";
 import { AddView } from "./AddView";
 import { resolveInitialAmount } from "./prefill";
 
@@ -55,6 +56,7 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
       initialKind={kind}
       initialCategory={resolveCategory(kind, sp)}
       initialWeekNumber={resolveWeekNumber(sp)}
+      captureEnabled={isCaptureConfigured()}
       initialWhere={single(sp.where) ?? ""}
       initialLabel={single(sp.label) ?? ""}
       initialAmount={resolveInitialAmount(sp)}
