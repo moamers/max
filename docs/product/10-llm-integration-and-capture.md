@@ -316,7 +316,31 @@ Four rules that are not negotiable, each with a doctrine behind it:
 
 Any copy you write passes the tone gate in `src/lib/tone.ts`. Run it.
 
-## Part 4 — privacy, and the thing you must not decide alone
+## Part 4 — spending real money, so it must be countable and bounded
+
+This runs on prepaid credit. The provider's dashboard shows the total; it will
+not tell you *which* feature spent it, and it will not stop a bug.
+
+- **One call per user action. No automatic retries.** If a call fails, the user
+  presses retry — the code never retries on its own, and never loops. An
+  automatic retry on a failing provider is how a small balance disappears in an
+  afternoon with nothing to show for it.
+- **Log token usage per call** — prompt tokens, output tokens, which capability
+  asked, and the resulting cost if the provider returns it. Server-side log
+  line is enough; no new table. Without this the dashboard total cannot be
+  reconciled against what the app actually did.
+- **A per-request ceiling**, so one oversized image or a runaway response
+  cannot cost a multiple of a normal call. Cap the output tokens and downscale
+  the image before sending it — a phone screenshot is far larger than the model
+  needs, and image size is most of the cost of this feature.
+- **Sensible per-user throttling.** Not a quota system; just enough that a
+  stuck finger or a retry loop in a flaky network cannot fire the same
+  extraction fifty times.
+- Say in your report **what one extraction costs** at the model you chose, and
+  show the arithmetic — image tokens, prompt tokens, output tokens — so the
+  number can be checked rather than believed.
+
+## Part 5 — privacy, and the thing you must not decide alone
 
 Uploading a screenshot sends the user's financial data to a third party. Max's
 red lines (`docs/principles/02-ethics-and-red-lines.md`) cover dark patterns,
@@ -328,8 +352,10 @@ What you must do:
 - Tell the user, in the interface, before the first upload — plainly, once,
   where they will actually read it. Not buried in a settings page.
 - Do not send anything that was not necessary for the task.
-- Write the open question into `docs/00-open-decisions.md` as a new entry, with
-  what you implemented and what remains undecided.
+- The open question is already recorded as **A-9** in
+  `docs/00-open-decisions.md`. Do not add a duplicate entry; if what you built
+  changes the picture, say so in your report and leave the register to the
+  founder.
 
 Do not design a consent flow beyond a clear one-time disclosure, and do not
 quietly ship without one.
@@ -443,4 +469,6 @@ where the user has no history at all.
 2. **Whether the screenshot reader is offered to other accounts**, or stays on
    yours while it is proven. It costs money per use and it sends data out.
 3. **Which model, at what cost ceiling.** Both are single config values in
-   task H's design, so this can be decided after you have seen it work.
+   task H's design, so this can be decided after you have seen it work. Set a
+   hard spend limit in the provider's console as well — the code's ceilings and
+   the account's ceiling protect against different mistakes.
