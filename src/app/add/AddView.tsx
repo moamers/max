@@ -133,7 +133,13 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
               )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <TextField value={where} onChange={setWhere} label="Where" placeholder="shop, café, name…" />
+                <TextField
+                  value={where}
+                  onChange={setWhere}
+                  label="Where"
+                  suggestionKind="merchant"
+                  placeholder="shop, café, name…"
+                />
                 {touched && validation.errors.where && (
                   <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.where}</span>
                 )}

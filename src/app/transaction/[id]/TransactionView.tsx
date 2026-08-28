@@ -119,7 +119,13 @@ export function TransactionView({ detail }: TransactionViewProps) {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {fieldLabel("Where")}
-            <TextField value={merchant} onChange={setMerchant} label="Where" placeholder="shop, café, name…" />
+            <TextField
+              value={merchant}
+              onChange={setMerchant}
+              label="Where"
+              suggestionKind="merchant"
+              placeholder="shop, café, name…"
+            />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

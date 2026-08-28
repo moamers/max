@@ -23,7 +23,13 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   onChange: (value: string) => void;
   /** Always required — every field needs a real accessible name even when the visible label is just a placeholder. */
   label: string;
-  /** LabelField supplies this explicitly; the existing Where field is inferred from its accessible label/name. */
+  /**
+   * Which history to offer, if any. Omitting it falls back to sniffing `name`
+   * and the visible label — a fallback, not the mechanism. Copy is owned by the
+   * design handoff and can change; a feature that switches itself off when a
+   * word is reworded fails silently and in a way no test would catch. Every
+   * call site that wants suggestions says so.
+   */
   suggestionKind?: SuggestionKind;
   /** Used only by LabelField, which fetches while its collapsed chip is mounted. */
   suggestionEntries?: readonly SuggestionEntry[];
