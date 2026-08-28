@@ -15,6 +15,9 @@ import {
   coalesceSuggestionLoad,
   filterAndRankSuggestions,
   suggestionsOfKind,
+  MAX_VISIBLE_SUGGESTIONS,
+  SUGGESTION_LIST_PADDING,
+  SUGGESTION_ROW_HEIGHT,
   type SuggestionKind,
 } from "./suggestions";
 
@@ -199,9 +202,12 @@ export function TextField({
             right: 0,
             bottom: "calc(100% + 6px)",
             zIndex: 20,
-            maxHeight: 220,
-            overflowY: "auto",
-            padding: 6,
+            // Exactly the height of a full list, so it is bounded and never
+            // scrolls — the cap is on the number of suggestions, not on how
+            // much of them you can see.
+            maxHeight:
+              MAX_VISIBLE_SUGGESTIONS * SUGGESTION_ROW_HEIGHT + SUGGESTION_LIST_PADDING * 2,
+            padding: SUGGESTION_LIST_PADDING,
             border: "1px solid var(--hairline-4)",
             borderRadius: "var(--radius-field)",
             background: "var(--surface-raised)",
@@ -225,7 +231,7 @@ export function TextField({
               onClick={() => chooseSuggestion(entry.value)}
               style={{
                 width: "100%",
-                minHeight: 44,
+                minHeight: SUGGESTION_ROW_HEIGHT,
                 display: "flex",
                 alignItems: "center",
                 padding: "9px 11px",

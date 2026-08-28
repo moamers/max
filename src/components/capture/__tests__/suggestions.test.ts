@@ -4,6 +4,8 @@ import {
   coalesceSuggestionLoad,
   filterAndRankSuggestions,
   suggestionsOfKind,
+  MAX_VISIBLE_SUGGESTIONS,
+  MIN_QUERY_LENGTH,
 } from "../suggestions";
 
 function entry(value: string, count: number, mostRecent: string): SuggestionEntry {
@@ -12,18 +14,20 @@ function entry(value: string, count: number, mostRecent: string): SuggestionEntr
 
 describe("autocomplete ranking and filtering", () => {
   it("ranks frequency first and recency next", () => {
+    // Every fixture shares "shop", so the query matches all four and this
+    // exercises ranking rather than filtering.
     const rows = [
-      entry("Frequent but older", 8, "2026-01-01"),
-      entry("Recent but rarer", 2, "2026-08-20"),
-      entry("Recent tie", 4, "2026-08-22"),
-      entry("Older tie", 4, "2026-07-01"),
+      entry("Frequent but older shop", 8, "2026-01-01"),
+      entry("Recent but rarer shop", 2, "2026-08-20"),
+      entry("Recent tie shop", 4, "2026-08-22"),
+      entry("Older tie shop", 4, "2026-07-01"),
     ];
 
-    expect(filterAndRankSuggestions(rows, "").map((row) => row.value)).toEqual([
-      "Frequent but older",
-      "Recent tie",
-      "Older tie",
-      "Recent but rarer",
+    expect(filterAndRankSuggestions(rows, "shop").map((row) => row.value)).toEqual([
+      "Frequent but older shop",
+      "Recent tie shop",
+      "Older tie shop",
+      "Recent but rarer shop",
     ]);
   });
 
@@ -33,7 +37,7 @@ describe("autocomplete ranking and filtering", () => {
       entry("TESCO EXPRESS", 3, "2026-08-20"),
     ];
 
-    expect(filterAndRankSuggestions(rows, "").map((row) => row.value)).toEqual([
+    expect(filterAndRankSuggestions(rows, "tesco").map((row) => row.value)).toEqual([
       "Tesco",
       "TESCO EXPRESS",
     ]);
@@ -71,7 +75,49 @@ describe("autocomplete ranking and filtering", () => {
     const rows = Array.from({ length: 8 }, (_, index) =>
       entry(`Place ${index}`, 8 - index, `2026-08-${String(index + 1).padStart(2, "0")}`)
     );
-    expect(filterAndRankSuggestions(rows, "")).toHaveLength(5);
+    expect(filterAndRankSuggestions(rows, "place")).toHaveLength(MAX_VISIBLE_SUGGESTIONS);
+  });
+
+  describe("nothing is offered until something has been typed", () => {
+    const rows = [
+      entry("Sainsbury's", 9, "2026-08-20"),
+      entry("Sainsbury's Local", 3, "2026-08-21"),
+    ];
+
+    it("stays closed on focus", () => {
+      // Focusing the field used to match the whole history and drop a
+      // full-height list over the form before the user had said anything.
+      expect(filterAndRankSuggestions(rows, "")).toEqual([]);
+    });
+
+    it("stays closed on the first character", () => {
+      expect(filterAndRankSuggestions(rows, "s")).toEqual([]);
+    });
+
+    it("opens on the second", () => {
+      expect(filterAndRankSuggestions(rows, "sa")).toHaveLength(2);
+    });
+
+    it("ignores whitespace when measuring", () => {
+      expect(filterAndRankSuggestions(rows, "  ")).toEqual([]);
+      expect(filterAndRankSuggestions(rows, " sa ")).toHaveLength(2);
+    });
+
+    it("agrees with the stated minimum", () => {
+      const short = "s".repeat(MIN_QUERY_LENGTH - 1);
+      const long = "s".repeat(MIN_QUERY_LENGTH);
+      expect(filterAndRankSuggestions([entry("sss", 1, "2026-08-20")], short)).toEqual([]);
+      expect(filterAndRankSuggestions([entry("sss", 1, "2026-08-20")], long)).toHaveLength(1);
+    });
+  });
+
+  it("says nothing when the only match is what is already typed", () => {
+    // Right after picking a suggestion, and again once a known name is
+    // finished, a one-item list repeating the input is pure noise.
+    const rows = [entry("Pret", 4, "2026-08-20")];
+    expect(filterAndRankSuggestions(rows, "Pret")).toEqual([]);
+    expect(filterAndRankSuggestions(rows, "pret")).toEqual([]);
+    expect(filterAndRankSuggestions(rows, "pre")).toHaveLength(1);
   });
 
   it("selects the requested history bucket", () => {
