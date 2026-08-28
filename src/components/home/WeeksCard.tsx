@@ -3,7 +3,7 @@ import { Bar } from "@/components/ui/Bar";
 import { Caret } from "@/components/ui/Accordion";
 import { Pill } from "@/components/ui/Chip";
 import { Row } from "@/components/ui/Row";
-import { formatGBP, moneyToneColor } from "./format";
+import { NO_WEEKLY_TARGETS_PROMPT, formatGBP, moneyToneColor } from "./format";
 import type { WeeksSummaryView, WeekView } from "./types";
 
 interface WeeksCardProps {
@@ -78,6 +78,26 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
           )}
         </div>
       </div>
+
+      {/*
+        Deliberately a sibling of the toggle header, not a child of it: a link
+        inside a role="button" is both an a11y error and a click that fires two
+        things at once. See NO_WEEKLY_TARGETS_PROMPT for why it exists.
+      */}
+      {summary.budget === null && (
+        <Link href="/goals" style={{ color: "inherit", textDecoration: "none" }}>
+          <Row interactive padding="14px 4px 15px">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
+                {NO_WEEKLY_TARGETS_PROMPT}
+              </span>
+              <span style={{ fontSize: 16, color: "var(--text-disabled)", lineHeight: 1 }} aria-hidden>
+                &rsaquo;
+              </span>
+            </div>
+          </Row>
+        </Link>
+      )}
 
       {open &&
         weeks.map((week, i) => (

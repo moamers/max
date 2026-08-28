@@ -138,6 +138,17 @@ export function categoryFooter(goal: number | null, state: MoneyState): string {
   return `of ${formatGBP(goal)}`;
 }
 
+/**
+ * Shown on the Weeks card when the month has no weekly targets at all.
+ *
+ * Without it the card is nothing but muted figures over empty bars, which
+ * reads as a broken screen rather than an unconfigured one — the user cannot
+ * tell which, and "is this thing working?" is exactly the doubt this app
+ * exists to avoid. Says which it is, and makes the fix one tap away. Mirrors
+ * the income prompt in OneOffsView ("Add an income figure and this fills in.").
+ */
+export const NO_WEEKLY_TARGETS_PROMPT = "Set weekly targets and these weeks fill in.";
+
 /** How many whole weeks (rounded up) are left in the period — the hero sentences count in weeks, not days. */
 export function weeksRemaining(daysRemaining: number): number {
   return Math.max(0, Math.ceil(daysRemaining / 7));
