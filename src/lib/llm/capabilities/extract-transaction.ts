@@ -9,7 +9,7 @@ import {
   type TransactionCategory,
   type TransactionKind,
 } from "@/lib/transactions";
-import { LLM_LIMITS } from "../config";
+import { LLM_LIMITS, getOpenAiConfig } from "../config";
 import { LlmCapabilityError } from "../errors";
 import { createLlmProvider } from "../index";
 import type { LlmProvider, LlmUsage } from "../provider";
@@ -350,7 +350,7 @@ export async function extractTransaction(
     },
     maxOutputTokens: LLM_LIMITS.extractTransaction.maxOutputTokens,
     timeoutMs: LLM_LIMITS.extractTransaction.providerTimeoutMs,
-    reasoningEffort: "none",
+    reasoningEffort: getOpenAiConfig().reasoningEffort,
     safetyIdentifier: safetyIdentifier(userId),
   });
 

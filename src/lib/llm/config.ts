@@ -9,9 +9,15 @@ export const LLM_LIMITS = {
   },
 } as const;
 
+export type ReasoningEffort = "none" | "low" | "medium" | "high";
+
+const REASONING_EFFORTS: readonly ReasoningEffort[] = ["none", "low", "medium", "high"];
+
 export interface OpenAiRuntimeConfig {
   apiKey: string;
   model: string;
+  /** How hard the model is asked to think. More thinking is more output tokens, which is more money. */
+  reasoningEffort: ReasoningEffort;
   endpoint: string;
   inputUsdPerMillionTokens: number | null;
   outputUsdPerMillionTokens: number | null;
@@ -19,6 +25,18 @@ export interface OpenAiRuntimeConfig {
 const KNOWN_OPENAI_PRICING: Readonly<Record<string, { input: number; output: number }>> = {
   "gpt-5.6-luna": { input: 0.2, output: 1.2 },
 };
+
+/**
+ * Reading a receipt is extraction, not deduction: the figure is printed on the
+ * image. `none` is the default because thinking about it costs output tokens
+ * and buys nothing here. Raised via env only if a real misread justifies it —
+ * and an unrecognised value falls back rather than failing a request, since a
+ * typo in a deploy variable should not take the feature down.
+ */
+function reasoningEffort(): ReasoningEffort {
+  const raw = process.env.OPENAI_REASONING_EFFORT?.trim().toLowerCase();
+  return REASONING_EFFORTS.find((effort) => effort === raw) ?? "none";
+}
 
 function optionalPositiveNumber(name: string): number | null {
   const raw = process.env[name];
@@ -33,6 +51,7 @@ export function getOpenAiConfig(): OpenAiRuntimeConfig {
   return {
     apiKey: process.env.OPENAI_API_KEY?.trim() || "",
     model,
+    reasoningEffort: reasoningEffort(),
     endpoint: "https://api.openai.com/v1/responses",
     inputUsdPerMillionTokens:
       optionalPositiveNumber("OPENAI_INPUT_USD_PER_MILLION_TOKENS") ?? known?.input ?? null,

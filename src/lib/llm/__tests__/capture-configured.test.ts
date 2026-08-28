@@ -15,9 +15,13 @@ import { isCaptureConfigured, getOpenAiConfig } from "../config";
 
 const original = process.env.OPENAI_API_KEY;
 
+const originalEffort = process.env.OPENAI_REASONING_EFFORT;
+
 afterEach(() => {
   if (original === undefined) delete process.env.OPENAI_API_KEY;
   else process.env.OPENAI_API_KEY = original;
+  if (originalEffort === undefined) delete process.env.OPENAI_REASONING_EFFORT;
+  else process.env.OPENAI_REASONING_EFFORT = originalEffort;
   vi.unstubAllEnvs();
 });
 
@@ -43,5 +47,29 @@ describe("capture is offered only when it can work", () => {
     process.env.OPENAI_API_KEY = "sk-test-not-a-real-key";
     expect(typeof isCaptureConfigured()).toBe("boolean");
     expect(getOpenAiConfig().apiKey).not.toBe("");
+  });
+});
+
+describe("how hard it thinks is a config value, not a constant", () => {
+  it("costs nothing extra by default", () => {
+    // Reading a printed figure is extraction, not deduction.
+    delete process.env.OPENAI_REASONING_EFFORT;
+    expect(getOpenAiConfig().reasoningEffort).toBe("none");
+  });
+
+  it("can be raised without a code change", () => {
+    process.env.OPENAI_REASONING_EFFORT = "low";
+    expect(getOpenAiConfig().reasoningEffort).toBe("low");
+  });
+
+  it("accepts the value however it is cased or spaced", () => {
+    process.env.OPENAI_REASONING_EFFORT = "  MEDIUM ";
+    expect(getOpenAiConfig().reasoningEffort).toBe("medium");
+  });
+
+  it("falls back rather than failing on a typo", () => {
+    // A mistyped deploy variable should not take the feature down.
+    process.env.OPENAI_REASONING_EFFORT = "maximum";
+    expect(getOpenAiConfig().reasoningEffort).toBe("none");
   });
 });

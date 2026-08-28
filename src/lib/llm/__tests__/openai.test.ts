@@ -10,6 +10,7 @@ import type { LlmRequest } from "../provider";
 const CONFIG: OpenAiRuntimeConfig = {
   apiKey: "test-key",
   model: "gpt-5.6-luna",
+  reasoningEffort: "none",
   endpoint: "https://api.openai.test/v1/responses",
   inputUsdPerMillionTokens: 0.2,
   outputUsdPerMillionTokens: 1.2,
