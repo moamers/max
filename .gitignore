@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the template, which holds NAMES and never values. Without this
+# negation `.env*` silently swallows it, and the one file that documents which
+# variables the app needs can never be committed.
+!.env.example
 
 # vercel
 .vercel
