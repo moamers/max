@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { resolvePeriodId } from "@/lib/queries";
+import { EmptyState } from "@/components/EmptyState";
 import {
   isTransactionKind,
   isRecurringCategory,
@@ -46,7 +46,10 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
   const sp = await searchParams;
 
   const periodId = await resolvePeriodId(user.id, sp);
-  if (periodId === null) notFound();
+  // `resolvePeriodId` returns null only when the account owns no periods at
+  // all — an unrecognised ?period= falls back to the current one rather than
+  // failing. So this is "nothing here yet", never "wrong id" (#46).
+  if (periodId === null) return <EmptyState />;
 
   const kind = resolveKind(sp);
 

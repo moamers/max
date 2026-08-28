@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { acceptRollover } from "@/app/rollover-actions";
 import { Button } from "@/components/ui/Button";
 
@@ -16,6 +17,7 @@ function displayDate(value: string): string {
 }
 
 export function RolloverPrompt({ proposal }: { proposal: RolloverView }) {
+  const router = useRouter();
   const [weeks, setWeeks] = useState<4 | 5>(proposal.proposedWeeks);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function RolloverPrompt({ proposal }: { proposal: RolloverView }) {
         {([4, 5] as const).map((count) => <button key={count} type="button" onClick={() => setWeeks(count)} style={{ height: 40, borderRadius: 99, border: `1px solid ${weeks === count ? "var(--lime-fill)" : "var(--hairline-4)"}`, background: weeks === count ? "var(--control-active)" : "transparent", color: "var(--text-primary)", fontFamily: "var(--font-jetbrains-mono)", cursor: "pointer" }}>{count} weeks</button>)}
       </div>
       {error && <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>{error}</span>}
-      <Button disabled={pending} onClick={() => { setError(null); startTransition(async () => { try { await acceptRollover(proposal.startDate, endDate); } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't start this period."); } }); }}>{pending ? "Starting…" : "Start this period"}</Button>
+      <Button disabled={pending} onClick={() => { setError(null); startTransition(async () => { try { const result = await acceptRollover(proposal.startDate, endDate); router.replace(result.next); } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't start this period."); } }); }}>{pending ? "Starting…" : "Start this period"}</Button>
     </div>
   );
 }

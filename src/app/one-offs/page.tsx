@@ -4,10 +4,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { formatDayMonth, formatMonth } from "@/components/money/format";
 import { OneOffsView } from "@/components/money/OneOffsView";
 import {
-  listPeriodsMeta,
   monthOverview,
   oneOffsForPeriod,
-  periodParamValue,
   resolvePeriodId,
   type PeriodSearchParams,
 } from "@/lib/queries";
@@ -21,11 +19,11 @@ export default async function OneOffsPage({
   const user = await requireUser();
   const sp = await searchParams;
   const periodId = await resolvePeriodId(user.id, sp);
-  if (periodId === null) {
-    const periods = await listPeriodsMeta(user.id);
-    if (periods.length === 0 && !periodParamValue(sp)) return <EmptyState />;
-    notFound();
-  }
+  // `resolvePeriodId` returns null only when the account owns no periods at
+  // all — an unrecognised ?period= falls back to the current one rather than
+  // failing. So this is "nothing here yet", never "wrong id", and a stale
+  // ?period=5 in a bookmark no longer 404s an empty account (#46).
+  if (periodId === null) return <EmptyState />;
 
   const [overview, oneOffs] = await Promise.all([
     monthOverview(user.id, periodId),

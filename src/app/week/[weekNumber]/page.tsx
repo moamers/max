@@ -6,6 +6,7 @@ import {
   weeklyBreakdown,
   type WeekTotals,
 } from "@/lib/queries";
+import { EmptyState } from "@/components/EmptyState";
 import { lineItemsForPeriod, listGoals } from "@/lib/store";
 import { WEEKLY_CATEGORIES, WEEKLY_CATEGORY_TITLES, type WeeklyCategory } from "@/lib/transactions";
 import { weekDateRange, formatWeekRange, monthNameOf } from "@/components/week/weekDateRange";
@@ -48,7 +49,10 @@ export default async function WeekPage({
   if (!Number.isFinite(weekNumber) || weekNumber < 1) notFound();
 
   const periodId = await resolvePeriodId(user.id, sp);
-  if (periodId === null) notFound();
+  // `resolvePeriodId` returns null only when the account owns no periods at
+  // all — an unrecognised ?period= falls back to the current one rather than
+  // failing. So this is "nothing here yet", never "wrong id" (#46).
+  if (periodId === null) return <EmptyState />;
 
   const [weeks, items, goals, overview] = await Promise.all([
     weeklyBreakdown(user.id, periodId),

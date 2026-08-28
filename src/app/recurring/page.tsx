@@ -4,9 +4,7 @@ import { formatMonth } from "@/components/money/format";
 import { highlightIdFrom } from "@/lib/routes";
 import { EmptyState } from "@/components/EmptyState";
 import {
-  listPeriodsMeta,
   monthOverview,
-  periodParamValue,
   recurringForPeriod,
   resolvePeriodId,
   type PeriodSearchParams,
@@ -21,11 +19,11 @@ export default async function RecurringPage({
   const user = await requireUser();
   const sp = await searchParams;
   const periodId = await resolvePeriodId(user.id, sp);
-  if (periodId === null) {
-    const periods = await listPeriodsMeta(user.id);
-    if (periods.length === 0 && !periodParamValue(sp)) return <EmptyState />;
-    notFound();
-  }
+  // `resolvePeriodId` returns null only when the account owns no periods at
+  // all — an unrecognised ?period= falls back to the current one rather than
+  // failing. So this is "nothing here yet", never "wrong id", and a stale
+  // ?period=5 in a bookmark no longer 404s an empty account (#46).
+  if (periodId === null) return <EmptyState />;
 
   const [overview, recurring] = await Promise.all([
     monthOverview(user.id, periodId),

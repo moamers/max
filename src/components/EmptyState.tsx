@@ -1,7 +1,23 @@
 import { Button } from "@/components/ui/Button";
+import { StartFirstPeriod } from "@/components/StartFirstPeriod";
+import { dominantMonth, proposeFirstPeriod } from "@/lib/periods";
 
-/** Shared first-import state for every period-backed main screen. */
+const MONTH = new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" });
+
+/**
+ * Shared first-import state for every period-backed main screen.
+ *
+ * Offers both routes in (#46): import a file, or start a month now and type
+ * transactions straight in. Neither writes anything until it is pressed —
+ * `proposeFirstPeriod` is pure date arithmetic, so rendering this screen
+ * proposes a month without creating one.
+ */
 export function EmptyState() {
+  const proposal = proposeFirstPeriod();
+  const month = MONTH.format(
+    dominantMonth(new Date(`${proposal.startDate}T00:00:00Z`), new Date(`${proposal.endDate}T00:00:00Z`))
+  );
+
   return (
     <div
       style={{
@@ -29,6 +45,7 @@ export function EmptyState() {
       >
         Import a file
       </Button>
+      <StartFirstPeriod label={month} />
     </div>
   );
 }

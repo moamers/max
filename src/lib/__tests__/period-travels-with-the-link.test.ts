@@ -78,6 +78,21 @@ describe("the period travels with the link", () => {
  * what they were doing. `transactionHome()` answers this now; these files must
  * use it rather than routing by hand.
  */
+/** Every .ts/.tsx file under src, excluding tests. */
+function sourceFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === "__tests__" || entry.name === "node_modules") continue;
+      out.push(...sourceFiles(full));
+    } else if (/\.tsx?$/.test(entry.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
 const MUTATION_FILES = [
   path.join(ROOT, "app", "add", "AddView.tsx"),
   path.join(ROOT, "app", "add", "actions.ts"),
@@ -122,23 +137,43 @@ describe("a write leaves you in the month you made it in", () => {
   });
 
   /**
-   * `redirect()` signals by throwing NEXT_REDIRECT. Every one of these actions
-   * is awaited inside a try/catch, so a redirect thrown here is caught by the
-   * view's own error handler and rendered to the user as the literal text
-   * "next_redirect", in red, next to the Save button. The action returns its
-   * destination instead and the client navigates.
+   * `redirect()` signals by throwing NEXT_REDIRECT. A client component that
+   * awaits such an action inside a try/catch catches that throw and renders it
+   * to the user as the literal text "next_redirect", in red, next to the
+   * button they just pressed. Actions return their destination instead and the
+   * client navigates.
+   *
+   * Discovered rather than listed. The first version of this test named two
+   * files by hand and so missed `rollover-actions.ts`, which had the same bug
+   * the whole time — the point of a guard is to catch the case nobody thought
+   * of.
    */
-  it("no write action redirects out from under the view's error handler", () => {
-    for (const file of [
-      path.join(ROOT, "app", "transaction", "[id]", "actions.ts"),
-      path.join(ROOT, "app", "add", "actions.ts"),
-    ]) {
+  it("no server action reachable from a client component redirects", () => {
+    const files = sourceFiles(ROOT);
+    const serverActions = files.filter((f) => /^\s*["']use server["']/m.test(fs.readFileSync(f, "utf8")));
+    const clientSource = files
+      .filter((f) => /^\s*["']use client["']/m.test(fs.readFileSync(f, "utf8")))
+      .map((f) => fs.readFileSync(f, "utf8"))
+      .join("\n");
+
+    const offenders: string[] = [];
+    for (const file of serverActions) {
       const src = fs.readFileSync(file, "utf8");
-      const calls = src
+      const redirects = src
         .split("\n")
-        .filter((l) => /(?:^|[^.\w])redirect\(/.test(l) && !l.trimStart().startsWith("*") && !l.trimStart().startsWith("//"));
-      expect(calls).toEqual([]);
+        .map((line, i) => ({ line: line.trim(), number: i + 1 }))
+        .filter(({ line }) => /(?:^|[^.\w])redirect\(/.test(line))
+        // Comments explaining why the redirect was removed are not redirects.
+        .filter(({ line }) => !line.startsWith("*") && !line.startsWith("//") && !line.startsWith("/*"));
+      if (redirects.length === 0) continue;
+
+      // "@/app/rollover-actions" — how a client component would name it.
+      const moduleId = `@/${path.relative(ROOT, file).replace(/\.tsx?$/, "")}`;
+      if (!clientSource.includes(`from "${moduleId}"`)) continue;
+
+      offenders.push(`${moduleId}: ${redirects.map((r) => `${r.number}: ${r.line}`).join(", ")}`);
     }
+    expect(offenders).toEqual([]);
   });
 });
 

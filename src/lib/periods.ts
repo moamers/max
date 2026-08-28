@@ -110,13 +110,7 @@ export function periodLabel(start: Date, end: Date): string {
  * B-9: proposal only. The caller shows this end date and lets the user switch
  * to the other whole-week length before it is persisted.
  */
-export function proposeNextPeriod(previousEndIso: string): NextPeriodProposal | null {
-  const previousEnd = validIsoDate(previousEndIso);
-  if (!previousEnd) return null;
-
-  const start = addDays(previousEnd, 1);
-  if (start.getUTCDay() !== 1) return null;
-
+function periodFromMondayStart(start: Date): NextPeriodProposal {
   const fourWeekEnd = addDays(start, 27);
   const fiveWeekEnd = addDays(start, 34);
   const weekCount: 4 | 5 =
@@ -129,6 +123,61 @@ export function proposeNextPeriod(previousEndIso: string): NextPeriodProposal | 
     weekCount,
     label: periodLabel(start, end),
   };
+}
+
+export function proposeNextPeriod(previousEndIso: string): NextPeriodProposal | null {
+  const previousEnd = validIsoDate(previousEndIso);
+  if (!previousEnd) return null;
+
+  const start = addDays(previousEnd, 1);
+  if (start.getUTCDay() !== 1) return null;
+
+  return periodFromMondayStart(start);
+}
+
+/** The first Monday on or after the 1st of `d`'s calendar month. */
+function firstMondayOfMonth(d: Date): Date {
+  const first = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  return addDays(first, (8 - first.getUTCDay()) % 7);
+}
+
+/** The Monday of the week `d` falls in. */
+function mondayOfWeek(d: Date): Date {
+  return addDays(d, -((d.getUTCDay() + 6) % 7));
+}
+
+/**
+ * The period to offer an account that has none yet.
+ *
+ * Starts at the first Monday of the current month rather than at today: every
+ * period in this app is whole Monday-to-Sunday weeks (`proposeNextPeriod`
+ * refuses anything else), so a period starting mid-week would have weeks that
+ * line up with nothing and could never be rolled over from.
+ *
+ * Rolls forward when the month's first period has already finished — late on
+ * the 31st, the four-week period from the 3rd ended yesterday, and offering a
+ * month the user is already past is worse than offering none. The loop
+ * advances at least 28 days each pass, so it terminates; the bound is a
+ * tripwire, not a real limit.
+ */
+export function proposeFirstPeriod(today: Date = new Date()): NextPeriodProposal {
+  const t = utcDay(today);
+  const monthStart = firstMondayOfMonth(t);
+
+  // In the days before the month's first Monday, that period would start in
+  // the future and anything spent today would have nowhere to go. Fall back to
+  // the week today is actually in — `dominantMonth` still names the result for
+  // this month, because that is where most of its days land.
+  const start = t.getTime() < monthStart.getTime() ? mondayOfWeek(t) : monthStart;
+  let proposal = periodFromMondayStart(start);
+
+  for (let guard = 0; guard < 4; guard++) {
+    const end = validIsoDate(proposal.endDate);
+    if (!end || end.getTime() >= t.getTime()) break;
+    proposal = periodFromMondayStart(addDays(end, 1));
+  }
+
+  return proposal;
 }
 
 export function periodHasEnded(endDateIso: string, today: Date = new Date()): boolean {
