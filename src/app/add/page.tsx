@@ -9,6 +9,7 @@ import {
   type TransactionKind,
 } from "@/lib/transactions";
 import { AddView } from "./AddView";
+import { resolveInitialAmount } from "./prefill";
 
 type SearchParams = { [key: string]: string | string[] | undefined };
 
@@ -56,6 +57,7 @@ export default async function AddPage({ searchParams }: { searchParams: Promise<
       initialWeekNumber={resolveWeekNumber(sp)}
       initialWhere={single(sp.where) ?? ""}
       initialLabel={single(sp.label) ?? ""}
+      initialAmount={resolveInitialAmount(sp)}
     />
   );
 }

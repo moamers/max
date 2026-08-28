@@ -9,11 +9,13 @@ import { AmountEditor } from "@/components/capture/AmountEditor";
 import { CategoryChips } from "@/components/capture/CategoryChips";
 import { TextField } from "@/components/capture/TextField";
 import { LabelField } from "@/components/capture/LabelField";
+import { CaptureButton } from "@/components/capture/CaptureButton";
 import { KIND_TITLES, type TransactionCategory } from "@/lib/transactions";
 import type { TransactionDetail } from "./data";
 import { reasoningFor } from "./reasoning";
 import { transactionHome } from "@/lib/routes";
 import { saveTransaction, removeTransaction } from "./actions";
+import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-transaction";
 
 export interface TransactionViewProps {
   detail: TransactionDetail;
@@ -45,11 +47,35 @@ export function TransactionView({ detail }: TransactionViewProps) {
   const [amount, setAmount] = useState(detail.amount);
   const [pending, setPending] = useState(detail.pending);
   const [needsAttention, setNeedsAttention] = useState(detail.needsAttention);
+  const [attentionReason, setAttentionReason] = useState(detail.attentionReason);
+  const [rawImport, setRawImport] = useState(detail.rawImport);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
   const [isDeleting, startDelete] = useTransition();
 
   const reasoning = reasoningFor(detail.kind, category, occurredOn || null);
+
+  function handleCapturedDraft(draft: TransactionExtractionDraft) {
+    if (draft.merchant !== null) setMerchant(draft.merchant);
+    if (draft.amount !== null) setAmount(draft.amount);
+    if (draft.occurredOn !== null) setOccurredOn(draft.occurredOn);
+
+    let nextReason = draft.attentionReason;
+    let nextNeedsAttention = draft.needsAttention;
+    if (draft.kind !== null && draft.kind !== detail.kind) {
+      nextNeedsAttention = true;
+      nextReason = [nextReason, "The image suggests a different transaction kind."].filter(Boolean).join(" ");
+    } else if (draft.kind === detail.kind && detail.kind !== "one_off") {
+      setCategory(draft.category);
+    }
+
+    if (nextNeedsAttention) {
+      setPending(false);
+      setNeedsAttention(true);
+      setAttentionReason(nextReason);
+    }
+    setRawImport(draft.rawImport);
+  }
 
   function handleSave() {
     setError(null);
@@ -64,7 +90,8 @@ export function TransactionView({ detail }: TransactionViewProps) {
           amount,
           pending,
           needsAttention,
-          attentionReason: needsAttention ? detail.attentionReason : null,
+          attentionReason: needsAttention ? attentionReason : null,
+          rawImport,
         });
         // `replace`, not push: the editor is finished with, and after a delete
         // it is a row that no longer exists — Back onto it renders a bare 404.
@@ -107,6 +134,8 @@ export function TransactionView({ detail }: TransactionViewProps) {
             <Pill tone="neutral">{KIND_TITLES[detail.kind]}</Pill>
             {detail.weekNumber !== null && <Pill tone="neutral">week {detail.weekNumber}</Pill>}
           </div>
+
+          <CaptureButton onDraft={handleCapturedDraft} />
 
           <AmountEditor
             amount={amount}
@@ -154,13 +183,13 @@ export function TransactionView({ detail }: TransactionViewProps) {
             <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0, textWrap: "pretty" }}>{reasoning}</p>
           )}
 
-          {needsAttention && detail.attentionReason && (
+          {needsAttention && attentionReason && (
             <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: 13, lineHeight: 1.45 }}>
-              {detail.attentionReason}
+              {attentionReason}
             </div>
           )}
 
-          {detail.rawImport && (
+          {rawImport && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {fieldLabel("As imported")}
               <span
@@ -171,7 +200,7 @@ export function TransactionView({ detail }: TransactionViewProps) {
                   wordBreak: "break-word",
                 }}
               >
-                {detail.rawImport}
+                {rawImport}
               </span>
             </div>
           )}

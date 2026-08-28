@@ -34,8 +34,11 @@ function draft(overrides: Partial<CreateTransactionInput> = {}): CreateTransacti
     label: "",
     note: "",
     amount: 12.65,
+    occurredOn: null,
     pending: false,
     needsAttention: false,
+    attentionReason: null,
+    rawImport: null,
     ...overrides,
   };
 }
@@ -102,5 +105,25 @@ describe("writes happen once, on Add it", () => {
   it("is one insert per save", async () => {
     await createTransaction(draft());
     expect(addTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps source words and screenshot provenance verbatim", async () => {
+    await createTransaction(
+      draft({
+        merchant: "SAINSBURYS S/MKT ",
+        label: "DXB-26 ",
+        occurredOn: "2026-08-18",
+        needsAttention: true,
+        attentionReason: "Max was not sure about the amount.",
+        rawImport: "SAINSBURYS S/MKT  £12.65",
+      })
+    );
+    expect(stored()).toMatchObject({
+      merchant: "SAINSBURYS S/MKT ",
+      label: "DXB-26 ",
+      occurredOn: "2026-08-18",
+      attentionReason: "Max was not sure about the amount.",
+      rawImport: "SAINSBURYS S/MKT  £12.65",
+    });
   });
 });

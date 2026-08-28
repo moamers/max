@@ -16,12 +16,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@keeratita/heic-converter": "^0.3.0",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",
     "next": "16.3.0",
     "postgres": "^3.4.9",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

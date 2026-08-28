@@ -22,6 +22,15 @@ export interface SaveTransactionInput {
   pending: boolean;
   needsAttention: boolean;
   attentionReason: string | null;
+  rawImport: string | null;
+}
+
+function validDateOrNull(value: string | null): boolean {
+  if (value === null) return true;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return date.toISOString().slice(0, 10) === value;
 }
 
 /**
@@ -57,12 +66,17 @@ export async function saveTransaction(
 
   if (!(input.amount > 0)) throw new Error("Add an amount before saving.");
   if (!isValidKindCategory(kind, input.category)) throw new Error("Pick a category before saving.");
+  if (!validDateOrNull(input.occurredOn)) throw new Error("Check the date before saving.");
+  if (input.rawImport && input.rawImport.length > 2_000) throw new Error("The source text is longer than Max can keep.");
+  if (input.attentionReason && input.attentionReason.length > 1_000) throw new Error("The note about this row is longer than Max can keep.");
 
   const ok = await updateTransaction(user.id, id, {
-    merchant: input.merchant.trim() || null,
+    // D-10: validation may inspect the value, but persistence does not rewrite
+    // the user's or source image's words.
+    merchant: input.merchant || null,
     occurredOn: input.occurredOn,
     category: input.category,
-    label: input.label.trim() || null,
+    label: input.label || null,
     note: input.note.trim() || null,
     amount: input.amount,
     pending: input.pending,
@@ -70,6 +84,7 @@ export async function saveTransaction(
     attentionReason: input.needsAttention
       ? input.attentionReason ?? USER_ATTENTION_REASON
       : null,
+    rawImport: input.rawImport,
   });
 
   if (!ok) throw new Error("Couldn't save this transaction — it may no longer exist.");

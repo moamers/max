@@ -9,10 +9,12 @@ import { AmountEditor } from "@/components/capture/AmountEditor";
 import { CategoryChips } from "@/components/capture/CategoryChips";
 import { TextField } from "@/components/capture/TextField";
 import { LabelField } from "@/components/capture/LabelField";
+import { CaptureButton } from "@/components/capture/CaptureButton";
 import { validateAddDraft, categoryStillValidForKind } from "@/components/capture/validation";
 import { KIND_TITLES, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
 import { transactionHome } from "@/lib/routes";
 import { createTransaction } from "./actions";
+import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-transaction";
 
 export interface AddViewProps {
   periodId: number;
@@ -21,6 +23,7 @@ export interface AddViewProps {
   initialWeekNumber: number | null;
   initialWhere: string;
   initialLabel: string;
+  initialAmount: number;
 }
 
 const KIND_OPTIONS: { value: TransactionKind; label: string }[] = [
@@ -45,19 +48,22 @@ function fieldLabel(text: string) {
   );
 }
 
-export function AddView({ periodId, initialKind, initialCategory, initialWeekNumber, initialWhere, initialLabel }: AddViewProps) {
+export function AddView({ periodId, initialKind, initialCategory, initialWeekNumber, initialWhere, initialLabel, initialAmount }: AddViewProps) {
   const router = useRouter();
   const [tab, setTab] = useState<"type" | "upload">("type");
 
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(initialAmount);
   const [pending, setPending] = useState(false);
   const [needsAttention, setNeedsAttention] = useState(false);
   const [where, setWhere] = useState(initialWhere);
+  const [occurredOn, setOccurredOn] = useState("");
   const [kind, setKind] = useState<TransactionKind>(initialKind);
   const [category, setCategory] = useState<TransactionCategory | null>(initialCategory);
   const [weekNumber] = useState<number | null>(initialWeekNumber);
   const [label, setLabel] = useState(initialLabel);
   const [note, setNote] = useState("");
+  const [attentionReason, setAttentionReason] = useState<string | null>(null);
+  const [rawImport, setRawImport] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
@@ -65,6 +71,21 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
   function handleKindChange(next: TransactionKind) {
     setKind(next);
     if (!categoryStillValidForKind(next, category)) setCategory(null);
+  }
+
+  function handleCapturedDraft(draft: TransactionExtractionDraft) {
+    if (draft.merchant !== null) setWhere(draft.merchant);
+    if (draft.amount !== null) setAmount(draft.amount);
+    if (draft.occurredOn !== null) setOccurredOn(draft.occurredOn);
+    if (draft.kind !== null) {
+      setKind(draft.kind);
+      setCategory(draft.category);
+    }
+    setNeedsAttention(draft.needsAttention);
+    if (draft.needsAttention) setPending(false);
+    setAttentionReason(draft.attentionReason);
+    setRawImport(draft.rawImport);
+    setTab("type");
   }
 
   const validation = validateAddDraft({ amount, where, kind, category });
@@ -85,8 +106,11 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
           label,
           note,
           amount,
+          occurredOn: occurredOn || null,
           pending,
           needsAttention,
+          attentionReason,
+          rawImport,
         });
         router.replace(transactionHome(kind, periodId, weekNumber, id));
       } catch (e) {
@@ -145,6 +169,11 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
                 )}
               </div>
 
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {fieldLabel("When")}
+                <TextField type="date" value={occurredOn} onChange={setOccurredOn} label="When" />
+              </div>
+
               <SegmentedControl value={kind} onChange={handleKindChange} options={KIND_OPTIONS} />
 
               {kind !== "one_off" && (
@@ -165,6 +194,21 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
                 <TextField value={note} onChange={setNote} label="Note" placeholder="a note, optional" />
               </div>
 
+              {needsAttention && attentionReason && (
+                <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: 13, lineHeight: 1.45 }}>
+                  {attentionReason}
+                </div>
+              )}
+
+              {rawImport && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {fieldLabel("As read from the image")}
+                  <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", wordBreak: "break-word" }}>
+                    {rawImport}
+                  </span>
+                </div>
+              )}
+
               {error && (
                 <p style={{ fontSize: 13, color: "var(--bar-over)", margin: 0 }} role="alert">
                   {error}
@@ -176,7 +220,7 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
               </Button>
             </>
           ) : (
-            <UploadTab />
+            <UploadTab onDraft={handleCapturedDraft} />
           )}
         </div>
       </Sheet>
@@ -184,12 +228,8 @@ export function AddView({ periodId, initialKind, initialCategory, initialWeekNum
   );
 }
 
-/**
- * Screen 08's Upload tab shape (drop target, "Read it" CTA). Reading a file
- * here isn't wired up; the CTA goes to /import, which does work — it used to
- * go to Home, which answered "read this file" by showing the dashboard.
- */
-function UploadTab() {
+/** Screen 08's Upload tab: one image becomes an editable draft, never a write. */
+function UploadTab({ onDraft }: { onDraft: (draft: TransactionExtractionDraft) => void }) {
   return (
     <div
       style={{
@@ -205,13 +245,13 @@ function UploadTab() {
         textAlign: "center",
       }}
     >
-      <span style={{ fontSize: 15, fontWeight: 600 }}>Drop a file, or paste</span>
+      <span style={{ fontSize: 15, fontWeight: 600 }}>Read a transaction image</span>
       <span style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 260, textWrap: "pretty" }}>
-        Reading a file here isn&apos;t wired up yet. Import takes spreadsheets, or add this one by hand on the Type it tab.
+        Choose a screenshot or photo. You will check every field before anything is saved.
       </span>
-      <Button variant="primary" href="/import" style={{ width: "auto", padding: "0 24px" }}>
-        Read it
-      </Button>
+      <div style={{ width: "100%", maxWidth: 320 }}>
+        <CaptureButton onDraft={onDraft} />
+      </div>
     </div>
   );
 }
