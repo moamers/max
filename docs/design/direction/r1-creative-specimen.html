@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>R1 · D1 creative specimen — “Spare”</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2EEE6; --card:#FFFCF6; --ink:#17150F; --ink-2:#56504A; --ink-3:#6B6459;
+    --rule:#E0D8C8; --clay:#B3502F; --clay-deep:#8C3C21; --clay-wash:#F0E2D9;
+    --serif:"Instrument Serif","Iowan Old Style",Georgia,"Times New Roman",serif;
+    --sans:"Instrument Sans",-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --shadow:0 1px 0 rgba(23,21,15,.04), 0 6px 16px -8px rgba(23,21,15,.10);
+    --hatch:repeating-linear-gradient(45deg,var(--paper) 0 1.5px,var(--ink) 1.5px 3px);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+       font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:56px 24px 96px}
+  h1{font-family:var(--serif);font-weight:400;font-size:52px;line-height:1.02;letter-spacing:-.02em;margin:0 0 8px}
+  h2{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink-3);margin:64px 0 4px}
+  h2 + p.note{margin:0 0 24px;color:var(--ink-2);max-width:62ch}
+  p{max-width:62ch}
+  .lede{color:var(--ink-2);max-width:62ch;margin:0 0 4px}
+  hr{border:0;border-top:1px solid var(--rule);margin:28px 0}
+  .divider{display:flex;align-items:center;gap:10px;margin:28px 0}
+  .divider .line{flex:1;height:1px;background:var(--rule)}
+  .divider .dot{width:7px;height:7px;border-radius:999px;background:var(--ink)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-3)}
+
+  /* palette */
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .sw{border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--card)}
+  .sw .chip{height:76px}
+  .sw .meta{padding:10px 12px 12px}
+  .sw .tok{font-size:13px;font-weight:600;letter-spacing:.02em}
+  .sw .hex{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-3);margin-top:1px}
+  .sw .use{font-size:12px;line-height:1.35;color:var(--ink-2);margin-top:6px}
+  .dark-set{background:#1A1815;border-radius:14px;padding:18px}
+  .dark-set .sw{background:#232019;border-color:#38332B}
+  .dark-set .sw .tok{color:#F3EEE3}.dark-set .sw .hex{color:#8A8377}.dark-set .sw .use{color:#B5AEA1}
+
+  /* type */
+  .row{display:flex;gap:20px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+  .row .spec{flex:0 0 190px;font-size:12px;line-height:1.4;color:var(--ink-3)}
+  .tnum{font-variant-numeric:tabular-nums}
+  .t-display{font-family:var(--serif);font-weight:400;font-size:56px;line-height:54px;letter-spacing:-.02em}
+  .t-title{font-weight:600;font-size:28px;line-height:32px;letter-spacing:-.015em}
+  .t-heading{font-weight:500;font-size:20px;line-height:25px;letter-spacing:-.01em}
+  .t-body{font-weight:400;font-size:17px;line-height:26px}
+  .t-figure{font-weight:600;font-size:17px;line-height:20px}
+  .t-label{font-weight:500;font-size:13px;line-height:16px;letter-spacing:.02em}
+  .t-micro{font-weight:400;font-size:12px;line-height:16px;color:var(--ink-3)}
+
+  /* marks */
+  .marks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+  .mark{border:1px solid var(--rule);border-radius:14px;background:var(--card);padding:20px}
+  .mark .big{color:var(--clay)}
+  .mark .sizes{display:flex;align-items:flex-end;gap:14px;margin-bottom:14px}
+  .mark .sizes .s16{color:var(--ink)}
+  .mark .nm{font-size:13px;font-weight:600}
+  .mark .ds{font-size:12px;line-height:1.45;color:var(--ink-2);margin-top:5px}
+  .icon-box{width:56px;height:56px;border-radius:12px;background:var(--paper);
+            display:flex;align-items:center;justify-content:center;border:1px solid var(--rule)}
+  .lockup{display:flex;align-items:center;gap:11px}
+  .lockup .wm{font-family:var(--serif);font-size:34px;line-height:1;letter-spacing:-.015em}
+
+  /* bars */
+  .bars{border:1px solid var(--rule);border-radius:14px;background:var(--card);padding:20px 22px}
+  .barrow{padding:13px 0}
+  .barrow + .barrow{border-top:1px solid var(--rule)}
+  .barhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+  .track{height:6px;border-radius:3px;background:var(--rule);overflow:hidden}
+  .fill{height:6px;border-radius:3px;background:var(--ink)}
+  .fill.over{background:var(--hatch)}
+
+  /* home mock */
+  .mock{max-width:392px;border:1px solid var(--rule);border-radius:20px;background:var(--paper);padding:26px 22px 30px;box-shadow:var(--shadow)}
+  .mock .brandrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:34px}
+  .clay-link{color:var(--clay);font-weight:600;font-size:13px;letter-spacing:.02em;text-decoration:none;
+             border-bottom:1px solid rgba(179,80,47,.35);padding-bottom:1px}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:13px 0}
+  .kv + .kv{border-top:1px solid var(--rule)}
+  .badcol{background:#0B0B0C;border-radius:14px;padding:16px;color:#fff}
+  .cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;align-items:start}
+  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink-3);margin-bottom:8px}
+  ul.rules{max-width:62ch;padding-left:18px}
+  ul.rules li{margin:7px 0;color:var(--ink-2)}
+  ul.rules li b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="tag">ROUND 1 · CREATIVE DIRECTOR D1</span>
+  <h1>Money on paper,<br>read in daylight.</h1>
+  <p class="lede">Light-first. Three hues. No gradients. No red anywhere in the product — over the
+  line is a <em>texture</em>, not a colour. Exactly one number per screen is allowed to be large,
+  and it is set in a serif.</p>
+  <p class="t-micro">Working name recommendation: <b style="color:var(--ink)">Spare</b> · runner-up: Leeway</p>
+
+  <!-- ─────────── PALETTE ─────────── -->
+  <h2>1 · Palette — Daylight (default)</h2>
+  <p class="note">Every colour has exactly one meaning. Colour never encodes valence: an under-budget
+  week and an over-budget week are the same colour.</p>
+  <div class="sw-grid">
+    <div class="sw"><div class="chip" style="background:#F2EEE6"></div><div class="meta">
+      <div class="tok">paper</div><div class="hex">#F2EEE6</div><div class="use">The app ground. There is one ground, and this is it. Carries a 3% grain.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#FFFCF6;border-bottom:1px solid var(--rule)"></div><div class="meta">
+      <div class="tok">card</div><div class="hex">#FFFCF6</div><div class="use">A raised object. Only real objects get this.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#17150F"></div><div class="meta">
+      <div class="tok">ink</div><div class="hex">#17150F</div><div class="use">Every figure, every heading, every bar fill. 16:1 on paper.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#56504A"></div><div class="meta">
+      <div class="tok">ink-2</div><div class="hex">#56504A</div><div class="use">Sentence copy supporting a figure. 6.3:1.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#6B6459"></div><div class="meta">
+      <div class="tok">ink-3</div><div class="hex">#6B6459</div><div class="use">Labels, units, provenance. 4.6:1 — the floor, not a nicety.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#E0D8C8"></div><div class="meta">
+      <div class="tok">rule</div><div class="hex">#E0D8C8</div><div class="use">1px hairlines, dividers, and every bar track.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#B3502F"></div><div class="meta">
+      <div class="tok">clay</div><div class="hex">#B3502F</div><div class="use">“Look here, or touch this.” The only chromatic. Max two per screen. Never good, never bad.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#8C3C21"></div><div class="meta">
+      <div class="tok">clay-deep</div><div class="hex">#8C3C21</div><div class="use">Pressed / hover state of clay. No other use.</div></div></div>
+    <div class="sw"><div class="chip" style="background:#F0E2D9"></div><div class="meta">
+      <div class="tok">clay-wash</div><div class="hex">#F0E2D9</div><div class="use">Selected / held state fill. One use only.</div></div></div>
+    <div class="sw"><div class="chip" style="background:repeating-linear-gradient(45deg,#F2EEE6 0 1.5px,#17150F 1.5px 3px)"></div><div class="meta">
+      <div class="tok">hatch</div><div class="hex">pattern · 45° · 1.5px on 3px</div><div class="use">Over the line. A different material, not a different temperature.</div></div></div>
+  </div>
+
+  <h2>2 · Palette — Lamplight (opt-in, designed separately)</h2>
+  <p class="note">Not a remap. Warm charcoal ground, never near-black. Dark clay is <em>higher</em> in
+  luminance and <em>lower</em> in chroma, so it sits in the page instead of emitting.</p>
+  <div class="dark-set">
+    <div class="sw-grid">
+      <div class="sw"><div class="chip" style="background:#1A1815"></div><div class="meta">
+        <div class="tok">paper</div><div class="hex">#1A1815</div><div class="use">Warm charcoal. Not #0B0B0C.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#232019"></div><div class="meta">
+        <div class="tok">card</div><div class="hex">#232019</div><div class="use">+1 step, plus a rule border. No shadows in dark.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F3EEE3"></div><div class="meta">
+        <div class="tok">ink</div><div class="hex">#F3EEE3</div><div class="use">Warm white. Never #FFFFFF.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#B5AEA1"></div><div class="meta">
+        <div class="tok">ink-2</div><div class="hex">#B5AEA1</div><div class="use">Supporting copy, one weight lighter than in light.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#38332B"></div><div class="meta">
+        <div class="tok">rule</div><div class="hex">#38332B</div><div class="use">Hairlines and card borders.</div></div></div>
+      <div class="sw"><div class="chip" style="background:#D98A66"></div><div class="meta">
+        <div class="tok">clay</div><div class="hex">#D98A66</div><div class="use">Same identity, de-glowed. Still max two per screen.</div></div></div>
+    </div>
+  </div>
+
+  <!-- ─────────── TYPE ─────────── -->
+  <h2>3 · Type — Instrument Serif (display only) + Instrument Sans</h2>
+  <p class="note">Mono numerals are gone. Alignment comes from <code>font-variant-numeric: tabular-nums</code>,
+  not from a terminal face. The serif is physically unusable below ~40px, which is how the
+  “one big number per screen” rule enforces itself.</p>
+
+  <div class="row"><div class="spec">display · 56/54 · serif 400<br>−0.02em · tabular<br><b>the one figure. nothing else.</b></div>
+    <div class="t-display tnum">£3,027.24</div></div>
+  <div class="row"><div class="spec">title · 28/32 · sans 600 · −0.015em<br>one per screen</div>
+    <div class="t-title">17 – 23 August</div></div>
+  <div class="row"><div class="spec">heading · 20/25 · sans 500</div>
+    <div class="t-heading">This week</div></div>
+  <div class="row"><div class="spec">body · 17/26 · sans 400<br>17, not 16 — a phone-in-hand read</div>
+    <div class="t-body" style="max-width:34ch">1 week to go. Spend the weekly budget that’s left and this is where August lands.</div></div>
+  <div class="row"><div class="spec">figure · 17/20 · sans 600 · tabular<br>every money figure that isn’t the display one</div>
+    <div class="t-figure tnum">£705.71 &nbsp;<span class="t-label" style="color:var(--ink-3)">left</span></div></div>
+  <div class="row"><div class="spec">label · 13/16 · sans 500 · +0.02em<br><b>sentence case — never all-caps</b></div>
+    <div class="t-label" style="color:var(--ink-3)">Forecast · spare on 30 Aug</div></div>
+  <div class="row"><div class="spec">micro · 12/16 · sans 400 · ink-3</div>
+    <div class="t-micro">From 3 imported rows · tap to open</div></div>
+  <p class="t-micro" style="margin-top:14px">Weights available: 400, 500, 600. Nothing heavier exists.
+  Line length capped at 62 characters; content column capped at 520px on every viewport.</p>
+
+  <!-- ─────────── MARKS ─────────── -->
+  <h2>4 · The mark — three concepts</h2>
+  <p class="note">Tests each must pass: legible at 16px in one colour; not a fruit, coin, wallet, pig,
+  chart, arrow or shield; carries <em>room</em> rather than <em>growth</em>; two elements or fewer.
+  Shown at 48px in clay and at 16px in ink. The geometry is fixed and is never bound to data.</p>
+  <div class="marks">
+
+    <div class="mark">
+      <div class="sizes">
+        <svg class="big" width="48" height="48" viewBox="0 0 48 48" aria-label="Open ring mark">
+          <circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="6"
+                  stroke-linecap="round" stroke-dasharray="83.2 17.3" transform="rotate(-14 24 24)"/>
+        </svg>
+        <svg class="s16" width="16" height="16" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="16" fill="none" stroke="currentColor" stroke-width="8"
+                  stroke-linecap="round" stroke-dasharray="83.2 17.3" transform="rotate(-14 24 24)"/>
+        </svg>
+      </div>
+      <div class="nm">M1 · The Open Ring</div>
+      <div class="ds">The month, unclosed. A fixed 62° gap on the upper-right diagonal is the room you
+      have left. The gap never moves and is never bound to a value — the moment it does, it is a
+      progress ring, which is a breakable mechanic and is banned.</div>
+    </div>
+
+    <div class="mark">
+      <div class="sizes">
+        <svg class="big" width="48" height="48" viewBox="0 0 48 48" aria-label="Basin mark">
+          <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="29" cy="23" r="4" fill="currentColor"/>
+        </svg>
+        <svg class="s16" width="16" height="16" viewBox="0 0 48 48">
+          <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="29" cy="23" r="5" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="nm">M2 · The Basin &nbsp;<span style="color:var(--clay)">— recommended</span></div>
+      <div class="ds">Where the month lands. One open bowl, one resting dot, sat right of centre so it
+      reads as <em>settled, with room either side</em> rather than balanced. A catch, a cupped hand, a
+      valley floor. The bowl always opens upward.</div>
+    </div>
+
+    <div class="mark">
+      <div class="sizes">
+        <svg class="big" width="48" height="48" viewBox="0 0 48 48" aria-label="Rule and dot mark">
+          <path d="M8 32 H40" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="30" cy="19" r="4.5" fill="currentColor"/>
+        </svg>
+        <svg class="s16" width="16" height="16" viewBox="0 0 48 48">
+          <path d="M8 32 H40" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="30" cy="18" r="5.5" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="nm">M3 · The Rule and the Dot</div>
+      <div class="ds">The line is the budget, the dot is where you are, the gap between them is the
+      product. Strongest as the recurring UI divider (below) rather than as a standalone icon — which
+      is the point: the mark is a compression of something on every screen.</div>
+    </div>
+  </div>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><span class="dot"></span><span class="line"></span></div>
+  <p class="t-micro" style="margin-top:-14px">↑ the M3 device, in use as the section divider</p>
+
+  <h2>5 · Lockups</h2>
+  <div style="display:flex;gap:44px;flex-wrap:wrap;align-items:center;margin-top:14px">
+    <div class="lockup">
+      <svg width="30" height="30" viewBox="0 0 48 48" style="color:var(--clay)">
+        <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="29" cy="23" r="4" fill="currentColor"/></svg>
+      <span class="wm">spare</span>
+    </div>
+    <div class="lockup">
+      <svg width="30" height="30" viewBox="0 0 48 48" style="color:var(--clay)">
+        <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="29" cy="23" r="4" fill="currentColor"/></svg>
+      <span class="wm">leeway</span>
+    </div>
+    <div class="icon-box" style="background:var(--paper)">
+      <svg width="34" height="34" viewBox="0 0 48 48" style="color:var(--clay)">
+        <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="29" cy="23" r="4" fill="currentColor"/></svg>
+    </div>
+    <span class="t-micro">app icon: clay on paper — the one place the chromatic earns its keep</span>
+  </div>
+
+  <!-- ─────────── BARS ─────────── -->
+  <h2>6 · The bar, re-materialised</h2>
+  <p class="note">Magnitude still lives in the number — the grammar is untouched. What changes is the
+  material. Over the line is the <em>same colour</em> in a hatched fill: a different kind of thing, not
+  a hotter one. This needs ratification against <code>AGENTS.md</code> non-negotiable 2, which
+  currently specifies red.</p>
+  <div class="bars">
+    <div class="barrow">
+      <div class="barhead"><span class="t-heading">Everyday</span>
+        <span class="t-figure tnum">£210.45 <span class="t-label" style="color:var(--ink-3)">left of £260</span></span></div>
+      <div class="track"><div class="fill" style="width:19%"></div></div>
+    </div>
+    <div class="barrow">
+      <div class="barhead"><span class="t-heading">Weekend</span>
+        <span class="t-figure tnum">£29.21 <span class="t-label" style="color:var(--ink-3)">left of £190</span></span></div>
+      <div class="track"><div class="fill" style="width:85%"></div></div>
+    </div>
+    <div class="barrow">
+      <div class="barhead"><span class="t-heading">Transport</span>
+        <span class="t-figure tnum">£18.40 <span class="t-label" style="color:var(--ink-3)">past £95</span></span></div>
+      <div class="track"><div class="fill over" style="width:100%"></div></div>
+    </div>
+  </div>
+  <p class="t-micro" style="margin-top:10px">No lime→amber ramp. A bar’s fill is one flat colour at
+  every fill level, and the third row is not louder than the first.</p>
+
+  <!-- ─────────── BEFORE / AFTER ─────────── -->
+  <h2>7 · The top of home — what changes</h2>
+  <div class="cmp">
+    <div>
+      <span class="tag">CURRENT</span>
+      <div class="badcol">
+        <div style="border-radius:14px;padding:18px;background:linear-gradient(135deg,#C9F24A,#7CE8A4 45%,#5BD9E8);color:#0B0B0C">
+          <div style="font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em">FORECAST · SPARE ON 30 AUG</div>
+          <div style="font-size:40px;font-weight:800;letter-spacing:-.03em;margin:6px 0 4px">£3,027.24</div>
+          <div style="font-size:13px">1 week to go. Spend the weekly budget that’s left and this is where August lands.</div>
+        </div>
+        <div style="height:12px"></div>
+        <div style="background:#161618;border-radius:12px;padding:14px;display:flex;justify-content:space-between">
+          <span style="font-weight:700">Recurring</span><span style="font-weight:700">£3,767.70</span></div>
+        <div style="height:10px"></div>
+        <div style="background:#161618;border-radius:12px;padding:14px;display:flex;justify-content:space-between">
+          <span style="font-weight:700">One-offs</span><span style="font-weight:700">£573</span></div>
+      </div>
+      <p class="t-micro" style="margin-top:10px">A borrowed gradient, the brightest object on screen at
+      the top, then identical grey boxes carrying four different kinds of thing.</p>
+    </div>
+
+    <div>
+      <span class="tag">PROPOSED</span>
+      <div class="mock">
+        <div class="brandrow">
+          <div class="lockup"><svg width="22" height="22" viewBox="0 0 48 48" style="color:var(--clay)">
+            <path d="M9 14 C 9 34, 39 34, 39 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="29" cy="23" r="4" fill="currentColor"/></svg>
+            <span class="t-label" style="color:var(--ink-3)">August</span></div>
+          <span class="t-label" style="color:var(--ink-3)">wk 4 of 4</span>
+        </div>
+        <div class="t-label" style="color:var(--ink-3)">Forecast · spare on 30 Aug</div>
+        <div class="t-display tnum" style="margin:8px 0 12px">£3,027.24</div>
+        <div class="t-body" style="color:var(--ink-2)">1 week to go. Spend the weekly budget that’s
+          left and this is where August lands.</div>
+        <div style="margin-top:12px"><a class="clay-link" href="#">Where this comes from</a></div>
+        <hr>
+        <div class="kv"><span class="t-label" style="color:var(--ink-3)">This week, left</span>
+          <span class="t-figure tnum">£705.71</span></div>
+        <div class="kv"><span class="t-label" style="color:var(--ink-3)">Recurring</span>
+          <span class="t-figure tnum">£3,767.70</span></div>
+        <div class="kv"><span class="t-label" style="color:var(--ink-3)">One-offs</span>
+          <span class="t-figure tnum">£573.00</span></div>
+      </div>
+      <p class="t-micro" style="margin-top:10px">One large figure, on paper, with nothing behind it.
+      Hairlines instead of boxes. One clay element (the provenance link), one held in reserve.
+      Illustrative only — layout and disclosure are D3’s call.</p>
+    </div>
+  </div>
+
+  <!-- ─────────── RULES ─────────── -->
+  <h2>8 · The rules, in short</h2>
+  <ul class="rules">
+    <li><b>Light is the default.</b> Dark ships, is designed separately, and is never a token-for-token remap.</li>
+    <li><b>Three hues exist:</b> paper, ink, clay. A fourth is a bug.</li>
+    <li><b>No red anywhere in the product</b> — including errors and destructive actions.</li>
+    <li><b>Colour never encodes valence.</b> Under and over are the same colour.</li>
+    <li><b>Max two clay elements per screen.</b> Countable in a screenshot.</li>
+    <li><b>Categories are never colour-coded</b> — no swatch, dot, tint or pictogram on a user’s own word.</li>
+    <li><b>Zero gradients in <code>src/</code></b>, and exactly one <code>repeating-linear-gradient</code>: the hatch.</li>
+    <li><b>Exactly one element per screen is ≥40px</b>, and the serif is used only at ≥40px.</li>
+    <li><b>Weights 400 / 500 / 600 only.</b> No all-caps letterspaced text, anywhere.</li>
+    <li><b>Every money figure sets <code>tabular-nums</code>;</b> mono survives only inside raw statement provenance.</li>
+    <li><b>Content column capped at 520px / 62 characters</b> on every viewport.</li>
+    <li><b>Icons:</b> 24px grid, 1.75px stroke, no fills, 18 max — a nineteenth means deleting one.</li>
+    <li><b>Two radii (4 / 14 / 999) and one shadow token.</b> Nothing else casts a shadow.</li>
+    <li><b>The mark’s geometry is never data-bound.</b> No part of the logo animates to show a value.</li>
+    <li><b>Three visual signatures</b> — the one serif figure, no red, paper. A fourth retires one.</li>
+  </ul>
+
+  <div class="divider" aria-hidden="true"><span class="line"></span><span class="dot"></span><span class="line"></span></div>
+  <p class="t-micro">Full argument, the case against the current direction, the name candidates and the
+  numbered rules: <code>docs/design/direction/r1-creative-direction.md</code></p>
+
+</div>
+</body>
+</html>

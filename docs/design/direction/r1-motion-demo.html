@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Max — three signature moments (R1, D2)</title>
+<style>
+/* ---------------------------------------------------------------
+   TOKENS. Nothing in this file uses a duration or curve outside these.
+   --k is the review speed multiplier (1x / 0.25x), not a design token.
+   --------------------------------------------------------------- */
+:root{
+  --k:1;
+  --d-tap:    calc(90ms  * var(--k));
+  --d-tick:   calc(140ms * var(--k));
+  --d-move:   calc(220ms * var(--k));
+  --d-travel: calc(320ms * var(--k));
+  --d-settle: calc(480ms * var(--k));
+  --e-standard: cubic-bezier(.2,0,0,1);
+  --e-enter:    cubic-bezier(.05,.7,.1,1);
+  --e-exit:     cubic-bezier(.3,0,.8,.15);
+  --e-settle:   cubic-bezier(.34,1.2,.64,1);
+
+  /* PROVISIONAL GREYS + ONE ACCENT. The palette is D1's job, not mine. */
+  --bg:#131416; --surface:#1c1e21; --surface2:#25282c; --line:#33373c;
+  --ink:#f1f2f3; --dim:#878e95; --dimmer:#5c6369;
+  --accent:#6f7bff; --accent-ink:#ffffff;
+  --past:#b8794a; /* placeholder for "the over colour" — D1 decides */
+}
+html.reduced{ --d-tick:var(--d-tap); --d-move:var(--d-tap); --d-travel:var(--d-tap); --d-settle:var(--d-tap); }
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b0c0d;color:var(--ink);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex;justify-content:center;min-height:100vh;overscroll-behavior-y:none}
+.frame{width:100%;max-width:414px;background:var(--bg);display:flex;flex-direction:column;min-height:100vh;position:relative;overflow:hidden}
+
+/* chrome ------------------------------------------------------- */
+.chrome{padding:10px 12px 8px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
+.tabs{display:flex;gap:6px}
+.tab{flex:1;padding:9px 4px;border:1px solid var(--line);background:transparent;color:var(--dim);
+  border-radius:9px;font:600 12px/1 inherit;letter-spacing:.02em;cursor:pointer;
+  transition:color var(--d-tick) var(--e-standard),background var(--d-tick) var(--e-standard),border-color var(--d-tick) var(--e-standard)}
+.tab[aria-selected="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.knobs{display:flex;gap:14px;align-items:center;margin-top:9px;font-size:11px;color:var(--dim)}
+.knob{display:flex;gap:6px;align-items:center;cursor:pointer;user-select:none}
+.knob input{accent-color:var(--accent);margin:0}
+.note{font-size:10.5px;color:var(--dimmer);margin-left:auto;text-align:right;line-height:1.3}
+
+.panel{display:none;flex:1;padding:18px 20px 40px;animation:none}
+.panel.on{display:block}
+.cap{margin:22px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.5;color:var(--dimmer)}
+.cap b{color:var(--dim);font-weight:600}
+
+.kicker{font:600 10.5px/1 inherit;letter-spacing:.11em;text-transform:uppercase;color:var(--dim)}
+.big{font:700 40px/1.02 inherit;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.sub{font-size:13px;color:var(--dim);margin-top:8px}
+
+/* ================= 1 · THE DECK ================= */
+.hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+.hdr h1{font:700 21px/1 inherit;margin:0;letter-spacing:-.01em}
+.hdr span{font-size:11.5px;color:var(--dim)}
+.deck{margin:0 -20px;overflow:hidden;touch-action:pan-y}
+.track{display:flex;gap:12px;will-change:transform}
+.card{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;
+  padding:20px 20px 18px;transform-origin:50% 50%;will-change:transform,opacity;cursor:pointer}
+.card .big{margin-top:10px}
+.detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--d-travel) var(--e-standard)}
+.card.open .detail{grid-template-rows:1fr}
+.detail>div{overflow:hidden}
+.drow{display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-top:1px solid var(--line);
+  color:var(--dim);opacity:0;transform:translateY(6px);
+  transition:opacity var(--d-move) var(--e-enter),transform var(--d-move) var(--e-enter)}
+.drow:first-child{margin-top:16px}
+.drow b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.card.open .drow{opacity:1;transform:none}
+.card.open .drow:nth-child(1){transition-delay:0ms}
+.card.open .drow:nth-child(2){transition-delay:calc(30ms*var(--k))}
+.card.open .drow:nth-child(3){transition-delay:calc(60ms*var(--k))}
+.card.open .drow:nth-child(n+4){transition-delay:calc(90ms*var(--k))} /* stagger capped at 4 / 120ms */
+.hint{font-size:11px;color:var(--dimmer);margin-top:14px}
+.card.open .hint{color:var(--dim)}
+.pager{overflow:hidden;margin:16px -20px 0;height:18px}
+.pagerTrack{display:flex;gap:22px;width:max-content;will-change:transform}
+.pagerTrack span{font:600 11.5px/1 inherit;letter-spacing:.02em;white-space:nowrap}
+
+/* ================= 2 · THE TRACE ================= */
+.fig{display:inline-block;position:relative;cursor:pointer;font-variant-numeric:tabular-nums}
+.fig::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--accent);
+  transform:scaleX(0);transform-origin:0 50%;transition:transform var(--d-tick) var(--e-standard)}
+.fig.open::after{transform:scaleX(1)}
+html.reduced .fig::after{transition:none}
+.evi{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--d-travel) var(--e-standard)}
+.evi.open{grid-template-rows:1fr}
+.evi>div{overflow:hidden}
+html.reduced .evi{transition:none}
+html.reduced .evi>div>div{transition:opacity var(--d-tap) linear}
+.eviBox{margin:14px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
+.erow{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:10px 0;border-bottom:1px solid var(--line);
+  color:var(--dim);opacity:0;transform:translateY(6px);
+  transition:opacity var(--d-move) var(--e-enter),transform var(--d-move) var(--e-enter)}
+.erow:last-child{border-bottom:0}
+.erow b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.erow small{display:block;color:var(--dimmer);font-size:10.5px;margin-top:2px}
+.evi.open .erow{opacity:1;transform:none}
+.evi.open .erow:nth-child(1){transition-delay:0ms}
+.evi.open .erow:nth-child(2){transition-delay:calc(30ms*var(--k))}
+.evi.open .erow:nth-child(3){transition-delay:calc(60ms*var(--k))}
+.evi.open .erow:nth-child(n+4){transition-delay:calc(90ms*var(--k))}
+.catRow{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:10px}
+.catTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.catTop .nm{font-weight:600;font-size:15px}
+.catTop .amt{font-size:15px;font-weight:600}
+.catTop .of{font-size:11.5px;color:var(--dim)}
+
+/* the one bar grammar — track is the budget, fill is spend */
+.bar{height:8px;border-radius:99px;background:var(--surface2);margin-top:12px;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--accent);width:0}
+.over .fill{background:var(--past)}
+.over .fill,.fill{transition:background-color var(--d-tick) var(--e-standard)}
+
+/* ================= 3 · THE LANDING ================= */
+.stage{position:relative;min-height:430px}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--surface2);display:inline-block;margin-right:9px;vertical-align:1px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border:1px solid var(--line);
+  border-radius:22px;padding:18px 18px 20px;box-shadow:0 -18px 40px rgba(0,0,0,.45)}
+.sheet.out{transform:translateY(12px);opacity:0;pointer-events:none;
+  transition:transform var(--d-move) var(--e-exit),opacity var(--d-move) var(--e-exit)}
+.sheet.in{transform:none;opacity:1;
+  transition:transform var(--d-travel) var(--e-enter),opacity var(--d-travel) var(--e-enter)}
+.amtWrap{display:flex;align-items:baseline;gap:2px;margin:4px 0 16px}
+.amtWrap span{font:700 30px/1 inherit}
+.amtWrap input{font:700 30px/1 inherit;color:var(--ink);background:transparent;border:0;width:120px;padding:0;
+  font-variant-numeric:tabular-nums;outline:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 13px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--dim);
+  font:600 12.5px/1 inherit;cursor:pointer;
+  transition:color var(--d-tick) var(--e-standard),background var(--d-tick) var(--e-standard),border-color var(--d-tick) var(--e-standard)}
+.chip[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.go{width:100%;margin-top:16px;padding:15px;border:0;border-radius:99px;background:var(--accent);color:var(--accent-ink);
+  font:700 15px/1 inherit;cursor:pointer;transition:transform var(--d-tap) var(--e-standard)}
+.go:active{transform:scale(.98)}
+.ghost{width:100%;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:99px;background:transparent;
+  color:var(--dim);font:600 12.5px/1 inherit;cursor:pointer}
+.flyer{position:fixed;z-index:99;pointer-events:none;left:0;top:0;will-change:transform}
+.flyerInner{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:7px 13px;
+  font:700 15px/1 inherit;font-variant-numeric:tabular-nums;white-space:nowrap;transform-origin:50% 50%;will-change:transform,opacity}
+.landed{animation:pointAt var(--d-tap) linear}
+@keyframes pointAt{from{opacity:.6}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <div class="chrome">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true"  data-p="deck">1 · Deck</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="trace">2 · Trace</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="land">3 · Landing</button>
+    </div>
+    <div class="knobs">
+      <label class="knob"><input type="checkbox" id="kSlow"> 0.25&times;</label>
+      <label class="knob"><input type="checkbox" id="kRed"> reduced motion</label>
+      <div class="note">Provisional greys + one accent.<br>Palette is D1&rsquo;s job.</div>
+    </div>
+  </div>
+
+  <!-- ============ 1 · THE DECK ============ -->
+  <section class="panel on" id="p-deck">
+    <div class="hdr"><h1>August</h1><span>29 Aug &middot; wk 4 of 4</span></div>
+
+    <div class="deck" id="deck">
+      <div class="track" id="track">
+        <article class="card">
+          <div class="kicker">Forecast &middot; spare on 30 Aug</div>
+          <div class="big">&pound;3,027.24</div>
+          <div class="sub">1 week to go. Spend the weekly budget that&rsquo;s left and this is where August lands.</div>
+          <div class="detail"><div>
+            <div class="drow"><span>Income so far</span><b>&pound;6,520.70</b></div>
+            <div class="drow"><span>Expected by 30 Aug</span><b>&pound;9,547.94</b></div>
+            <div class="drow"><span>Committed</span><b>&pound;4,340.70</b></div>
+          </div></div>
+          <div class="hint">Tap to expand &middot; swipe for the next card</div>
+        </article>
+
+        <article class="card">
+          <div class="kicker">Weeks &middot; this month</div>
+          <div class="big">&pound;705.71<span style="font-size:16px;color:var(--dim);font-weight:600"> left</span></div>
+          <div class="sub">&pound;1,474.29 spent of &pound;2,180 across four weeks.</div>
+          <div class="detail"><div>
+            <div class="drow"><span>Week 1</span><b>&pound;486.10</b></div>
+            <div class="drow"><span>Week 2</span><b>&pound;443.19</b></div>
+            <div class="drow"><span>Week 3</span><b>&pound;299.32</b></div>
+            <div class="drow"><span>Week 4 so far</span><b>&pound;245.68</b></div>
+          </div></div>
+          <div class="hint">Tap to expand &middot; swipe for the next card</div>
+        </article>
+
+        <article class="card">
+          <div class="kicker">Commitments</div>
+          <div class="big">&pound;4,340.70</div>
+          <div class="sub">Recurring and one-offs already accounted for this month.</div>
+          <div class="detail"><div>
+            <div class="drow"><span>Recurring</span><b>&pound;3,767.70</b></div>
+            <div class="drow"><span>One-offs</span><b>&pound;573.00</b></div>
+          </div></div>
+          <div class="hint">Tap to expand &middot; swipe for the next card</div>
+        </article>
+
+        <article class="card">
+          <div class="kicker">2026 &middot; net position</div>
+          <div class="big">+&pound;11,806.05</div>
+          <div class="sub">Where the year stands, on the same basis as every month above.</div>
+          <div class="detail"><div>
+            <div class="drow"><span>In</span><b>&pound;71,204.18</b></div>
+            <div class="drow"><span>Out</span><b>&pound;59,398.13</b></div>
+          </div></div>
+          <div class="hint">Tap to expand &middot; swipe back</div>
+        </article>
+      </div>
+    </div>
+
+    <div class="pager"><div class="pagerTrack" id="pagerTrack">
+      <span>Forecast</span><span>Weeks</span><span>Commitments</span><span>Year</span>
+    </div></div>
+
+    <p class="cap"><b>Watch:</b> peers scale and dim <i>continuously</i> with the drag &mdash; a half-swipe looks
+    half-committed. The label row parallaxes at ~0.4&times;. Release commits on velocity <i>or</i> distance, snapping on
+    320ms/standard. Expanded rows stagger 30ms, capped at four. Nothing navigates; the nine figures did not leave,
+    they stopped being simultaneous.</p>
+  </section>
+
+  <!-- ============ 2 · THE TRACE ============ -->
+  <section class="panel" id="p-trace">
+    <div class="kicker">August &middot; week 3</div>
+    <h1 style="font:700 26px/1.1 inherit;margin:6px 0 18px;letter-spacing:-.02em">17 &ndash; 23 Aug</h1>
+
+    <div class="big"><span class="fig" data-evi="e1">&pound;245.68</span> <span style="font-size:20px;color:var(--dim);font-weight:600">left</span></div>
+    <div class="sub">of &pound;545 &middot; &pound;299.32 spent</div>
+    <div class="bar"><div class="fill" style="width:54.9%"></div></div>
+    <div class="evi" id="e1"><div><div class="eviBox">
+      <div class="erow"><span>Weekly budget<small>set by you, 3 Aug</small></span><b>&pound;545.00</b></div>
+      <div class="erow"><span>Spent, 17&ndash;23 Aug<small>41 transactions</small></span><b>&minus;&pound;299.32</b></div>
+      <div class="erow"><span>Left<small>budget minus spend, nothing else</small></span><b>&pound;245.68</b></div>
+    </div></div></div>
+
+    <div class="catRow">
+      <div class="catTop"><span class="nm">Everyday</span>
+        <span><span class="amt fig" data-evi="e2">&pound;210.45</span> <span class="of">of &pound;260</span></span></div>
+      <div class="bar"><div class="fill" style="width:19.1%"></div></div>
+      <div class="evi" id="e2"><div><div class="eviBox">
+        <div class="erow"><span>Tesco Express<small>19 Aug &middot; statement line 214</small></span><b>&minus;&pound;18.40</b></div>
+        <div class="erow"><span>Pret<small>20 Aug &middot; statement line 227</small></span><b>&minus;&pound;9.15</b></div>
+        <div class="erow"><span>Sainsbury&rsquo;s<small>21 Aug &middot; statement line 238</small></span><b>&minus;&pound;22.00</b></div>
+        <div class="erow"><span>+ 9 more<small>tap any line to see the source row</small></span><b>&minus;&pound;0.00</b></div>
+      </div></div></div>
+    </div>
+
+    <div class="catRow">
+      <div class="catTop"><span class="nm">Weekend</span>
+        <span><span class="amt fig" data-evi="e3">&pound;29.21</span> <span class="of">of &pound;190</span></span></div>
+      <div class="bar"><div class="fill" style="width:84.6%"></div></div>
+      <div class="evi" id="e3"><div><div class="eviBox">
+        <div class="erow"><span>The Crown<small>22 Aug &middot; statement line 251</small></span><b>&minus;&pound;64.30</b></div>
+        <div class="erow"><span>Curzon<small>23 Aug &middot; statement line 259</small></span><b>&minus;&pound;27.00</b></div>
+        <div class="erow"><span>+ 6 more<small>tap any line to see the source row</small></span><b>&minus;&pound;0.00</b></div>
+      </div></div></div>
+    </div>
+
+    <p class="cap"><b>Watch:</b> the figure itself never moves, never scales, never recolours &mdash; the underline draws
+    at 140ms and the evidence grows out from under it at 320ms, pushing the page down on the same curve. Open a second
+    figure while one is open: both run concurrently, nothing queues. This is doctrine 5 made physical.</p>
+  </section>
+
+  <!-- ============ 3 · THE LANDING ============ -->
+  <section class="panel" id="p-land">
+    <div class="kicker">August &middot; week 4</div>
+    <h1 style="font:700 26px/1.1 inherit;margin:6px 0 18px;letter-spacing:-.02em">24 &ndash; 30 Aug</h1>
+
+    <div class="stage" id="stage">
+      <div class="catRow" data-row="everyday">
+        <div class="catTop"><span class="nm"><i class="dot"></i>Everyday</span>
+          <span><span class="amt val">&pound;210.45</span> <span class="of">of &pound;260</span></span></div>
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+      <div class="catRow" data-row="weekend">
+        <div class="catTop"><span class="nm"><i class="dot"></i>Weekend</span>
+          <span><span class="amt val">&pound;29.21</span> <span class="of">of &pound;190</span></span></div>
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+      <div class="catRow" data-row="transport">
+        <div class="catTop"><span class="nm"><i class="dot"></i>Transport</span>
+          <span><span class="amt val">&pound;6.02</span> <span class="of">of &pound;95</span></span></div>
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+
+      <div class="sheet in" id="sheet">
+        <div class="kicker">Add it</div>
+        <div class="amtWrap"><span>&pound;</span><input id="amt" inputmode="decimal" value="24.80"></div>
+        <div class="chips" id="dests">
+          <button class="chip" aria-pressed="false" data-row="everyday">Everyday</button>
+          <button class="chip" aria-pressed="true"  data-row="weekend">Weekend</button>
+          <button class="chip" aria-pressed="false" data-row="transport">Transport</button>
+        </div>
+        <button class="go" id="go">Add it</button>
+      </div>
+    </div>
+
+    <button class="ghost" id="replay">Reset and open the sheet again</button>
+
+    <p class="cap"><b>Watch:</b> the write goes at t=0 &mdash; nothing here blocks. The form recedes on 220/exit while the
+    amount chip <i>doesn&rsquo;t</i>; it lifts and arcs (x on standard, y on enter) for 320ms, and only when it lands does
+    the fill settle on 480ms/enter. The thing you did leads; the consequence follows. The number cuts instantly &mdash;
+    it never tweens. The fill never overshoots. Try &pound;40 on Transport to see the over case: same speed, same curve,
+    colour cross-fades only <i>after</i> the settle, and the app never flinches.</p>
+  </section>
+</div>
+
+<script>
+"use strict";
+const root=document.documentElement;
+const T={tap:90,tick:140,move:220,travel:320,settle:480};
+const E={standard:"cubic-bezier(.2,0,0,1)",enter:"cubic-bezier(.05,.7,.1,1)",
+         exit:"cubic-bezier(.3,0,.8,.15)",settle:"cubic-bezier(.34,1.2,.64,1)"};
+let K=1, REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const d=n=>(REDUCED?T.tap:T[n])*K;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const gbp=n=>(n<0?"−£":"£")+Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",");
+function hap(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
+
+/* controls ------------------------------------------------------ */
+const kRed=document.getElementById("kRed"), kSlow=document.getElementById("kSlow");
+kRed.checked=REDUCED; root.classList.toggle("reduced",REDUCED);
+kRed.onchange=()=>{REDUCED=kRed.checked;root.classList.toggle("reduced",REDUCED);measure();};
+kSlow.onchange=()=>{K=kSlow.checked?4:1;root.style.setProperty("--k",K);};
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",String(x===t)));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+t.dataset.p));
+  if(t.dataset.p==="deck") measure();
+});
+
+/* =============== 1 · THE DECK =============== */
+const deck=document.getElementById("deck"), track=document.getElementById("track");
+const cards=[...track.children], pagerTrack=document.getElementById("pagerTrack");
+const labels=[...pagerTrack.children];
+let DW=0,CW=0,STEP=0,OFF=0,idx=0,dx=0, drag=null, centres=[];
+
+function measure(){
+  DW=deck.clientWidth; CW=Math.max(200,DW-64); STEP=CW+12; OFF=(DW-CW)/2;
+  cards.forEach(c=>c.style.width=CW+"px");
+  centres=labels.map(l=>l.offsetLeft+l.offsetWidth/2);
+  render();
+}
+function centreAt(pos){
+  const i=Math.floor(pos), f=pos-i, j=Math.min(i+1,centres.length-1);
+  return centres[i]+(centres[j]-centres[i])*f;
+}
+function render(){
+  const x=OFF-idx*STEP+dx;
+  track.style.transform="translate3d("+x+"px,0,0)";
+  cards.forEach((c,i)=>{
+    const dlt=clamp(Math.abs((x+i*STEP+CW/2-DW/2)/STEP),0,1);
+    if(REDUCED){ c.style.transform="none"; c.style.opacity=(i===idx?1:.5); }
+    else{ c.style.transform="scale("+(1-dlt*.06)+")"; c.style.opacity=(1-dlt*.45); }
+  });
+  const pos=clamp(idx-dx/STEP,0,cards.length-1);
+  pagerTrack.style.transform="translate3d("+(deck.clientWidth/2-centreAt(pos))+"px,0,0)";
+  labels.forEach((l,i)=>{
+    const dd=clamp(Math.abs(i-pos),0,1);
+    l.style.opacity=REDUCED?(i===idx?1:.35):(1-dd*.62);
+    l.style.color=(dd<.5?"var(--ink)":"var(--dim)");
+  });
+}
+function trans(on,dur){
+  const t=on?("transform "+dur+"ms "+E.standard+",opacity "+dur+"ms "+E.standard):"none";
+  track.style.transition=on?("transform "+dur+"ms "+E.standard):"none";
+  pagerTrack.style.transition=track.style.transition;
+  cards.forEach(c=>c.style.transition=t);
+  labels.forEach(l=>l.style.transition=on?("opacity "+dur+"ms "+E.standard+",color "+dur+"ms "+E.standard):"none");
+}
+function snap(target){
+  const committed=target!==idx;
+  idx=clamp(target,0,cards.length-1); dx=0;
+  if(committed){ cards.forEach(c=>c.classList.remove("open")); hap(8); }
+  if(REDUCED){ trans(false); render(); return; }
+  trans(true, committed?d("travel"):d("move"));
+  render();
+  setTimeout(()=>trans(false), (committed?d("travel"):d("move"))+30);
+}
+/* 1:1 tracking while the pointer is down. No easing, no duration. */
+deck.addEventListener("pointerdown",e=>{
+  trans(false);
+  drag={x0:e.clientX,y0:e.clientY,t0:performance.now(),lx:e.clientX,lt:performance.now(),v:0,axis:null,moved:false};
+  deck.setPointerCapture(e.pointerId);
+});
+deck.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  const ddx=e.clientX-drag.x0, ddy=e.clientY-drag.y0;
+  if(!drag.axis && Math.hypot(ddx,ddy)>8) drag.axis=Math.abs(ddx)>Math.abs(ddy)?"x":"y";
+  if(drag.axis!=="x") return;
+  drag.moved=true;
+  const now=performance.now(), dt=Math.max(1,now-drag.lt);
+  drag.v=(e.clientX-drag.lx)/dt; drag.lx=e.clientX; drag.lt=now;
+  const over=(idx===0&&ddx>0)||(idx===cards.length-1&&ddx<0);
+  dx=over?ddx*0.35:ddx;                 /* rubber-band 0.35x at the ends */
+  render();
+});
+function endDrag(e){
+  if(!drag) return;
+  const wasDrag=drag.moved, v=drag.v, moved=dx;
+  drag=null;
+  if(!wasDrag){ const c=e.target.closest(".card"); if(c===cards[idx]) c.classList.toggle("open"); return; }
+  let t=idx;
+  if(Math.abs(v)>0.35) t=idx-Math.sign(v);
+  else if(Math.abs(moved)>CW*0.28) t=idx-Math.sign(moved);
+  snap(t);
+}
+deck.addEventListener("pointerup",endDrag);
+deck.addEventListener("pointercancel",endDrag);
+addEventListener("resize",measure);
+measure();
+
+/* =============== 2 · THE TRACE =============== */
+document.querySelectorAll(".fig").forEach(f=>{
+  f.addEventListener("click",()=>{
+    const panel=document.getElementById(f.dataset.evi), opening=!panel.classList.contains("open");
+    /* opening another closes the first in the same frame — nothing queues */
+    document.querySelectorAll(".evi.open").forEach(p=>{ if(p!==panel) p.classList.remove("open"); });
+    document.querySelectorAll(".fig.open").forEach(x=>{ if(x!==f) x.classList.remove("open"); });
+    panel.classList.toggle("open",opening); f.classList.toggle("open",opening);
+    if(opening) hap(8);
+  });
+});
+addEventListener("keydown",e=>{ if(e.key==="Escape"){
+  document.querySelectorAll(".evi.open,.fig.open").forEach(x=>x.classList.remove("open")); }});
+
+/* =============== 3 · THE LANDING =============== */
+const START={everyday:{left:210.45,budget:260},weekend:{left:29.21,budget:190},transport:{left:6.02,budget:95}};
+let ROWS=structuredClone(START);
+const sheet=document.getElementById("sheet"), amtEl=document.getElementById("amt");
+let dest="weekend";
+document.getElementById("dests").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  dest=b.dataset.row;
+  document.querySelectorAll("#dests .chip").forEach(c=>c.setAttribute("aria-pressed",String(c===b)));
+});
+function rowEl(k){ return document.querySelector('[data-row="'+k+'"].catRow'); }
+function paint(k,animate){
+  const r=ROWS[k], el=rowEl(k), fill=el.querySelector(".fill");
+  el.querySelector(".val").textContent=gbp(r.left);           /* numbers cut, never tween */
+  const pct=clamp((r.budget-r.left)/r.budget,0,1)*100;
+  fill.style.transition=animate&&!REDUCED?("width "+d("settle")+"ms "+E.enter):"none";
+  fill.style.width=pct+"%";
+  const over=r.left<0;
+  const flip=()=>el.classList.toggle("over",over);
+  if(animate&&!REDUCED) setTimeout(flip,d("settle")); else flip();   /* colour only AFTER the settle */
+}
+function resetLanding(){
+  ROWS=structuredClone(START);
+  Object.keys(ROWS).forEach(k=>paint(k,false));
+  sheet.classList.remove("out"); sheet.classList.add("in");
+}
+document.getElementById("replay").onclick=resetLanding;
+
+document.getElementById("go").onclick=()=>{
+  const amount=Math.abs(parseFloat(amtEl.value)||0); if(!amount) return;
+  const target=rowEl(dest), landPad=target.querySelector(".dot");
+  const apply=()=>{ ROWS[dest].left=+(ROWS[dest].left-amount).toFixed(2); paint(dest,true); hap(14); };
+
+  sheet.classList.remove("in"); sheet.classList.add("out");   /* form recedes: 220 / exit */
+
+  if(REDUCED){                                               /* no flight; point the eye instead */
+    apply(); target.classList.add("landed");
+    setTimeout(()=>target.classList.remove("landed"),d("tap")+40);
+    return;
+  }
+  const a=amtEl.getBoundingClientRect(), b=landPad.getBoundingClientRect();
+  const outer=document.createElement("div"); outer.className="flyer";
+  const inner=document.createElement("div"); inner.className="flyerInner";
+  inner.textContent=gbp(amount); outer.appendChild(inner); document.body.appendChild(outer);
+  outer.style.left=(a.left-14)+"px"; outer.style.top=(a.top-4)+"px";
+  const tx=(b.left+b.width/2)-(a.left-14+inner.offsetWidth/2);
+  const ty=(b.top+b.height/2)-(a.top-4+inner.offsetHeight/2);
+  const dur=d("travel");
+  setTimeout(()=>{                                           /* chip starts at t=90 */
+    outer.animate([{transform:"translateX(0)"},{transform:"translateX("+tx+"px)"}],
+      {duration:dur,easing:E.standard,fill:"forwards"});     /* x on standard  */
+    inner.animate([{transform:"translateY(0) scale(1)"},{transform:"translateY("+ty+"px) scale(.72)"}],
+      {duration:dur,easing:E.enter,fill:"forwards"});        /* y on enter -> the path bends */
+    setTimeout(()=>{
+      inner.animate([{opacity:1},{opacity:0}],{duration:d("tick"),easing:E.exit,fill:"forwards"});
+      apply();                                               /* fill settles as the chip lands */
+      setTimeout(()=>outer.remove(),d("tick")+60);
+    },dur);
+  },T.tap*K);
+};
+resetLanding();
+</script>
+</body>
+</html>
