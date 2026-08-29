@@ -524,8 +524,8 @@ is dead — there are now at least two, the scrub and the deck.)
 
 **Rule 15 — restated.** *A haptic marks a change of state, never a touch. At
 most one per state change, and never more than one per 80ms. Exactly three call
-sites exist: the scrub's detent crossing, the tape's open, the landing's touch
-down.*
+sites exist: the scrub's detent crossing, the tape's open, and the instant the
+Landing's chip arrives (t=410) — never the button press.*
 *Fails:* a haptic on tap-down, on an error, on crossing over budget, on a deck
 commit, or anything on a timer.
 
