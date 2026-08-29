@@ -252,7 +252,7 @@ html.reduced .evi>div>div{transition:opacity var(--d-tap) linear}
         <div class="erow"><span>Tesco Express<small>19 Aug &middot; statement line 214</small></span><b>&minus;&pound;18.40</b></div>
         <div class="erow"><span>Pret<small>20 Aug &middot; statement line 227</small></span><b>&minus;&pound;9.15</b></div>
         <div class="erow"><span>Sainsbury&rsquo;s<small>21 Aug &middot; statement line 238</small></span><b>&minus;&pound;22.00</b></div>
-        <div class="erow"><span>+ 9 more<small>tap any line to see the source row</small></span><b>&minus;&pound;0.00</b></div>
+        <div class="erow"><span>+ 9 more<small>every line opens its own source row</small></span><b>&minus;&pound;249.77</b></div>
       </div></div></div>
     </div>
 
@@ -263,7 +263,7 @@ html.reduced .evi>div>div{transition:opacity var(--d-tap) linear}
       <div class="evi" id="e3"><div><div class="eviBox">
         <div class="erow"><span>The Crown<small>22 Aug &middot; statement line 251</small></span><b>&minus;&pound;64.30</b></div>
         <div class="erow"><span>Curzon<small>23 Aug &middot; statement line 259</small></span><b>&minus;&pound;27.00</b></div>
-        <div class="erow"><span>+ 6 more<small>tap any line to see the source row</small></span><b>&minus;&pound;0.00</b></div>
+        <div class="erow"><span>+ 6 more<small>every line opens its own source row</small></span><b>&minus;&pound;69.49</b></div>
       </div></div></div>
     </div>
 
@@ -346,9 +346,10 @@ const labels=[...pagerTrack.children];
 let DW=0,CW=0,STEP=0,OFF=0,idx=0,dx=0, drag=null, centres=[];
 
 function measure(){
-  DW=deck.clientWidth; CW=Math.max(200,DW-64); STEP=CW+12; OFF=(DW-CW)/2;
+  DW=deck.clientWidth; CW=Math.max(200,DW-88); STEP=CW+12; OFF=(DW-CW)/2;
   cards.forEach(c=>c.style.width=CW+"px");
-  centres=labels.map(l=>l.offsetLeft+l.offsetWidth/2);
+  const pr=pagerTrack.getBoundingClientRect();
+  centres=labels.map(l=>{const r=l.getBoundingClientRect();return r.left-pr.left+r.width/2;});
   render();
 }
 function centreAt(pos){
@@ -407,9 +408,11 @@ deck.addEventListener("pointermove",e=>{
 });
 function endDrag(e){
   if(!drag) return;
-  const wasDrag=drag.moved, v=drag.v, moved=dx;
+  const wasDrag=drag.moved, v=drag.v, moved=dx, axis=drag.axis;
   drag=null;
-  if(!wasDrag){ const c=e.target.closest(".card"); if(c===cards[idx]) c.classList.toggle("open"); return; }
+  if(!wasDrag){ /* a real tap only — never a vertical scroll that started here */
+    if(axis===null){ const c=e.target.closest(".card"); if(c===cards[idx]) c.classList.toggle("open"); }
+    return; }
   let t=idx;
   if(Math.abs(v)>0.35) t=idx-Math.sign(v);
   else if(Math.abs(moved)>CW*0.28) t=idx-Math.sign(moved);
@@ -449,7 +452,9 @@ function paint(k,animate){
   const r=ROWS[k], el=rowEl(k), fill=el.querySelector(".fill");
   el.querySelector(".val").textContent=gbp(r.left);           /* numbers cut, never tween */
   const pct=clamp((r.budget-r.left)/r.budget,0,1)*100;
-  fill.style.transition=animate&&!REDUCED?("width "+d("settle")+"ms "+E.enter):"none";
+  fill.style.transition=(animate&&!REDUCED)
+    ? ("width "+d("settle")+"ms "+E.enter+",background-color "+d("tick")+"ms "+E.standard)
+    : ("background-color "+d("tick")+"ms "+E.standard);
   fill.style.width=pct+"%";
   const over=r.left<0;
   const flip=()=>el.classList.toggle("over",over);

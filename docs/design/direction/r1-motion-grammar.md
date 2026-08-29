@@ -117,8 +117,8 @@ simultaneous.
 
 - *At rest.* Live card at `scale 1`, `opacity 1`. Each peer, per unit of
   distance from centre: `scale −0.06`, `opacity −0.45`, clamped at one unit.
-  Card width = container − 64px, gap 12px, so ~44px of the next card and ~16px
-  of the previous are always visible. The deck reads as a deck standing still.
+  Card width = container − 88px, gap 12px, so ~32px of the neighbouring card is
+  always visible on each side. The deck reads as a deck standing still.
 - *During drag.* The track follows the finger 1:1, `transition: none`. Every
   peer's scale and opacity interpolate **continuously** off one normalised
   progress value — a half-swipe looks exactly half-committed. This continuity is
@@ -457,7 +457,7 @@ A reviewer should be able to fail me on any of these mechanically.
   need D1's palette to be judged. Nothing in here assumes dark or light.
 - **Dependency on D3.** The Deck assumes the home screen resolves to *four*
   sibling cards. If D3's information architecture produces three or six, the
-  mechanic survives unchanged but the peek geometry (44px / 16px slivers) needs
+  mechanic survives unchanged but the peek geometry (container − 88px, 32px slivers) needs
   re-deriving. If D3 removes the home card stack entirely, signature 1 dies and
   I owe a replacement, not a patch.
 - **The keystroke rule interacts with this.** The Landing is optimistic and
