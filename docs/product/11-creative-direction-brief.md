@@ -140,10 +140,11 @@ This must go in every brief, at the top.
 | 8 | No database write from a keystroke | This took production down once |
 | — | Works on phone **and** desktop web | Cross-platform constraint in the brief |
 | — | Motion respects `prefers-reduced-motion`, and the app stays fully usable with motion off | Accessibility, and an anxious user may want it still |
+| 2 | The bar grammar — magnitude lives in the number, never in bar length or colour | Founder-confirmed 2026-08-29. Intent and the room it still leaves are in the section below |
 
 ### Open for challenge — the founder has explicitly invited these
 
-- The entire colour palette, including whether dark-first is right at all
+- The entire colour palette, and **whether dark-first is right at all** — three of the four references are light-first apps, see `02-taste-and-signature.md`
 - Typography, including the mono numerals
 - **The name** and **the mark**
 - Density, layout, navigation model, and the card system
@@ -155,9 +156,20 @@ This must go in every brief, at the top.
 or colour; magnitude lives in the number and never in bar length."* It exists so a
 hard month doesn't *look* violent to someone who is already avoidant.
 
-A creative director will collide with this immediately. It is **challengeable, but
-only in writing, and only to the founder** — not quietly designed around. If the
-rule goes, it goes on purpose, with the reason it was written addressed head-on.
+**Decided (2026-08-29).** The founder was asked and delegated the call: *"up to
+you. I like how it is now but up to you."* **The rule stays, and moves to the
+non-negotiable list** — with its intent stated, so directors design with it
+rather than around it.
+
+The intent is narrow: **magnitude must not shout.** It is not "bars must be
+boring." Everything except the mapping from amount to size and colour is open —
+the track's shape, the fill's texture, how it settles into place, its weight,
+its material. A director has a great deal of room here; what they may not do is
+make a hard month *look* worse than a good one by any means other than the
+number.
+
+If a director still wants it opened, the argument goes to the founder and must
+answer one question: *what stops this feeling like a telling-off?*
 
 ---
 
@@ -209,10 +221,34 @@ Two or three screens — home, week, add transaction — built as an interactive
 animated prototype the founder can open on his phone. Not a slide deck, not
 static mockups.
 
-**Gate · Founder review.** Then loop R2→R4 at most twice more.
+**Gate · Founder review.**
 
-The cap is deliberate. "Keep iterating until it's ready" without a bound is how
-this becomes expensive and never lands.
+### Revised after founder pushback (2026-08-29)
+
+The original plan proposed piloting **one** director for one round to measure
+cost before committing. The founder rejected this, correctly:
+
+> I'd run 1 - 2 round of agent run working together to see collaborative output
+> — otherwise I see result from first director and I have to steer it. I don't
+> want that.
+
+He is right, and the pilot idea was wrong. **The steering is the thing he is
+buying.** A single director's output is a half-formed direction that only the
+founder can adjudicate, which lands the work back on him — the exact labour this
+workstream exists to remove. Optimising the pilot for cost destroyed the value
+it was meant to protect.
+
+**So R1→R3 run as one uninterrupted batch. No founder gate until a converged,
+cross-critiqued direction exists.**
+
+The budget control moves to where it costs nothing: **R4 narrows from three
+screens to one.** Building interactive, animated prototypes is the expensive
+part; three of them before anyone has agreed the direction is waste regardless
+of budget. One screen — home, since all three complaints are visible on it —
+proves the direction is real. The other two get built after the founder has seen
+it and steered once, with something coherent to steer.
+
+Then loop at most twice more.
 
 ---
 
@@ -269,19 +305,14 @@ against a moving target.
 
 ---
 
-## 10 · What I need from you before R1
+## 10 · Founder inputs — answered 2026-08-29
 
-Three things, and the second matters most.
+| Asked | Answer |
+|---|---|
+| Is the bar grammar open? | Delegated to me. **Kept**, with intent stated — see §4 |
+| Apps whose feel you love | Monzo, iMessage, Airbnb, Trading 212 (least preferred). Captured with derived rules in `docs/design/direction/02-taste-and-signature.md` |
+| Anything specific you hate beyond the three points | No |
+| Is the rename in scope? | **"Let's find a name but not execute yet."** Name chosen at the gate, rename scheduled separately — as recommended in §9 |
+| Budget | Not set as a number. Controlled structurally instead: fixed context pack, capped images, R4 narrowed to one screen |
 
-1. **Is the bar grammar genuinely open?** (§4). It's the one doctrine the
-   creative work will hit immediately.
-2. **Two or three apps whose feel you love** — any category, not just finance.
-   *"Wow" is undefined without anchors*, and this single input does more for
-   output quality than anything else in this plan. The existing brief names Monzo
-   and Payhawk; if those still hold, say so, and if they don't, that itself is
-   useful.
-3. **A budget ceiling.** Three agents over four rounds is materially more
-   expensive than the feature work to date. I'd rather bound it up front than
-   discover it.
-
-Also worth deciding: is the name change in scope for this round, or parked?
+**Outstanding: the go-ahead itself.** Nothing has been executed.
