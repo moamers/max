@@ -1,0 +1,299 @@
+<title>Poolside</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+
+<style>
+/* ── the page around the work ─────────────────────────────────────── */
+:root{
+  --ground:#EDECE8; --surface:#FFFFFF; --sunk:#E3E2DC;
+  --ink:#1A1A17; --ink-2:#55554E; --ink-3:#84837B;
+  --rule:#D6D4CE; --accent:#0093B0; --accent-soft:#E1F2F5; --accent-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,26,23,.06),0 10px 30px -14px rgba(20,48,58,.30);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14181B; --surface:#1B2125; --sunk:#101416; --ink:#E9EDEE; --ink-2:#A0AAAD;
+  --ink-3:#788285; --rule:#283034; --accent:#22C8E8; --accent-soft:#12292F; --accent-ink:#04202A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --ground:#14181B; --surface:#1B2125; --sunk:#101416; --ink:#E9EDEE; --ink-2:#A0AAAD;
+  --ink-3:#788285; --rule:#283034; --accent:#22C8E8; --accent-soft:#12292F; --accent-ink:#04202A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:400 16px/1.55 Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:34px 20px 52px;display:flex;flex-direction:column;gap:38px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin:0;font-size:clamp(32px,7vw,46px);font-weight:700;letter-spacing:-.028em;line-height:1.03}
+h2{margin:0;font-size:clamp(21px,4.4vw,26px);font-weight:650;letter-spacing:-.018em;line-height:1.2;text-wrap:balance}
+.mast{display:flex;flex-direction:column;gap:13px;padding-bottom:26px;border-bottom:1px solid var(--rule)}
+.sf{margin:0;max-width:64ch;color:var(--ink-2);font-size:16.5px}
+.sf strong{color:var(--ink);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:18px}
+.sh{display:flex;flex-direction:column;gap:8px}
+.tnum{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.tnum::before{content:"";width:20px;height:1px;background:var(--accent);opacity:.6}
+.q{margin:0;color:var(--ink-2);max-width:64ch;font-size:15.5px}
+.note{display:flex;gap:12px;padding:13px 15px;background:var(--surface);border:1px solid var(--rule);border-left:2px solid var(--accent);border-radius:3px;font-size:14px;color:var(--ink-2);line-height:1.5}
+.note b{color:var(--ink);font-weight:600}
+.who{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);white-space:nowrap;padding-top:3px}
+.screens{display:flex;gap:26px;flex-wrap:wrap;justify-content:center}
+.cell{display:flex;flex-direction:column;align-items:center;gap:9px}
+.cap{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+
+/* ── the app itself ───────────────────────────────────────────────
+   Poolside. Explicit literals throughout: this is a depiction of the
+   product, so it must look the same whichever theme the page is in. */
+.app{
+  --bg:linear-gradient(172deg,#FFFFFF 0%,#ECF6F8 100%);
+  --card:#FFFFFF; --ink:#14303A; --ink2:#4E6B74; --ink3:#7F959C;
+  --rule:#DCEAED; --blue:#0093B0; --green:#2E9179; --clay:#F0521F; --clayBg:#FEE3D9;
+  --onBlue:#FFFFFF; --track:#E4EFF1;
+  width:320px; border-radius:26px; background:var(--bg); color:var(--ink);
+  font-family:"Libre Franklin",system-ui,sans-serif; padding:16px 15px 0;
+  border:1px solid #DCE8EB; box-shadow:var(--shadow); overflow:hidden;
+  display:flex; flex-direction:column; min-height:588px;
+}
+.app.dark{
+  --bg:linear-gradient(172deg,#0F262E 0%,#061218 100%);
+  --card:#122F38; --ink:#EAF6F8; --ink2:#8FB2BB; --ink3:#6C8D97;
+  --rule:#1C424E; --blue:#22C8E8; --green:#57CDA8; --clay:#FF7A4D; --clayBg:#33190F;
+  --onBlue:#04202A; --track:#17353F; border-color:#16323C;
+}
+.appHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand svg{display:block;color:var(--ink)}
+.brand .m{font-family:Newsreader,Georgia,serif;font-size:19px;font-weight:400;letter-spacing:-.01em}
+.appHead .d{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;color:var(--ink3)}
+
+.hero{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
+.hero .kick{font-size:11.5px;font-weight:600;letter-spacing:.02em;color:var(--ink3)}
+.hero .fig{font-family:Newsreader,Georgia,serif;font-weight:300;font-size:47px;line-height:1.02;letter-spacing:-.022em;font-variant-numeric:tabular-nums}
+.hero .fig em{font-style:normal;font-size:22px;font-weight:400;color:var(--ink2)}
+.hero .sub{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.hero .say{font-size:13.5px;line-height:1.45;color:var(--ink);margin-top:9px;max-width:26ch}
+
+.catlist{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.cat{background:var(--card);border:1px solid var(--rule);border-radius:15px;padding:13px 13px 14px;cursor:pointer;
+  transition:transform .18s cubic-bezier(.2,0,0,1), box-shadow .18s}
+.cat:hover{transform:translateY(-1px)}
+.cat .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cat .nm{font-size:14.5px;font-weight:600;letter-spacing:-.005em}
+.cat .amt{font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.cat .of{font-size:11px;color:var(--ink3);font-weight:400;margin-left:5px}
+.cat .trk{height:6px;border-radius:99px;background:var(--track);margin-top:10px;overflow:hidden}
+.cat .fl{height:100%;border-radius:99px;background:var(--ink)}
+.cat .caret{font-size:11px;color:var(--ink3);margin-top:7px;display:block}
+
+.flagrow{display:flex;gap:7px;margin-top:16px;flex-wrap:wrap}
+.flag{padding:6px 11px;border-radius:99px;font-size:11px;font-weight:600;background:var(--clayBg);color:var(--clay)}
+.flag.calm{background:transparent;color:var(--green);border:1px solid var(--green)}
+
+.spacer{flex:1;min-height:16px}
+.pill{position:sticky;bottom:0;margin:0 -15px;padding:9px 12px 15px;display:flex;justify-content:center}
+.pillInner{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.72);border:1px solid var(--rule);
+  border-radius:99px;padding:5px;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%)}
+.app.dark .pillInner{background:rgba(18,47,56,.72)}
+.pillInner button{appearance:none;border:0;background:transparent;color:var(--ink3);
+  font:600 11.5px/1 "Libre Franklin",sans-serif;padding:9px 14px;border-radius:99px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:color .18s, background .18s}
+.pillInner button[aria-current="true"]{background:var(--blue);color:var(--onBlue)}
+.pillInner button svg{display:block}
+.pillInner button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* month view */
+.mrow{display:flex;gap:10px;overflow-x:auto;margin:0 -15px;padding:2px 15px 6px;scrollbar-width:none}
+.mrow::-webkit-scrollbar{display:none}
+.mcard{flex:0 0 172px;background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:14px 13px 15px;
+  display:flex;flex-direction:column;gap:5px}
+.mcard .lbl{font-size:11.5px;font-weight:600;color:var(--ink3)}
+.mcard .big{font-family:Newsreader,Georgia,serif;font-weight:300;font-size:29px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05}
+.mcard .sm{font-size:11px;color:var(--ink2)}
+.mcard .go{margin-top:8px;font-size:11.5px;font-weight:600;color:var(--blue)}
+.wlist{display:flex;flex-direction:column;gap:1px;margin-top:18px;background:var(--card);border:1px solid var(--rule);border-radius:15px;overflow:hidden}
+.wk{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:12px 13px;font-size:13px}
+.wk + .wk{border-top:1px solid var(--rule)}
+.wk .r{font-weight:600;font-variant-numeric:tabular-nums}
+.wk.now{background:var(--clayBg)}
+.wk.now .r{color:var(--clay)}
+
+/* spec */
+.spec{display:grid;gap:10px}
+@media(min-width:700px){.spec{grid-template-columns:1fr 1fr}}
+.srow{display:flex;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--rule);border-radius:5px;font-size:14px;align-items:baseline}
+.srow .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;min-width:74px}
+.srow .v{color:var(--ink);line-height:1.45}
+.srow .v b{font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chips i{width:30px;height:18px;border-radius:4px;display:block;border:1px solid rgba(128,128,128,.28)}
+.foot{border-top:1px solid var(--rule);padding-top:22px;color:var(--ink-3);font-size:13.5px;max-width:64ch}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <span class="eyebrow">The look, settled</span>
+  <h1>Poolside</h1>
+  <p class="sf">Every decision is made. This is your home screen in it — <strong>Poolside, Bookish, structure A</strong>, the morphing mark, the nav pill. Real figures from a seeded August.</p>
+</header>
+
+<!-- ══ THE SCREENS ═══════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">the app</span>
+    <h2>Home is a week</h2>
+    <p class="q">Tap the pill to move between week, month and year — <strong>the mark morphs as you go</strong>, oasis to dune to horizon. The month view is the horizontal cards you specced, one-offs first.</p>
+  </div>
+  <div class="screens">
+    <div class="cell"><div class="app" id="appLight"></div><span class="cap">light</span></div>
+    <div class="cell"><div class="app dark" id="appDark"></div><span class="cap">dark</span></div>
+  </div>
+  <div class="note"><span class="who">what to look for</span><span>Nine figures became <b>one headline and three rows</b>. The per-week breakdown is gone from home entirely — it lives on the month tab, totals only. And the one thing wearing the warning colour is the only thing actually asking for you.</span></div>
+</section>
+
+<!-- ══ THE SPEC ══════════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">locked</span>
+    <h2>Every decision, in one place</h2>
+  </div>
+  <div class="spec">
+    <div class="srow"><span class="k">palette</span><span class="v"><b>Poolside.</b> Whitewash and chlorine.
+      <span class="chips"><i style="background:#FFFFFF"></i><i style="background:#14303A"></i><i style="background:#0093B0"></i><i style="background:#2E9179"></i><i style="background:#F0521F"></i><i style="background:#061218"></i></span></span></div>
+    <div class="srow"><span class="k">roles</span><span class="v"><b>Blue acts</b> — anything you can touch. <b>Green settles</b> — done, fine. <b>Coral warns</b>, once per screen, and it is the most saturated thing on the page.</span></div>
+    <div class="srow"><span class="k">type</span><span class="v"><b>Newsreader</b> for the one big figure, <b>Libre Franklin</b> for everything else. No mono; <code>tabular-nums</code> does the aligning.</span></div>
+    <div class="srow"><span class="k">structure</span><span class="v">Home is <b>the current week</b>, transactions collapsed. Month and Year are their own tabs. Old month opens on its last week, future month on its first.</span></div>
+    <div class="srow"><span class="k">the mark</span><span class="v"><b>Oasis → dune → horizon</b>, morphing with the scope. Dune is the fixed mark. Still water, no palm.</span></div>
+    <div class="srow"><span class="k">motion</span><span class="v">Level <b>C · alive</b>. Three signatures — the Tape, the Landing, the Mark — over a visible functional layer.</span></div>
+    <div class="srow"><span class="k">bars</span><span class="v">A flat <b>ink</b> fill on a quiet track. No colour ramp: with coral reserved for warnings, a bar that heats up would be the one thing shouting.</span></div>
+    <div class="srow"><span class="k">still open</span><span class="v">The <b>name</b> — nothing has survived yet, and it wants its own pass now the look exists to hang it on.</span></div>
+  </div>
+  <div class="note"><span class="who">one consequence</span><span>Picking Poolside settles the bar ramp by implication. You chose <b>rotated hues</b> back on the bench, but that was against the old dark-and-lime palette. Here the fill is ink and the ramp is gone — say if you want it back.</span></div>
+</section>
+
+<footer class="foot">Ten rounds, three directors, and the two things that moved it furthest were both yours: home as a week, and a mark that changes with the scope.</footer>
+</div>
+
+<script>
+/* ── the mark: oasis · dune · horizon, morphing ──────────────────── */
+var SW=3.1;
+var OASIS ={p1:[5,32, 12,17, 21,17, 28,28], p2:[28,28, 34,22, 38,22, 44,32], c:[34,11,3.7], e:[24,40,14,3.4], o:1};
+var DUNE  ={p1:[4,35, 12,19, 22,19, 30,35], p2:[17,35, 26,25, 35,25, 44,35], c:[34,14,3.7], e:[24,36,0.1,0.1], o:0};
+var HORIZ ={p1:[5,31, 17,31, 31,31, 43,31], p2:[14,40, 21,40, 27,40, 34,40], c:[31,19,4.4], e:[24,40,0.1,0.1], o:0};
+var S=[OASIS,DUNE,HORIZ];
+var d=function(a){return "M"+a[0]+" "+a[1]+" C"+a[2]+" "+a[3]+","+a[4]+" "+a[5]+","+a[6]+" "+a[7];};
+var lp=function(a,b,t){return +(a+(b-a)*t).toFixed(2);};
+var la=function(a,b,t){return a.map(function(v,i){return lp(v,b[i],t);});};
+var ease=function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+var mix=function(a,b,t){return {p1:la(a.p1,b.p1,t),p2:la(a.p2,b.p2,t),c:la(a.c,b.c,t),e:la(a.e,b.e,t),o:lp(a.o,b.o,t)};};
+var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function markSVG(size,w){
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 48 48" aria-hidden="true">'+
+    '<path class="s1" fill="none" stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round"/>'+
+    '<path class="s2" fill="none" stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round"/>'+
+    '<ellipse class="pool" fill="currentColor"/><circle class="sun" fill="currentColor"/></svg>';
+}
+function paintMark(svg,st){
+  svg.querySelector(".s1").setAttribute("d",d(st.p1));
+  svg.querySelector(".s2").setAttribute("d",d(st.p2));
+  var e=svg.querySelector(".pool");
+  e.setAttribute("cx",st.e[0]); e.setAttribute("cy",st.e[1]);
+  e.setAttribute("rx",st.e[2]); e.setAttribute("ry",st.e[3]); e.setAttribute("opacity",st.o);
+  var c=svg.querySelector(".sun");
+  c.setAttribute("cx",st.c[0]); c.setAttribute("cy",st.c[1]); c.setAttribute("r",st.c[2]);
+}
+
+/* ── the screens ─────────────────────────────────────────────────── */
+var WEEK =
+  '<div class="hero">'+
+    '<span class="kick">This week · 17–23 Aug</span>'+
+    '<span class="fig">£245.68 <em>left</em></span>'+
+    '<span class="sub">of £545 · 3 days to go</span>'+
+    '<span class="say">You&rsquo;ve got room for the weekend.</span>'+
+  '</div>'+
+  '<div class="catlist">'+
+    cat("Everyday","£210.45","of £260",19)+
+    cat("Weekend","£29.21","of £190",85)+
+    cat("Transport","£6.02","of £95",94)+
+  '</div>'+
+  '<div class="flagrow"><span class="flag">1 needs a look</span><span class="flag calm">4 bills settled</span></div>';
+function cat(nm,amt,of,pct){
+  return '<div class="cat"><div class="top"><span class="nm">'+nm+'</span>'+
+    '<span><span class="amt">'+amt+'</span><span class="of">'+of+'</span></span></div>'+
+    '<div class="trk"><div class="fl" style="width:'+pct+'%"></div></div>'+
+    '<span class="caret">tap to open</span></div>';
+}
+var MONTH =
+  '<div class="hero" style="margin-bottom:14px">'+
+    '<span class="kick">August · 3 Aug – 30 Aug</span>'+
+    '<span class="fig" style="font-size:38px">about £3,030 <em>spare</em></span>'+
+    '<span class="sub">£6,520 of £9,547 income used</span>'+
+  '</div>'+
+  '<div class="mrow">'+
+    '<div class="mcard"><span class="lbl">One-offs</span><span class="big">£573.00</span><span class="sm">3 things</span><span class="go">Add one &rarr;</span></div>'+
+    '<div class="mcard"><span class="lbl">Recurring</span><span class="big">£3,767.70</span><span class="sm">14 bills</span><span class="go">See them &rarr;</span></div>'+
+    '<div class="mcard"><span class="lbl">Weeks</span><span class="big">£2,180</span><span class="sm">4 weeks</span><span class="go">Totals &rarr;</span></div>'+
+  '</div>'+
+  '<div class="wlist">'+
+    wk("Week 1 · 3–9 Aug","£486.10",0)+wk("Week 2 · 10–16 Aug","£443.19",0)+
+    wk("Week 3 · 17–23 Aug","£299.32",0)+wk("Week 4 · 24–30 Aug","£245.68 left",1)+
+  '</div>';
+function wk(l,r,now){ return '<div class="wk'+(now?" now":"")+'"><span>'+l+'</span><span class="r">'+r+'</span></div>'; }
+var YEAR =
+  '<div class="hero">'+
+    '<span class="kick">2026 · net position</span>'+
+    '<span class="fig">+£11,806.05 <em>kept</em></span>'+
+    '<span class="sub">of £28,643.82 earned</span>'+
+    '<span class="say">Eight months in, and every one of them finished ahead.</span>'+
+  '</div>'+
+  '<div class="wlist" style="margin-top:22px">'+
+    wk("May","+£1,402.11",0)+wk("June","+£1,688.40",0)+wk("July","+£1,204.77",0)+wk("August","about +£3,030",1)+
+  '</div>';
+var VIEWS=[WEEK,MONTH,YEAR], LABELS=["Week","Month","Year"];
+
+function buildApp(el){
+  el.innerHTML =
+    '<div class="appHead"><span class="brand">'+markSVG(21,SW*1.15)+'<span class="m">the app</span></span>'+
+    '<span class="d">29 AUG</span></div>'+
+    '<div class="body"></div><div class="spacer"></div>'+
+    '<div class="pill"><div class="pillInner">'+
+      LABELS.map(function(l,i){ return '<button data-i="'+i+'"'+(i===0?' aria-current="true"':'')+'>'+
+        (i===0?markSVG(15,SW*1.5):"")+l+'</button>'; }).join("")+
+    '</div></div>';
+  el.querySelector(".body").innerHTML=VIEWS[0];
+  var marks=function(){ return [].slice.call(el.querySelectorAll("svg")); };
+  marks().forEach(function(s){ paintMark(s,S[0]); });
+
+  var cur=0, anim=null;
+  el.querySelector(".pillInner").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    var to=+b.dataset.i; if(to===cur) return;
+    [].slice.call(this.children).forEach(function(x){ x.removeAttribute("aria-current"); });
+    b.setAttribute("aria-current","true");
+    /* the little mark rides in the live tab */
+    this.querySelectorAll("button svg").forEach(function(s){ s.remove(); });
+    b.insertAdjacentHTML("afterbegin", markSVG(15,SW*1.5));
+    var body=el.querySelector(".body");
+    body.style.transition="none"; body.style.opacity="0";
+    setTimeout(function(){
+      body.innerHTML=VIEWS[to];
+      body.style.transition="opacity 220ms cubic-bezier(.05,.7,.1,1)";
+      body.style.opacity="1";
+    }, reduced?0:110);
+    var from=S[cur];
+    if(anim) cancelAnimationFrame(anim);
+    if(reduced){ cur=to; marks().forEach(function(s){paintMark(s,S[to]);}); return; }
+    var t0=performance.now();
+    (function step(now){
+      var raw=Math.min(1,(now-t0)/540), t=ease(raw), st=mix(from,S[to],t);
+      marks().forEach(function(s){ paintMark(s,st); });
+      if(raw<1) anim=requestAnimationFrame(step); else cur=to;
+    })(t0);
+  });
+}
+buildApp(document.getElementById("appLight"));
+buildApp(document.getElementById("appDark"));
+</script>
