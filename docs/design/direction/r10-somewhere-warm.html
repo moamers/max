@@ -1,0 +1,368 @@
+<title>Somewhere Warm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Libre+Franklin:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#EDECE8; --surface:#FFFFFF; --sunk:#E3E2DC;
+  --ink:#1A1A17; --ink-2:#55554E; --ink-3:#84837B;
+  --rule:#D6D4CE; --accent:#41526F; --accent-soft:#E4E8F0; --accent-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,26,23,.06),0 8px 24px -12px rgba(26,26,23,.18);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216; --ink:#E9E8E4; --ink-2:#A5A69F;
+  --ink-3:#7A7B75; --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216; --ink:#E9E8E4; --ink-2:#A5A69F;
+  --ink-3:#7A7B75; --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:400 16px/1.55 Archivo,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:38px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin:0;font-size:clamp(30px,7vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05}
+h2{margin:0;font-size:clamp(21px,4.4vw,26px);font-weight:650;letter-spacing:-.018em;line-height:1.2;text-wrap:balance}
+.mast{display:flex;flex-direction:column;gap:13px;padding-bottom:26px;border-bottom:1px solid var(--rule)}
+.sf{margin:0;max-width:64ch;color:var(--ink-2);font-size:16.5px}
+.sf strong{color:var(--ink);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:17px}
+.sh{display:flex;flex-direction:column;gap:8px}
+.tnum{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.tnum::before{content:"";width:20px;height:1px;background:var(--accent);opacity:.5}
+.q{margin:0;color:var(--ink-2);max-width:64ch;font-size:15.5px}
+.note{display:flex;gap:12px;padding:13px 15px;background:var(--surface);border:1px solid var(--rule);border-left:2px solid var(--accent);border-radius:3px;font-size:14px;color:var(--ink-2);line-height:1.5}
+.note b{color:var(--ink);font-weight:600}
+.who{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);white-space:nowrap;padding-top:3px}
+.opts{display:grid;gap:16px}
+@media(min-width:760px){.opts.three{grid-template-columns:repeat(3,1fr)}}
+.opt{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);border-radius:5px;overflow:hidden;box-shadow:var(--shadow)}
+.ohead{padding:14px 15px 12px;display:flex;flex-direction:column;gap:5px}
+.oname{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.odesc{font-size:13.2px;color:var(--ink-2);line-height:1.45}
+.ostage{background:var(--sunk);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:15px 12px}
+.pick{display:flex;border-top:1px solid var(--rule)}
+.pick button{flex:1;appearance:none;border:0;border-right:1px solid var(--rule);background:transparent;color:var(--ink-2);font:500 12.5px/1 Archivo,sans-serif;padding:11px 6px;cursor:pointer;transition:background .12s,color .12s}
+.pick button:last-child{border-right:0}
+.pick button:hover{background:var(--accent-soft);color:var(--ink)}
+.pick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.pick button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.mini{border-radius:12px;padding:12px 9px 13px;border:1px solid;font-family:"Libre Franklin",system-ui,sans-serif;font-size:11px;line-height:1.4;overflow:hidden}
+.mini .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:9.5px;font-weight:600}
+.mini .card{border-radius:11px;padding:10px 8px 11px}
+.mini .mfig{font-family:Newsreader,Georgia,serif;font-size:22px;font-weight:400;letter-spacing:-.015em;font-variant-numeric:tabular-nums;line-height:1.05}
+.mini .mq{font-size:9px;margin-top:4px}
+.mini .row{display:flex;justify-content:space-between;gap:6px;font-size:9px;margin-top:10px;font-weight:600;white-space:nowrap}
+.mini .trk{height:5px;border-radius:99px;margin-top:5px;overflow:hidden}
+.mini .fl{height:100%;border-radius:99px}
+.mini .acts{display:flex;gap:5px;margin-top:11px;align-items:center;flex-wrap:wrap}
+.mini .btn1{padding:6px 10px;border-radius:99px;font-size:9.5px;font-weight:600;white-space:nowrap}
+.mini .flag{padding:4px 8px;border-radius:99px;font-size:9px;font-weight:600;white-space:nowrap}
+.mini .lnk{font-size:9px;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.pair{display:flex;gap:9px}.pair>*{flex:1;min-width:0}
+.sw{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.sw i{width:22px;height:14px;border-radius:3px;display:block;border:1px solid rgba(128,128,128,.25)}
+.mlbl{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:block}
+
+.stage{background:var(--sunk);border:1px solid var(--rule);border-radius:10px;padding:22px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.lens{width:190px;height:190px;border-radius:14px;background:var(--surface);border:1px solid var(--rule);overflow:hidden;position:relative}
+.lens svg{width:100%;height:100%;display:block;color:var(--ink)}
+.scopes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.scopes button{appearance:none;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);font:600 12px/1 Archivo,sans-serif;padding:8px 13px;border-radius:99px;cursor:pointer;transition:all .15s}
+.scopes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.scopes button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.statename{font-family:Newsreader,Georgia,serif;font-size:21px;color:var(--ink-2)}
+.smrow{display:flex;align-items:center;gap:20px}
+.smcell{display:flex;flex-direction:column;align-items:center;gap:5px}
+.smcell .cap{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.smlens{border-radius:6px;overflow:hidden}
+.smlens svg{display:block;color:var(--ink)}
+
+.tally{background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.tl{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.tl li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px;align-items:baseline}
+.tl li:last-child{border-bottom:0}
+.tl .k{color:var(--ink-2)}.tl .v{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;font-weight:500}
+.tl .v.none{color:var(--ink-3);font-weight:400}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font:600 13.5px/1 Archivo,sans-serif;padding:11px 16px;border-radius:4px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.copied{font-size:13px;color:var(--ink-3)}
+textarea.out{width:100%;min-height:84px;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);border-radius:4px;padding:11px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.55;resize:vertical}
+.foot{border-top:1px solid var(--rule);padding-top:22px;color:var(--ink-3);font-size:13.5px;max-width:64ch}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <span class="eyebrow">Round 10 · warmer</span>
+  <h1>Somewhere Warm</h1>
+  <p class="sf"><strong>I sampled the wrong thing.</strong> Those stills are Dune the film — deliberately desaturated, grim, at war. You want <strong>dune the place</strong>: a holiday. Marrakech and Palm Springs, not Arrakis.</p>
+  <p class="sf" style="font-size:14.5px">That is why every pass has felt toned out. I was faithfully reproducing a colour grade designed to look bleak.</p>
+</header>
+
+<!-- ══ 1 · PALETTE ═══════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">01 · palette</span>
+    <h2>Pool blue, not eye blue</h2>
+    <p class="q">Same desert, different day. Sun on white plaster, tiled water, terracotta in full light, palm green. Saturation goes <strong>up</strong>, not down — and the ground gets light again, because holidays are bright.</p>
+  </div>
+  <div class="note"><span class="who">what carries over</span><span>Only the structure. <b>Blue acts, green settles, hot coral warns</b> — and the warning is still the most saturated thing on the screen, which is the one lesson the film references did teach.</span></div>
+
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · Riad</span><span class="odesc">Warm plaster walls and zellige tile. Cream ground, deep pool-turquoise, terracotta. The most Marrakech.</span></div>
+      <div class="ostage"><span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair"><div class="mini" data-fill="A-light"></div><div class="mini" data-fill="A-dark"></div></div>
+        <div class="sw"><i style="background:#FBF1E2"></i><i style="background:#2A1E14"></i><i style="background:#0E9AA7"></i><i style="background:#4E9E6A"></i><i style="background:#E8622E"></i><i style="background:#F0C24B"></i></div>
+      </div>
+      <div class="pick" data-q="palette"><button data-v="A · Riad">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Poolside</span><span class="odesc">Midday, whitewash and chlorine. The brightest and coolest — blue does most of the talking.</span></div>
+      <div class="ostage"><span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair"><div class="mini" data-fill="B-light"></div><div class="mini" data-fill="B-dark"></div></div>
+        <div class="sw"><i style="background:#FDFBF6"></i><i style="background:#15303A"></i><i style="background:#00A8C8"></i><i style="background:#3FA98C"></i><i style="background:#FF6B3D"></i><i style="background:#FFC53D"></i></div>
+      </div>
+      <div class="pick" data-q="palette"><button data-v="B · Poolside">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Golden hour</span><span class="odesc">Late afternoon. Peach ground, the water gone deeper, everything lit from the side. Warmest.</span></div>
+      <div class="ostage"><span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair"><div class="mini" data-fill="C-light"></div><div class="mini" data-fill="C-dark"></div></div>
+        <div class="sw"><i style="background:#FEEBD6"></i><i style="background:#33190F"></i><i style="background:#12808F"></i><i style="background:#5B9E5E"></i><i style="background:#F2542D"></i><i style="background:#FFB020"></i></div>
+      </div>
+      <div class="pick" data-q="palette"><button data-v="C · Golden hour">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2 · THE MARK, AS A CAMERA ═════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">02 · the mark</span>
+    <h2>Fly through it, don't bend it</h2>
+    <p class="q">Your idea, built. It isn't a morph any more — it's <strong>one landscape with depth</strong>, and changing scope moves the camera through it. The dune really is sitting small in the distance behind the oasis the whole time. Press Month and you fly to it.</p>
+  </div>
+  <div class="note"><span class="who">why this is better</span><span>A morph says two shapes are the same thing bending. A <b>dolly</b> says they are different things at different distances — which is exactly what a week, a month and a year are. Pulling back through time becomes literal rather than a metaphor.</span></div>
+
+  <div class="stage">
+    <div class="lens"><svg id="big" viewBox="0 0 48 48" aria-label="The mark, currently at the oasis"></svg></div>
+    <div class="statename" id="sname">oasis · this week</div>
+    <div class="scopes" id="scopes">
+      <button data-s="0" aria-pressed="true">Week</button>
+      <button data-s="1">Month</button>
+      <button data-s="2">Year</button>
+      <button data-s="cycle">Fly</button>
+    </div>
+    <div class="smrow">
+      <div class="smcell"><div class="smlens"><svg class="sm" width="30" height="30" viewBox="0 0 48 48" aria-hidden="true"></svg></div><span class="cap">30px</span></div>
+      <div class="smcell"><div class="smlens"><svg class="sm" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"></svg></div><span class="cap">18px · tab</span></div>
+    </div>
+  </div>
+
+  <div class="note"><span class="who">the palm, redrawn</span><span>You were right, the last one was a mess. It is now a straight trunk and a four-stroke crown — no curves to tangle, and it survives 18px. Simpler was the answer.</span></div>
+
+  <div class="opts three">
+    <div class="opt"><div class="ohead"><span class="oname">The dolly</span><span class="odesc">Does flying through the scene beat shapes morphing into each other?</span></div>
+      <div class="pick" data-q="dolly"><button data-v="dolly, yes">Yes</button><button data-v="back to morph">Prefer morph</button></div></div>
+    <div class="opt"><div class="ohead"><span class="oname">The palm</span><span class="odesc">Straight trunk, four-stroke crown.</span></div>
+      <div class="pick" data-q="palm"><button data-v="palm good">Good</button><button data-v="palm needs work">Still off</button></div></div>
+    <div class="opt"><div class="ohead"><span class="oname">Distant object</span><span class="odesc">Should the next scope always be visible in the corner, or only appear as you move?</span></div>
+      <div class="pick" data-q="distant"><button data-v="always visible">Always there</button><button data-v="only on move">Only on move</button></div></div>
+  </div>
+</section>
+
+<section class="tally">
+  <h2 style="font-size:19px">Your picks</h2>
+  <ul class="tl" id="tl"></ul>
+  <div class="row2"><button class="btn" id="copy">Copy the tally</button><button class="btn ghost" id="clear">Clear</button><span class="copied" id="msg"></span></div>
+  <textarea class="out" id="out" readonly aria-label="Your picks as text"></textarea>
+</section>
+
+<footer class="foot">Settled: Bookish type, structure A, motion level C, dune as the fixed mark. Open: this palette, the dolly, and the name.</footer>
+</div>
+
+<script>
+/* ── palettes: holiday, not war ────────────────────────────────────── */
+var P={
+  A:{light:{bg:"linear-gradient(170deg,#FDF6EA,#F6E7D0)",card:"#FFFFFF",ink:"#2A1E14",ink2:"#6B5544",rule:"#E7D6BE",blue:"#0E8E9B",green:"#3F8759",clay:"#DE5A26",clayBg:"#FDE3D6",on:"#FFFFFF"},
+     dark:{bg:"linear-gradient(170deg,#23180F,#150E08)",card:"#2E2116",ink:"#FBEEDC",ink2:"#B39A7E",rule:"#43301E",blue:"#2FC5D4",green:"#6FC58F",clay:"#FF7A45",clayBg:"#3B1E12",on:"#0B1E21"}},
+  B:{light:{bg:"linear-gradient(170deg,#FFFFFF,#EFF7F8)",card:"#FFFFFF",ink:"#14303A",ink2:"#4E6B74",rule:"#D5E6E9",blue:"#0093B0",green:"#2E9179",clay:"#F0521F",clayBg:"#FEE1D6",on:"#FFFFFF"},
+     dark:{bg:"linear-gradient(170deg,#0D2028,#061218)",card:"#123039",ink:"#EAF6F8",ink2:"#8FB2BB",rule:"#1D4450",blue:"#22C8E8",green:"#57CDA8",clay:"#FF7A4D",clayBg:"#2A1710",on:"#04202A"}},
+  C:{light:{bg:"linear-gradient(170deg,#FFF2E0,#FBDFBE)",card:"#FFFAF2",ink:"#33190F",ink2:"#7A5744",rule:"#EFD3B2",blue:"#0F7784",green:"#4C8B50",clay:"#E24518",clayBg:"#FDDCCC",on:"#FFFFFF"},
+     dark:{bg:"linear-gradient(170deg,#2B150C,#170A05)",card:"#38200F",ink:"#FFEDD8",ink2:"#BE9878",rule:"#4F3018",blue:"#2CB6C4",green:"#79BC72",clay:"#FF7038",clayBg:"#42200F",on:"#07222A"}}
+};
+function miniHTML(t){
+  return '<div class="mh"><span>This week</span><span style="color:'+t.ink2+';font-weight:400">17–23 Aug</span></div>'+
+  '<div class="card" style="background:'+t.card+'">'+
+    '<div class="mfig">£245.68</div><div class="mq" style="color:'+t.ink2+'">left of £545 · 3 days</div>'+
+    '<div class="row"><span>Everyday</span><span>£210</span></div>'+
+    '<div class="trk" style="background:'+t.rule+'"><div class="fl" style="width:19%;background:'+t.ink+'"></div></div>'+
+    '<div class="row"><span>Weekend</span><span>£29</span></div>'+
+    '<div class="trk" style="background:'+t.rule+'"><div class="fl" style="width:85%;background:'+t.ink+'"></div></div>'+
+  '</div>'+
+  '<div class="acts"><span class="btn1" style="background:'+t.blue+';color:'+t.on+'">Add a one-off</span>'+
+  '<span class="lnk" style="color:'+t.blue+'">Where from</span></div>'+
+  '<div class="acts" style="margin-top:8px"><span class="flag" style="background:'+t.clayBg+';color:'+t.clay+'">1 needs a look</span>'+
+  '<span class="flag" style="background:transparent;color:'+t.green+';border:1px solid '+t.green+'">4 settled</span></div>';
+}
+document.querySelectorAll(".mini[data-fill]").forEach(function(el){
+  var a=el.dataset.fill.split("-"), t=P[a[0]][a[1]];
+  el.style.background=t.bg; el.style.borderColor=t.rule; el.style.color=t.ink;
+  el.innerHTML=miniHTML(t);
+});
+
+/* ── the mark, as a camera ─────────────────────────────────────────
+   Three scenes drawn once, laid out at three depths in the same space.
+   Changing scope moves a single `depth` value; each scene's scale and
+   position fall out of how far it is from the camera. Nothing morphs —
+   the near scene rushes past and the far one grows in. */
+var SW=3.0;
+function g(children){ return children.join(""); }
+function stroke(dattr,w){ return '<path d="'+dattr+'" fill="none" stroke="currentColor" stroke-width="'+(w||SW)+'" stroke-linecap="round" stroke-linejoin="round"/>'; }
+
+/* scene 0 · the oasis — ridge, pool, and a palm of straight strokes */
+var OASIS = g([
+  /* Palm on the left, ridge moved right so they never touch. All four
+     fronds fan UPWARD from the crown — two up and two down was what made
+     the last one read as a scribble. */
+  stroke("M14 30 C22 22, 32 22, 42 30"),
+  '<ellipse cx="24" cy="40" rx="13" ry="3.0" fill="currentColor"/>',
+  stroke("M9 40 L9 28", SW*0.8),
+  stroke("M9 28 L3 24", SW*0.8),
+  stroke("M9 28 L6.5 21.5", SW*0.8),
+  stroke("M9 28 L11.5 21.5", SW*0.8),
+  stroke("M9 28 L15 24", SW*0.8)
+]);
+/* scene 1 · the dune — the two crossing ridges, restored */
+var DUNE = g([
+  stroke("M4 35 C12 19, 22 19, 30 35"),
+  stroke("M17 35 C26 25, 35 25, 44 35"),
+  '<circle cx="34" cy="14" r="3.7" fill="currentColor"/>'
+]);
+/* scene 2 · the horizon — two rules and a high sun */
+var HORIZON = g([
+  stroke("M5 31 L43 31"),
+  stroke("M14 40 L34 40", SW*0.9),
+  '<circle cx="31" cy="19" r="4.4" fill="currentColor"/>'
+]);
+var SCENES=[OASIS,DUNE,HORIZON];
+var NAMES=["oasis · this week","dune · the month","horizon · the year"];
+
+/* distant scenes sit small and up-left, as described */
+var CENTRES=[[24,24],[33,12.5],[38,8]];
+function layerTransform(dist){
+  /* dist = depth - index. 0 = in frame, negative = ahead, positive = behind */
+  var s = Math.pow(2.65, dist);
+  var i = Math.max(0, Math.min(2, Math.round(-dist)));
+  var lerp=function(a,b,t){return a+(b-a)*t;};
+  var k = Math.max(0, Math.min(1, -dist));
+  var cx = lerp(CENTRES[0][0], CENTRES[1][0], k);
+  var cy = lerp(CENTRES[0][1], CENTRES[1][1], k);
+  if(dist>0){ cx=24; cy=24; }
+  return "translate("+cx.toFixed(2)+" "+cy.toFixed(2)+") scale("+s.toFixed(4)+") translate(-24 -24)";
+}
+function layerOpacity(dist){
+  if(dist>0) return Math.max(0, 1-dist*1.6);      /* rushing past, fading out */
+  if(dist<-1.6) return 0;                          /* too far to see */
+  return dist<0 ? Math.max(0, 0.55+dist*0.34) : 1; /* distant, dimmer */
+}
+function svgHTML(){
+  return SCENES.map(function(s,i){ return '<g class="L'+i+'">'+s+'</g>'; }).join("");
+}
+var big=document.getElementById("big");
+var smalls=[].slice.call(document.querySelectorAll("svg.sm"));
+[big].concat(smalls).forEach(function(sv){ sv.innerHTML=svgHTML(); });
+
+var depth=0, anim=null, timer=null, flying=false;
+var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function draw(d){
+  [big].concat(smalls).forEach(function(sv){
+    for(var i=0;i<3;i++){
+      var el=sv.querySelector(".L"+i); if(!el) continue;
+      var dist=d-i;
+      el.setAttribute("transform", layerTransform(dist));
+      el.setAttribute("opacity", layerOpacity(dist).toFixed(3));
+    }
+  });
+}
+draw(0);
+var ease=function(t){ return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; };
+function fly(to){
+  var from=depth;
+  document.getElementById("sname").textContent=NAMES[to];
+  big.setAttribute("aria-label","The mark, currently at the "+NAMES[to].split(" ")[0]);
+  if(anim) cancelAnimationFrame(anim);
+  if(reduced){ depth=to; draw(to); return; }
+  var t0=performance.now(), DUR=620;
+  (function step(now){
+    var raw=Math.min(1,(now-t0)/DUR), t=ease(raw);
+    depth=from+(to-from)*t; draw(depth);
+    if(raw<1) anim=requestAnimationFrame(step); else depth=to;
+  })(t0);
+}
+document.getElementById("scopes").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  var btns=[].slice.call(this.children);
+  if(b.dataset.s==="cycle"){
+    flying=!flying; b.setAttribute("aria-pressed",String(flying));
+    if(flying){ (function loop(){ timer=setTimeout(function(){
+      var n=(Math.round(depth)+1)%3;
+      btns.forEach(function(x){ x.setAttribute("aria-pressed", x.dataset.s==="cycle"?"true":String(x.dataset.s===String(n))); });
+      fly(n); loop(); },1450); })(); }
+    else clearTimeout(timer);
+    return;
+  }
+  flying=false; clearTimeout(timer);
+  btns.forEach(function(x){ x.setAttribute("aria-pressed",String(x===b)); });
+  fly(+b.dataset.s);
+});
+
+/* ── tally ─────────────────────────────────────────────────────────── */
+var Q=[{id:"palette",label:"Palette"},{id:"dolly",label:"The dolly"},
+       {id:"palm",label:"The palm"},{id:"distant",label:"Distant object"}];
+var ans={}; try{ ans=JSON.parse(localStorage.getItem("p5")||"{}")||{}; }catch(e){ ans={}; }
+function save(){ try{ localStorage.setItem("p5",JSON.stringify(ans)); }catch(e){} }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function render(){
+  var h="",lines=[];
+  Q.forEach(function(q){ var v=ans[q.id];
+    h+='<li><span class="k">'+esc(q.label)+'</span><span class="v'+(v?"":" none")+'">'+esc(v||"not picked")+'</span></li>';
+    lines.push(q.label+": "+(v||"—")); });
+  document.getElementById("tl").innerHTML=h;
+  document.getElementById("out").value="Somewhere warm — my picks\n\n"+lines.join("\n");
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".pick button"); if(!b) return;
+  var q=b.closest(".pick").dataset.q;
+  document.querySelectorAll('.pick[data-q="'+q+'"] button').forEach(function(x){ x.setAttribute("aria-pressed",String(x===b)); });
+  ans[q]=b.dataset.v; save(); render();
+});
+Q.forEach(function(q){ if(!ans[q.id]) return;
+  document.querySelectorAll('.pick[data-q="'+q.id+'"] button').forEach(function(x){
+    if(x.dataset.v===ans[q.id]) x.setAttribute("aria-pressed","true"); }); });
+render();
+document.getElementById("copy").addEventListener("click",function(){
+  var ta=document.getElementById("out"), m=document.getElementById("msg");
+  ta.select(); var ok=false; try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){m.textContent="Copied.";},
+      function(){m.textContent=ok?"Copied.":"Select the text above and copy.";});
+  } else m.textContent=ok?"Copied.":"Select the text above and copy.";
+  setTimeout(function(){m.textContent="";},2600);
+});
+document.getElementById("clear").addEventListener("click",function(){
+  ans={}; save();
+  document.querySelectorAll(".pick button").forEach(function(x){x.setAttribute("aria-pressed","false");});
+  render();
+});
+</script>
