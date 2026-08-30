@@ -1,0 +1,655 @@
+<title>Max Design Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ─── The rig ────────────────────────────────────────────────────────────
+   Instrument chrome. Deliberately neither lime nor clay: nothing here may
+   give a candidate a home-field advantage.                              */
+:root{
+  --ground:#EDECE8; --surface:#FFFFFF; --sunk:#E3E2DC;
+  --ink:#1A1A17; --ink-2:#55554E; --ink-3:#84837B;
+  --rule:#D6D4CE; --rule-2:#C4C2BA;
+  --accent:#41526F; --accent-soft:#E4E8F0; --accent-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,26,23,.06),0 8px 24px -12px rgba(26,26,23,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#15161A; --surface:#1C1E23; --sunk:#111216;
+    --ink:#E9E8E4; --ink-2:#A5A69F; --ink-3:#7A7B75;
+    --rule:#2A2C32; --rule-2:#383B43;
+    --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216;
+  --ink:#E9E8E4; --ink-2:#A5A69F; --ink-3:#7A7B75;
+  --rule:#2A2C32; --rule-2:#383B43;
+  --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font:400 16px/1.55 Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px 40px;display:flex;flex-direction:column;gap:40px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* masthead */
+.mast{display:flex;flex-direction:column;gap:14px;padding-bottom:28px;border-bottom:1px solid var(--rule)}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+h1{margin:0;font-size:clamp(30px,7vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05;text-wrap:balance}
+.standfirst{margin:0;max-width:62ch;color:var(--ink-2);font-size:16.5px}
+.standfirst strong{color:var(--ink);font-weight:600}
+
+/* test blocks */
+.test{display:flex;flex-direction:column;gap:18px}
+.test-head{display:flex;flex-direction:column;gap:9px}
+.tnum{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);font-weight:500;
+}
+.tnum::before{content:"";width:20px;height:1px;background:var(--accent);opacity:.5}
+h2{margin:0;font-size:clamp(21px,4.4vw,26px);font-weight:650;letter-spacing:-.018em;line-height:1.2;text-wrap:balance}
+.q{margin:0;color:var(--ink-2);max-width:64ch;font-size:15.5px}
+.q code{font-family:"IBM Plex Mono",monospace;font-size:.9em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* the note strip — who said what */
+.note{
+  display:flex;gap:12px;padding:13px 15px;background:var(--surface);
+  border:1px solid var(--rule);border-left:2px solid var(--accent);border-radius:3px;
+  font-size:14px;color:var(--ink-2);line-height:1.5;
+}
+.note b{color:var(--ink);font-weight:600}
+.note .who{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);white-space:nowrap;padding-top:3px;
+}
+
+/* candidate grid */
+.cands{display:grid;gap:16px}
+@media(min-width:700px){.cands.three{grid-template-columns:repeat(3,1fr)}.cands.two{grid-template-columns:repeat(2,1fr)}}
+.cand{
+  display:flex;flex-direction:column;gap:0;background:var(--surface);
+  border:1px solid var(--rule);border-radius:5px;overflow:hidden;box-shadow:var(--shadow);
+}
+.cand-top{display:flex;flex-direction:column;gap:5px;padding:14px 15px 12px}
+.cand-name{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.cand-desc{font-size:13.2px;color:var(--ink-2);line-height:1.45}
+.cand-stage{background:var(--sunk);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:16px 12px;display:flex;justify-content:center}
+
+/* verdict buttons */
+.verdict{display:flex;gap:0;border-top:1px solid var(--rule)}
+.verdict button{
+  flex:1;appearance:none;border:0;border-right:1px solid var(--rule);background:transparent;
+  color:var(--ink-2);font:500 12.5px/1 Archivo,sans-serif;padding:11px 6px;cursor:pointer;
+  transition:background .12s,color .12s;
+}
+.verdict button:last-child{border-right:0}
+.verdict button:hover{background:var(--accent-soft);color:var(--ink)}
+.verdict button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.verdict button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ─── The specimens ──────────────────────────────────────────────────────
+   These depict the app. Explicit literals, not rig tokens — they must look
+   the same whichever theme the rig is in, or the test has two variables. */
+.phone{
+  width:320px;max-width:100%;background:#0E0F14;border-radius:15px;padding:16px 15px 18px;
+  color:#F2F4EE;font-family:"Schibsted Grotesk",system-ui,sans-serif;
+  border:1px solid #23262F;
+}
+.phone.light{background:#F6F6F2;color:#17150F;border-color:#DFDDD4}
+.pmono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.phead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.phead .m{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.phead .d{font-family:"JetBrains Mono",monospace;font-size:10px;color:#6E7382}
+.phone.light .phead .d{color:#7A776C}
+
+.figure{font-size:33px;font-weight:800;letter-spacing:-.035em;line-height:1.04;font-variant-numeric:tabular-nums}
+.figure .unit{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.qual{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#6E7382;margin-top:7px;line-height:1.5}
+.phone.light .qual{color:#7A776C}
+.sentence{font-size:13.5px;line-height:1.45;margin-top:11px;color:#9DA2AE}
+.phone.light .sentence{color:#55534A}
+
+/* deck */
+/* the peek must read as "there is more", not as a card sliced through a
+   glyph — a clipped specimen would lose this test on a rendering artifact */
+.deck{
+  overflow:hidden;margin:0 -15px;touch-action:pan-y;
+  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 84%,rgba(0,0,0,.15) 97%,transparent 100%);
+  mask-image:linear-gradient(90deg,#000 0,#000 84%,rgba(0,0,0,.15) 97%,transparent 100%);
+}
+.deckTrack{display:flex;gap:10px;padding:0 15px;will-change:transform;cursor:grab}
+.deckTrack.drag{cursor:grabbing}
+.dcard{
+  flex:0 0 258px;background:#14171C;border:1px solid #1E212A;border-radius:11px;padding:15px 14px;
+  min-height:150px;display:flex;flex-direction:column;justify-content:center;
+}
+.phone.light .dcard{background:#FFFFFF;border-color:#E4E1D8}
+
+/* tick strip */
+.strip{margin-top:15px;padding-top:3px;touch-action:pan-y;user-select:none}
+.stripRail{position:relative;height:26px;display:flex;align-items:center}
+.stripLine{position:absolute;left:0;right:0;height:1px;background:#23262F}
+.phone.light .stripLine{background:#DFDDD4}
+.stripTicks{position:relative;display:flex;justify-content:space-between;width:100%}
+.tick{
+  appearance:none;border:0;background:transparent;padding:6px 2px;cursor:pointer;
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;color:#6E7382;
+  position:relative;transition:color .16s;
+}
+.phone.light .tick{color:#8A877B}
+.tick[aria-current="true"]{color:#C6FF3D;font-weight:500}
+.phone.light .tick[aria-current="true"]{color:#4C6B12}
+.tick:focus-visible{outline:1px solid #C6FF3D;outline-offset:2px;border-radius:3px}
+.thumb{
+  position:absolute;bottom:-1px;height:2px;width:34px;background:#C6FF3D;border-radius:2px;
+  will-change:transform;
+}
+.phone.light .thumb{background:#4C6B12}
+
+/* bars */
+.barRow{display:flex;flex-direction:column;gap:6px;margin-top:13px}
+.barTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px}
+.barTop .lbl{font-weight:600}
+.barTop .amt{font-family:"JetBrains Mono",monospace;font-size:11px;color:#9DA2AE}
+.phone.light .barTop .amt{color:#55534A}
+.track{height:6px;border-radius:99px;background:#191C23;overflow:hidden}
+.phone.light .track{background:#E8E5DC}
+.fill{height:100%;border-radius:99px;background-repeat:no-repeat;background-position:left center}
+
+/* tally */
+.tally{
+  background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:20px;
+  display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);
+}
+.tally h2{font-size:19px}
+.tallyList{display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none}
+.tallyList li{
+  display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);
+  font-size:14px;align-items:baseline;
+}
+.tallyList li:last-child{border-bottom:0}
+.tallyList .k{color:var(--ink-2)}
+.tallyList .v{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;font-weight:500}
+.tallyList .v.none{color:var(--ink-3);font-weight:400}
+.copyRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{
+  appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  font:600 13.5px/1 Archivo,sans-serif;padding:10px 15px;border-radius:4px;cursor:pointer;
+}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.copied{font-size:13px;color:var(--ink-3)}
+textarea.out{
+  width:100%;min-height:120px;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:4px;padding:11px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.55;resize:vertical;
+}
+
+.foot{border-top:1px solid var(--rule);padding-top:22px;color:var(--ink-3);font-size:13.5px;max-width:64ch}
+.foot a{color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <span class="eyebrow">Round 4 · decision instrument</span>
+    <h1>Max Design Bench</h1>
+    <p class="standfirst">Two rounds of critique settled most of the direction. <strong>Four questions are left, and none of them can be settled by argument</strong> — three directors already tried. Try each option with your thumb, mark what you prefer, and send me the tally at the bottom.</p>
+    <p class="standfirst" style="font-size:14.5px">Every figure below is real, from a seeded month at your scale. Inside each test only <em>one thing</em> changes — everything else is held constant on purpose.</p>
+  </header>
+
+  <!-- ── TEST 1 ────────────────────────────────────────────────── -->
+  <section class="test">
+    <div class="test-head">
+      <span class="tnum">Test 01 · home control</span>
+      <h2>Sliding cards, a tick strip, or both?</h2>
+      <p class="q">Settled already: home shows <strong>one figure</strong>, and what you move is the <strong>time horizon</strong> — Today, Week, Month, Year. Both directors got there independently. What isn't settled is how you move it.</p>
+    </div>
+    <div class="note">
+      <span class="who">The tangle</span>
+      <span>Motion built your swipe-cards, then <b>conceded them</b> — the old card order was a shuffle, so you could never predict what was to the right. UX invented the strip, then <b>withdrew it</b>. They swapped. Both options below are honest and both order the axis, so doctrine doesn't decide this. Your thumb does.</span>
+    </div>
+
+    <div class="cands three">
+      <div class="cand">
+        <div class="cand-top">
+          <span class="cand-name">A · Sliding cards</span>
+          <span class="cand-desc">Your mechanic. Drag the card away and the next horizon arrives. Peers peek at the edge.</span>
+        </div>
+        <div class="cand-stage"><div class="phone" id="specA"></div></div>
+        <div class="verdict" data-q="home"><button data-v="A">Prefer</button><button data-v="A?">Unsure</button><button data-v="A!">No</button></div>
+      </div>
+
+      <div class="cand">
+        <div class="cand-top">
+          <span class="cand-name">B · Tick strip</span>
+          <span class="cand-desc">The figure stays put and re-states. Drag the strip, or tap a tick. The whole axis is visible at rest.</span>
+        </div>
+        <div class="cand-stage"><div class="phone" id="specB"></div></div>
+        <div class="verdict" data-q="home"><button data-v="B">Prefer</button><button data-v="B?">Unsure</button><button data-v="B!">No</button></div>
+      </div>
+
+      <div class="cand">
+        <div class="cand-top">
+          <span class="cand-name">C · Both</span>
+          <span class="cand-desc">Cards slide over a strip that also works. Drag either. My candidate — no director has vetted it.</span>
+        </div>
+        <div class="cand-stage"><div class="phone" id="specC"></div></div>
+        <div class="verdict" data-q="home"><button data-v="C">Prefer</button><button data-v="C?">Unsure</button><button data-v="C!">No</button></div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="who">Watch for</span>
+      <span>Whether you can tell what's to the right <b>before you get there</b>, and whether the number ever shows a value that isn't real. It shouldn't — figures step, they never count.</span>
+    </div>
+  </section>
+
+  <!-- ── TEST 2 ────────────────────────────────────────────────── -->
+  <section class="test">
+    <div class="test-head">
+      <span class="tnum">Test 02 · the bar ramp</span>
+      <h2>Is the colour carrying the fraction, or the culture?</h2>
+      <p class="q">You asked for the warm ramp, and the reasoning is in <code>bar-grammar.ts</code>. Creative withdrew its proposed fix once it read that — but narrowed its objection to the four hex values: green→amber→red is a verdict vocabulary, and in dark mode the <em>calm</em> green is the brightest thing on screen.</p>
+    </div>
+    <div class="note">
+      <span class="who">The test</span>
+      <span>Same stops, same curve, different hues. <b>If the bars still read correctly in every ramp, the colour was carrying fraction</b> and the current hues are fine. If one stops working, that ramp's colour was doing the talking. Four real categories, 19% to 94% spent.</span>
+    </div>
+    <div class="cands">
+      <div class="cand">
+        <div class="cand-top">
+          <span class="cand-name">Toggle the ramp</span>
+          <span class="cand-desc" id="rampDesc">Current — green through amber to red.</span>
+        </div>
+        <div class="cand-stage"><div class="phone" id="specBars"></div></div>
+        <div class="verdict" data-q="ramp-pick" id="rampPick">
+          <button data-v="current" aria-pressed="true">Current</button>
+          <button data-v="rotated">Rotated</button>
+          <button data-v="density">Density</button>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <span class="who">Then decide</span>
+      <span>Which should ship? <b>Current</b> keeps what you asked for. <b>Rotated</b> proves the point and picks new hues. <b>Density</b> is creative's proposal — one ink, darkening.</span>
+    </div>
+    <div class="cands"><div class="cand"><div class="verdict" data-q="ramp"><button data-v="keep current">Keep current</button><button data-v="rotated hues">Rotated</button><button data-v="density ramp">Density</button></div></div></div>
+  </section>
+
+  <!-- ── TEST 3 ────────────────────────────────────────────────── -->
+  <section class="test">
+    <div class="test-head">
+      <span class="tnum">Test 03 · ground</span>
+      <h2>Light or dark by default?</h2>
+      <p class="q">Three of your four references — Monzo, iMessage, Airbnb — are light-first. The dark one, Trading 212, is the one you like least. Creative committed to light and argued it properly: on a dark ground every accent glows, and glow reads as alarm in an app forbidden from using fear.</p>
+    </div>
+    <div class="note">
+      <span class="who">Caveat</span>
+      <span>This is today's palette on a light ground, <b>not</b> creative's proposed one. It answers "does light suit this product?", not "is that the right cream". The full palette is in the specimen file.</span>
+    </div>
+    <div class="cands two">
+      <div class="cand">
+        <div class="cand-top"><span class="cand-name">Dark</span><span class="cand-desc">What ships today.</span></div>
+        <div class="cand-stage"><div class="phone" id="specDark"></div></div>
+      </div>
+      <div class="cand">
+        <div class="cand-top"><span class="cand-name">Light</span><span class="cand-desc">Same figures, same grammar.</span></div>
+        <div class="cand-stage"><div class="phone light" id="specLight"></div></div>
+      </div>
+    </div>
+    <div class="cands"><div class="cand"><div class="verdict" data-q="ground"><button data-v="light-first">Light-first</button><button data-v="dark-first">Keep dark</button><button data-v="undecided">Not yet</button></div></div></div>
+  </section>
+
+  <!-- ── TEST 4 ────────────────────────────────────────────────── -->
+  <section class="test">
+    <div class="test-head">
+      <span class="tnum">Test 04 · the name</span>
+      <h2>Does it survive being worn?</h2>
+      <p class="q">A name reads differently in a sentence than in a list. Creative recommends <strong>Spare</strong> — the app's own word for the number it exists to produce, and the exact antonym of "maximise". Its case against Max: <em>maximise</em> is optimisation vocabulary aimed at someone whose problem is avoidance.</p>
+    </div>
+    <div class="note">
+      <span class="who">Known snag</span>
+      <span>UX flagged it: <b>"spare" is already a label in the UI</b> — "genuinely spare", "spare on 30 Aug". The name would shadow a word the product already uses for a specific figure.</span>
+    </div>
+    <div class="cands"><div class="cand">
+      <div class="cand-top"><span class="cand-name">Worn in place</span><span class="cand-desc">Tap a name to see it in the header and in a sentence.</span></div>
+      <div class="cand-stage"><div class="phone" id="specName"></div></div>
+      <div class="verdict" data-q="name-try" id="namePick">
+        <button data-v="Max" aria-pressed="true">Max</button><button data-v="Spare">Spare</button><button data-v="Leeway">Leeway</button><button data-v="Margin">Margin</button>
+      </div>
+    </div></div>
+    <div class="cands"><div class="cand"><div class="verdict" data-q="name"><button data-v="rename to Spare">Spare</button><button data-v="rename to Leeway">Leeway</button><button data-v="keep Max">Keep Max</button><button data-v="none of these">None yet</button></div></div></div>
+  </section>
+
+  <!-- ── TALLY ─────────────────────────────────────────────────── -->
+  <section class="tally">
+    <h2>Your answers</h2>
+    <ul class="tallyList" id="tallyList"></ul>
+    <div class="copyRow">
+      <button class="btn" id="copyBtn">Copy the tally</button>
+      <button class="btn ghost" id="clearBtn">Clear</button>
+      <span class="copied" id="copied"></span>
+    </div>
+    <textarea class="out" id="out" readonly aria-label="Your answers as text"></textarea>
+  </section>
+
+  <footer class="foot">
+    Nothing here writes to the app. The specimens apply the rules the directors already agreed — figures step rather than count, and the month is stated as <em>about £3,030</em> rather than to the penny, because a projection that prints pence claims a precision it doesn't have. Full reasoning in <code>docs/design/direction/</code>.
+  </footer>
+</div>
+
+<script>
+/* ── data: real figures from a seeded month ─────────────────────────── */
+var HORIZONS = [
+  {k:"Today", fig:"£38.20", unit:" left today", qual:"of £78 · nothing recorded since 9:40", sent:"Coffee and the tube so far."},
+  {k:"Week",  fig:"£245.68", unit:" left", qual:"of £545 this week · 3 days left", sent:"You've got room for the weekend."},
+  {k:"Month", fig:"about £3,030", unit:" spare", qual:"£6,520 of £9,547 income used · 30 Aug", sent:"Assumes the rest of the weekly budget is spent."},
+  {k:"Year",  fig:"+£11,806.05", unit:" kept", qual:"of £28,643.82 earned · 2026", sent:"Eight months in."}
+];
+var CATS = [
+  {lbl:"Everyday",  amt:"£210.45 left of £260", pct:19},
+  {lbl:"Weekend",   amt:"£29.21 left of £190",  pct:85},
+  {lbl:"Transport", amt:"£6.02 left of £95",    pct:94},
+  {lbl:"This week", amt:"£299.32 spent of £545",pct:55}
+];
+var RAMPS = {
+  current:{desc:"Current — green through amber to red.",
+    stops:"#8fd14f 0%,#8fd14f 55%,#d8d84a 74%,#f0a93f 88%,#e8736f 100%"},
+  rotated:{desc:"Rotated — lime through teal to indigo. Same stops, same curve.",
+    stops:"#7fd6a6 0%,#7fd6a6 55%,#5cc3c0 74%,#4f95c9 88%,#6a6fc4 100%"},
+  density:{desc:"Density — one ink, darkening. Creative's proposal.",
+    stops:"rgba(226,229,220,.30) 0%,rgba(226,229,220,.30) 55%,rgba(226,229,220,.52) 74%,rgba(226,229,220,.76) 88%,rgba(226,229,220,.96) 100%"}
+};
+var esc = function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ── the figure block ───────────────────────────────────────────────── */
+function figureHTML(h){
+  return '<div class="figure">'+esc(h.fig)+'<span class="unit">'+esc(h.unit)+'</span></div>'+
+         '<div class="qual">'+esc(h.qual)+'</div>'+
+         '<div class="sentence">'+esc(h.sent)+'</div>';
+}
+function headHTML(name){
+  return '<div class="phead"><span class="m">'+esc(name||"August")+'</span><span class="d">29 AUG</span></div>';
+}
+
+/* ── the tick strip ─────────────────────────────────────────────────── */
+function stripHTML(){
+  var t="";
+  for(var i=0;i<HORIZONS.length;i++){
+    t+='<button class="tick" type="button" data-i="'+i+'" aria-current="'+(i===1)+'">'+HORIZONS[i].k+'</button>';
+  }
+  return '<div class="strip"><div class="stripRail"><span class="stripLine"></span>'+
+         '<span class="thumb"></span><span class="stripTicks">'+t+'</span></div></div>';
+}
+
+/* ── the deck ───────────────────────────────────────────────────────── */
+function deckHTML(){
+  var c="";
+  for(var i=0;i<HORIZONS.length;i++) c+='<div class="dcard">'+figureHTML(HORIZONS[i])+'</div>';
+  return '<div class="deck"><div class="deckTrack">'+c+'</div></div>';
+}
+
+/* ── shared index driver ────────────────────────────────────────────
+   One setIndex per specimen. Every input drives it; nothing interpolates
+   a value. The figure is a step function of position — it re-states, it
+   never counts. That rule is settled; only the control is being tested. */
+function wire(root, opts){
+  var idx = 1, n = HORIZONS.length;
+  var track = root.querySelector(".deckTrack");
+  var ticks = [].slice.call(root.querySelectorAll(".tick"));
+  var thumb = root.querySelector(".thumb");
+  var rail  = root.querySelector(".stripRail");
+  var figWrap = root.querySelector("[data-fig]");
+  var CARD = 258, GAP = 10, STEP = CARD + GAP;
+
+  function paint(animate){
+    if(track){
+      track.style.transition = (animate && !reduced) ? "transform 320ms cubic-bezier(.22,.61,.36,1)" : "none";
+      track.style.transform = "translate3d("+(-idx*STEP)+"px,0,0)";
+    }
+    if(figWrap) figWrap.innerHTML = figureHTML(HORIZONS[idx]);
+    for(var i=0;i<ticks.length;i++) ticks[i].setAttribute("aria-current", String(i===idx));
+    if(thumb && ticks.length){
+      var t = ticks[idx], rr = rail.getBoundingClientRect(), tr = t.getBoundingClientRect();
+      thumb.style.transition = (animate && !reduced) ? "transform 220ms cubic-bezier(.22,.61,.36,1), width 220ms" : "none";
+      thumb.style.width = Math.max(28, tr.width) + "px";
+      thumb.style.transform = "translate3d("+(tr.left - rr.left)+"px,0,0)";
+    }
+  }
+  function setIndex(i, animate){
+    i = Math.max(0, Math.min(n-1, i));
+    if(i === idx){ paint(animate); return; }
+    idx = i; paint(animate);
+  }
+
+  /* taps + keyboard — the route that survives when dragging isn't available */
+  ticks.forEach(function(t){
+    t.addEventListener("click", function(){ setIndex(+t.dataset.i, true); });
+    t.addEventListener("keydown", function(e){
+      if(e.key==="ArrowRight"){ e.preventDefault(); setIndex(idx+1,true); ticks[Math.min(n-1,idx)].focus(); }
+      if(e.key==="ArrowLeft"){ e.preventDefault(); setIndex(idx-1,true); ticks[Math.max(0,idx)].focus(); }
+    });
+  });
+
+  /* drag — 1:1 while the finger is down, curve only on release */
+  function draggable(el, unitPx, isStrip){
+    if(!el) return;
+    var down=false, startX=0, startIdx=0, moved=0, pid=null;
+    el.addEventListener("pointerdown", function(e){
+      if(e.target.classList && e.target.classList.contains("tick") && !isStrip) return;
+      down=true; startX=e.clientX; startIdx=idx; moved=0; pid=e.pointerId;
+      el.setPointerCapture&&el.setPointerCapture(pid);
+      if(track) track.classList.add("drag");
+      if(track) track.style.transition="none";
+    });
+    el.addEventListener("pointermove", function(e){
+      if(!down) return;
+      moved = e.clientX - startX;
+      if(track && !isStrip){
+        track.style.transform = "translate3d("+(-startIdx*STEP + moved)+"px,0,0)";
+      }
+      /* hysteresis: the value only steps past the halfway point, so a
+         half-committed drag never states a figure that isn't the one
+         you land on */
+      var stepped = startIdx - Math.round(moved / unitPx);
+      stepped = Math.max(0, Math.min(n-1, stepped));
+      if(stepped !== idx){
+        idx = stepped;
+        /* dragging the strip on the synthesis card must carry the cards
+           with it, or the two halves of one control disagree */
+        if(track && isStrip){
+          track.style.transition = reduced ? "none" : "transform 160ms cubic-bezier(.22,.61,.36,1)";
+          track.style.transform = "translate3d("+(-idx*STEP)+"px,0,0)";
+        }
+        if(figWrap) figWrap.innerHTML = figureHTML(HORIZONS[idx]);
+        for(var i=0;i<ticks.length;i++) ticks[i].setAttribute("aria-current", String(i===idx));
+        if(thumb){
+          var t=ticks[idx], rr=rail.getBoundingClientRect(), tr=t.getBoundingClientRect();
+          thumb.style.transition="none";
+          thumb.style.width=Math.max(28,tr.width)+"px";
+          thumb.style.transform="translate3d("+(tr.left-rr.left)+"px,0,0)";
+        }
+      }
+    });
+    function release(){
+      if(!down) return; down=false;
+      if(track) track.classList.remove("drag");
+      paint(true);
+    }
+    el.addEventListener("pointerup", release);
+    el.addEventListener("pointercancel", release);
+    el.addEventListener("lostpointercapture", release);
+  }
+  if(opts.dragDeck) draggable(root.querySelector(".deck"), STEP, false);
+  if(opts.dragStrip) draggable(rail, (rail ? rail.getBoundingClientRect().width/(n-1) : 70), true);
+
+  /* the thumb is positioned from measured tick widths, so it has to be
+     placed again once the real faces land — otherwise it sits under the
+     fallback font's metrics */
+  requestAnimationFrame(function(){ paint(false); });
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){ paint(false); });
+  }
+  return setIndex;
+}
+
+/* ── build the specimens ────────────────────────────────────────────── */
+var A = document.getElementById("specA");
+A.innerHTML = headHTML() + deckHTML();
+wire(A, {dragDeck:true, dragStrip:false});
+
+var B = document.getElementById("specB");
+B.innerHTML = headHTML() + '<div data-fig></div>' + stripHTML();
+wire(B, {dragDeck:false, dragStrip:true});
+
+var C = document.getElementById("specC");
+C.innerHTML = headHTML() + deckHTML() + stripHTML();
+wire(C, {dragDeck:true, dragStrip:true});
+
+/* bars */
+function barsHTML(rampKey){
+  var g = RAMPS[rampKey].stops, out = "";
+  for(var i=0;i<CATS.length;i++){
+    var c = CATS[i];
+    /* faithful to bar-grammar.ts: the gradient is painted across the whole
+       TRACK and the fill reveals the left part of it, so colour means
+       "this much of the budget" rather than "how bad" */
+    var size = c.pct > 0 ? (100 / c.pct * 100) : 100;
+    out += '<div class="barRow"><div class="barTop"><span class="lbl">'+esc(c.lbl)+
+           '</span><span class="amt">'+esc(c.amt)+'</span></div>'+
+           '<div class="track"><div class="fill" style="width:'+c.pct+'%;background-image:linear-gradient(90deg,'+g+
+           ');background-size:'+size.toFixed(1)+'% 100%"></div></div></div>';
+  }
+  return out;
+}
+var barsEl = document.getElementById("specBars"), currentRamp = "current";
+function paintBars(){
+  barsEl.innerHTML = headHTML("Week 3") + barsHTML(currentRamp);
+  document.getElementById("rampDesc").textContent = RAMPS[currentRamp].desc;
+}
+paintBars();
+document.getElementById("rampPick").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  currentRamp = b.dataset.v; paintBars();
+});
+
+/* light + dark grounds */
+function groundSpec(el){
+  el.innerHTML = headHTML() + figureHTML(HORIZONS[1]) + barsHTML("current");
+}
+groundSpec(document.getElementById("specDark"));
+groundSpec(document.getElementById("specLight"));
+
+/* the name, worn */
+var nameEl = document.getElementById("specName");
+function paintName(nm){
+  nameEl.innerHTML =
+    '<div class="phead"><span class="m">'+esc(nm)+'</span><span class="d">29 AUG</span></div>' +
+    figureHTML(HORIZONS[1]) +
+    '<div class="sentence" style="margin-top:16px">"Let me check '+esc(nm)+' before we book anything."</div>' +
+    '<div class="qual" style="margin-top:10px">'+esc(nm)+' couldn\'t read one line on that receipt.</div>';
+}
+paintName("Max");
+document.getElementById("namePick").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  paintName(b.dataset.v);
+});
+
+/* ── verdicts + tally ───────────────────────────────────────────────── */
+var QUESTIONS = [
+  {id:"home",   label:"Home control"},
+  {id:"ramp",   label:"Bar ramp"},
+  {id:"ground", label:"Light or dark"},
+  {id:"name",   label:"The name"}
+];
+var answers = {};
+try{ answers = JSON.parse(localStorage.getItem("maxbench") || "{}") || {}; }catch(e){ answers = {}; }
+
+function save(){ try{ localStorage.setItem("maxbench", JSON.stringify(answers)); }catch(e){} }
+
+function renderTally(){
+  var list = document.getElementById("tallyList"), html = "", lines = [];
+  for(var i=0;i<QUESTIONS.length;i++){
+    var q = QUESTIONS[i], v = answers[q.id];
+    html += '<li><span class="k">'+esc(q.label)+'</span><span class="v'+(v?"":" none")+'">'+
+            esc(v || "not answered")+'</span></li>';
+    lines.push(q.label+": "+(v || "—"));
+  }
+  list.innerHTML = html;
+  document.getElementById("out").value = "Max design bench — my answers\n\n" + lines.join("\n");
+}
+
+document.addEventListener("click", function(e){
+  var b = e.target.closest(".verdict button"); if(!b) return;
+  var group = b.closest(".verdict"), q = group.dataset.q;
+  if(q === "ramp-pick" || q === "name-try"){
+    [].slice.call(group.children).forEach(function(x){ x.setAttribute("aria-pressed", String(x===b)); });
+    return;
+  }
+  var val = b.dataset.v;
+  /* one answer per question, even across the three candidate cards */
+  document.querySelectorAll('.verdict[data-q="'+q+'"] button').forEach(function(x){
+    x.setAttribute("aria-pressed", String(x === b));
+  });
+  answers[q] = val; save(); renderTally();
+});
+
+/* restore */
+QUESTIONS.forEach(function(q){
+  if(!answers[q.id]) return;
+  document.querySelectorAll('.verdict[data-q="'+q.id+'"] button').forEach(function(x){
+    if(x.dataset.v === answers[q.id]) x.setAttribute("aria-pressed","true");
+  });
+});
+renderTally();
+
+document.getElementById("copyBtn").addEventListener("click", function(){
+  var ta = document.getElementById("out"), msg = document.getElementById("copied");
+  ta.select();
+  var ok = false;
+  try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){ msg.textContent = "Copied."; },
+      function(){ msg.textContent = ok ? "Copied." : "Select the text above and copy."; });
+  } else {
+    msg.textContent = ok ? "Copied." : "Select the text above and copy.";
+  }
+  setTimeout(function(){ msg.textContent = ""; }, 2600);
+});
+document.getElementById("clearBtn").addEventListener("click", function(){
+  answers = {}; save();
+  document.querySelectorAll('.verdict button').forEach(function(x){
+    var q = x.closest(".verdict").dataset.q;
+    if(q !== "ramp-pick" && q !== "name-try") x.setAttribute("aria-pressed","false");
+  });
+  renderTally();
+});
+
+window.addEventListener("resize", function(){
+  [A,B,C].forEach(function(root){
+    var thumb = root.querySelector(".thumb"), rail = root.querySelector(".stripRail");
+    if(!thumb || !rail) return;
+    var t = root.querySelector('.tick[aria-current="true"]'); if(!t) return;
+    var rr = rail.getBoundingClientRect(), tr = t.getBoundingClientRect();
+    thumb.style.transition = "none";
+    thumb.style.width = Math.max(28, tr.width) + "px";
+    thumb.style.transform = "translate3d("+(tr.left - rr.left)+"px,0,0)";
+  });
+});
+</script>
