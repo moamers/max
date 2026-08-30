@@ -1,0 +1,418 @@
+<title>Oasis, Dune, Horizon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Libre+Franklin:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#EDECE8; --surface:#FFFFFF; --sunk:#E3E2DC;
+  --ink:#1A1A17; --ink-2:#55554E; --ink-3:#84837B;
+  --rule:#D6D4CE; --accent:#41526F; --accent-soft:#E4E8F0; --accent-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,26,23,.06),0 8px 24px -12px rgba(26,26,23,.18);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216; --ink:#E9E8E4; --ink-2:#A5A69F;
+  --ink-3:#7A7B75; --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216; --ink:#E9E8E4; --ink-2:#A5A69F;
+  --ink-3:#7A7B75; --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font:400 16px/1.55 Archivo,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:800px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:40px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin:0;font-size:clamp(30px,7vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05}
+h2{margin:0;font-size:clamp(21px,4.4vw,26px);font-weight:650;letter-spacing:-.018em;line-height:1.2;text-wrap:balance}
+.mast{display:flex;flex-direction:column;gap:13px;padding-bottom:26px;border-bottom:1px solid var(--rule)}
+.sf{margin:0;max-width:64ch;color:var(--ink-2);font-size:16.5px}
+.sf strong{color:var(--ink);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:17px}
+.sh{display:flex;flex-direction:column;gap:8px}
+.tnum{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.tnum::before{content:"";width:20px;height:1px;background:var(--accent);opacity:.5}
+.q{margin:0;color:var(--ink-2);max-width:64ch;font-size:15.5px}
+.note{display:flex;gap:12px;padding:13px 15px;background:var(--surface);border:1px solid var(--rule);
+  border-left:2px solid var(--accent);border-radius:3px;font-size:14px;color:var(--ink-2);line-height:1.5}
+.note b{color:var(--ink);font-weight:600}
+.who{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);white-space:nowrap;padding-top:3px}
+.opts{display:grid;gap:16px}
+@media(min-width:740px){.opts.three{grid-template-columns:repeat(3,1fr)}}
+.opt{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);
+  border-radius:5px;overflow:hidden;box-shadow:var(--shadow)}
+.ohead{padding:14px 15px 12px;display:flex;flex-direction:column;gap:5px}
+.oname{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.odesc{font-size:13.2px;color:var(--ink-2);line-height:1.45}
+.ostage{background:var(--sunk);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:15px 13px}
+.pick{display:flex;border-top:1px solid var(--rule)}
+.pick button{flex:1;appearance:none;border:0;border-right:1px solid var(--rule);background:transparent;
+  color:var(--ink-2);font:500 12.5px/1 Archivo,sans-serif;padding:11px 6px;cursor:pointer;transition:background .12s,color .12s}
+.pick button:last-child{border-right:0}
+.pick button:hover{background:var(--accent-soft);color:var(--ink)}
+.pick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.pick button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* app specimens — Low Sun, literal values */
+.mini{border-radius:12px;padding:13px 12px 14px;border:1px solid;font-family:"Libre Franklin",system-ui,sans-serif;font-size:11px;line-height:1.4}
+.mini .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:10px;font-weight:600}
+.mini .mfig{font-family:Newsreader,Georgia,serif;font-size:29px;font-weight:400;letter-spacing:-.015em;font-variant-numeric:tabular-nums;line-height:1.05}
+.mini .mq{font-size:9.5px;margin-top:4px}
+.mini .row{display:flex;justify-content:space-between;gap:9px;font-size:10.5px;margin-top:11px;font-weight:600;white-space:nowrap}
+.mini .trk{height:5px;border-radius:99px;margin-top:5px;overflow:hidden}
+.mini .fl{height:100%;border-radius:99px}
+.mini .acts{display:flex;gap:6px;margin-top:13px;align-items:center;flex-wrap:wrap}
+.mini .btn1{padding:6px 11px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap}
+.mini .flag{padding:5px 9px;border-radius:99px;font-size:9.5px;font-weight:600;white-space:nowrap}
+.mini .lnk{font-size:9.5px;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.pair{display:flex;gap:10px}
+.pair>*{flex:1;min-width:0}
+.sw{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap}
+.sw i{width:24px;height:15px;border-radius:3px;display:block;border:1px solid rgba(128,128,128,.25)}
+.mlbl{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;display:block}
+
+/* the morphing mark */
+.markbay{background:var(--sunk);border:1px solid var(--rule);border-radius:8px;padding:24px 18px 18px;
+  display:flex;flex-direction:column;align-items:center;gap:16px}
+.markbay svg{color:var(--ink);display:block}
+.smallrow{display:flex;align-items:center;gap:22px;margin-top:2px}
+.smallrow .cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+.smallrow .cap{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.scopes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.scopes button{appearance:none;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);
+  font:600 12px/1 Archivo,sans-serif;padding:9px 15px;border-radius:99px;cursor:pointer;transition:all .15s}
+.scopes button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.scopes button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.statename{font-family:Newsreader,Georgia,serif;font-size:23px;color:var(--ink-2)}
+.pillsim{display:flex;gap:5px;background:var(--surface);border:1px solid var(--rule);border-radius:99px;padding:5px;align-items:center}
+.pillsim span{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.06em;padding:6px 11px;border-radius:99px;color:var(--ink-3)}
+.pillsim span.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+
+.tally{background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.tl{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.tl li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px;align-items:baseline}
+.tl li:last-child{border-bottom:0}
+.tl .k{color:var(--ink-2)} .tl .v{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;font-weight:500}
+.tl .v.none{color:var(--ink-3);font-weight:400}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  font:600 13.5px/1 Archivo,sans-serif;padding:11px 16px;border-radius:4px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.copied{font-size:13px;color:var(--ink-3)}
+textarea.out{width:100%;min-height:100px;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:4px;padding:11px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.55;resize:vertical}
+.foot{border-top:1px solid var(--rule);padding-top:22px;color:var(--ink-3);font-size:13.5px;max-width:64ch}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <span class="eyebrow">Round 6 · settling two things</span>
+  <h1>Oasis, Dune, Horizon</h1>
+  <p class="sf"><strong>Low Sun is picked, Bookish is picked, structure A is picked.</strong> Two things left: the blue you asked for, and your idea for a mark that changes with the scope. Both are here.</p>
+</header>
+
+<!-- ══ 1 · THE BLUE ═══════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">01 · the blue</span>
+    <h2>Clay steps back to being a warning</h2>
+    <p class="q">You said clay should be the warning colour and not the main one, and that green alone isn't enough. So the roles change: <strong>blue does the work</strong>, green supports, and clay is held back for the one thing that needs a look. Same ground and type in all three — only the blue moves.</p>
+  </div>
+  <div class="note"><span class="who">the roles</span><span><b>Blue</b> — anything you can act on: buttons, links, the live tab. <b>Green</b> — a quiet second voice, used for a state that is settled or fine. <b>Clay</b> — attention only, and never more than one per screen. That is what makes it read as a warning instead of decoration.</span></div>
+
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · Dusk</span><span class="odesc">A dusty slate-blue — the sky twenty minutes after the sun goes. Quietest of the three; closest to a neutral.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" data-fill="A-light"></div>
+          <div class="mini" data-fill="A-dark"></div>
+        </div>
+        <div class="sw"><i style="background:#F0E9D9"></i><i style="background:#2A2317"></i><i style="background:#2F5470"></i>
+          <i style="background:#4F6650"></i><i style="background:#B3502F"></i><i style="background:#14140F"></i></div>
+      </div>
+      <div class="pick" data-q="blue"><button data-v="A · Dusk">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Deep Water</span><span class="odesc">A teal-blue with real saturation — the oasis itself. The only one that feels like a colour rather than a shade.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" data-fill="B-light"></div>
+          <div class="mini" data-fill="B-dark"></div>
+        </div>
+        <div class="sw"><i style="background:#F0E9D9"></i><i style="background:#2A2317"></i><i style="background:#1F6A78"></i>
+          <i style="background:#4F6650"></i><i style="background:#B3502F"></i><i style="background:#14140F"></i></div>
+      </div>
+      <div class="pick" data-q="blue"><button data-v="B · Deep Water">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Night</span><span class="odesc">An indigo pulled from the stargazing note. Deepest, most formal, and the furthest from the sand.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" data-fill="C-light"></div>
+          <div class="mini" data-fill="C-dark"></div>
+        </div>
+        <div class="sw"><i style="background:#F0E9D9"></i><i style="background:#2A2317"></i><i style="background:#38406E"></i>
+          <i style="background:#4F6650"></i><i style="background:#B3502F"></i><i style="background:#14140F"></i></div>
+      </div>
+      <div class="pick" data-q="blue"><button data-v="C · Night">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2 · THE MARK ═══════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">02 · the mark</span>
+    <h2>One mark, three distances</h2>
+    <p class="q">Your idea, drawn. It works because the two shapes you liked already share a skeleton — <strong>two strokes and a disc</strong> — so the ridges can genuinely flatten into the horizon rather than cross-fading. That gave the third state its meaning: <strong>oasis is close, dune is mid-distance, horizon is far.</strong> The mark pulls back as the time scope widens.</p>
+  </div>
+
+  <div class="markbay">
+    <svg id="bigmark" width="132" height="132" viewBox="0 0 48 48" aria-label="The mark, currently showing the week state">
+      <path id="p1" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+      <path id="p2" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+      <circle id="c1" fill="currentColor"/>
+    </svg>
+    <div class="statename" id="statename">oasis</div>
+    <div class="scopes" id="scopes">
+      <button data-s="0" aria-pressed="true">This week</button>
+      <button data-s="1" aria-pressed="false">Month</button>
+      <button data-s="2" aria-pressed="false">Year</button>
+      <button data-s="cycle" aria-pressed="false">Cycle</button>
+    </div>
+    <div class="smallrow">
+      <div class="cell">
+        <svg id="sm1" width="26" height="26" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="5.2" stroke-linecap="round"/>
+          <path fill="none" stroke="currentColor" stroke-width="5.2" stroke-linecap="round"/>
+          <circle fill="currentColor"/></svg>
+        <span class="cap">26px</span>
+      </div>
+      <div class="cell">
+        <svg id="sm2" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="6.4" stroke-linecap="round"/>
+          <path fill="none" stroke="currentColor" stroke-width="6.4" stroke-linecap="round"/>
+          <circle fill="currentColor"/></svg>
+        <span class="cap">18px · tab</span>
+      </div>
+      <div class="cell">
+        <div class="pillsim" id="pillsim">
+          <svg id="sm3" width="17" height="17" viewBox="0 0 48 48" aria-hidden="true" style="margin-left:5px">
+            <path fill="none" stroke="currentColor" stroke-width="6.4" stroke-linecap="round"/>
+            <path fill="none" stroke="currentColor" stroke-width="6.4" stroke-linecap="round"/>
+            <circle fill="currentColor"/></svg>
+          <span class="on" id="pl0">week</span><span id="pl1">month</span><span id="pl2">year</span>
+        </div>
+        <span class="cap">in the nav pill</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><span class="who">the rule that keeps it safe</span><span>The mark moves with <b>where you are</b>, never with <b>a value</b>. The moment its geometry responds to how much you've spent it becomes a progress ring — a mechanic that can break, and one this app bans. Scope only.</span></div>
+
+  <div class="note"><span class="who">what it costs</span><span>Nothing, as it turns out. Structure A took the scrubber off home, which freed a signature slot. The three become <b>the Tape</b> (any figure opens its evidence), <b>the Landing</b> (the add), and <b>the Mark</b>. Still three. The third one is yours.</span></div>
+
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">Which is the fixed mark?</span><span class="odesc">The app icon, the favicon and anywhere outside the app can't morph — they need one state. Pick which one represents the brand at rest.</span></div>
+      <div class="pick" data-q="canonical"><button data-v="oasis">Oasis</button><button data-v="dune">Dune</button><button data-v="horizon">Horizon</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">Does the morph earn a signature slot?</span><span class="odesc">If yes it gets crafted properly — timing, easing, the works. If no it becomes a quiet cross-fade and something else takes the slot.</span></div>
+      <div class="pick" data-q="signature"><button data-v="yes, signature">Yes</button><button data-v="no, keep it quiet">Keep it quiet</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">More iteration on the shapes?</span><span class="odesc">These are second drafts. Say if the three states are close enough to build on, or want another pass.</span></div>
+      <div class="pick" data-q="shapes"><button data-v="good enough">Build on these</button><button data-v="another pass">Another pass</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="tally">
+  <h2 style="font-size:19px">Your picks</h2>
+  <ul class="tl" id="tl"></ul>
+  <div class="row2">
+    <button class="btn" id="copy">Copy the tally</button>
+    <button class="btn ghost" id="clear">Clear</button>
+    <span class="copied" id="msg"></span>
+  </div>
+  <textarea class="out" id="out" readonly aria-label="Your picks as text"></textarea>
+</section>
+
+<footer class="foot">Motion level C · alive is noted. The added motion is all functional — transitions, scroll response, tap feedback — so the signature count stays at three. The name is still open.</footer>
+</div>
+
+<script>
+/* ── the palette specimens ─────────────────────────────────────────── */
+var LOWSUN={
+  light:{bg:"#F0E9D9",card:"#FBF7EC",ink:"#2A2317",ink2:"#60584A",rule:"#DED3BC",green:"#4F6650",clay:"#B3502F",clayBg:"#F3E0D6"},
+  dark: {bg:"#14140F",card:"#1C1C15",ink:"#EFEADC",ink2:"#A39C89",rule:"#2B2B22",green:"#86A187",clay:"#D98A66",clayBg:"#2E211A"}
+};
+var BLUES={
+  A:{light:"#2F5470",dark:"#8FB2CC"},
+  B:{light:"#1F6A78",dark:"#6FBAC6"},
+  C:{light:"#38406E",dark:"#98A2D6"}
+};
+function miniHTML(blueKey,mode){
+  var t=LOWSUN[mode], blue=BLUES[blueKey][mode];
+  var onBlue = mode==="light" ? "#FBF7EC" : "#14140F";
+  return ''+
+  '<div class="mh"><span>This week</span><span style="color:'+t.ink2+';font-weight:400">17–23 Aug</span></div>'+
+  '<div class="mfig">£245.68</div>'+
+  '<div class="mq" style="color:'+t.ink2+'">left of £545 · 3 days to go</div>'+
+  '<div class="row"><span>Everyday</span><span>£210.45</span></div>'+
+  '<div class="trk" style="background:'+t.rule+'"><div class="fl" style="width:19%;background:'+t.ink+'"></div></div>'+
+  '<div class="row"><span>Weekend</span><span>£29.21</span></div>'+
+  '<div class="trk" style="background:'+t.rule+'"><div class="fl" style="width:85%;background:'+t.ink+'"></div></div>'+
+  '<div class="acts">'+
+    '<span class="btn1" style="background:'+blue+';color:'+onBlue+'">Add a one-off</span>'+
+    '<span class="lnk" style="color:'+blue+'">Where this comes from</span>'+
+  '</div>'+
+  '<div class="acts" style="margin-top:9px">'+
+    '<span class="flag" style="background:'+t.clayBg+';color:'+t.clay+'">1 needs a look</span>'+
+    '<span class="flag" style="background:transparent;color:'+t.green+';border:1px solid '+t.green+'">4 bills settled</span>'+
+  '</div>';
+}
+document.querySelectorAll(".mini[data-fill]").forEach(function(el){
+  var parts=el.dataset.fill.split("-"), key=parts[0], mode=parts[1], t=LOWSUN[mode];
+  el.style.background=t.card; el.style.borderColor=t.rule; el.style.color=t.ink;
+  el.innerHTML=miniHTML(key,mode);
+});
+
+/* ── the morphing mark ─────────────────────────────────────────────
+   Three states, one skeleton: two cubics and a disc. Because the command
+   structure matches, the numbers can simply be interpolated — a real
+   morph, not a cross-fade. */
+var STATES=[
+  {name:"oasis",
+   p1:[6,29, 15,21, 33,21, 42,29],
+   p2:[13,38, 20,34, 28,34, 35,38],
+   c:[24,15.5,4.6]},
+  {name:"dune",
+   p1:[4,35, 12,19, 22,19, 30,35],
+   p2:[17,35, 26,25, 35,25, 44,35],
+   c:[34,14,3.8]},
+  {name:"horizon",
+   p1:[5,31, 17,31, 31,31, 43,31],
+   p2:[14,40, 21,40, 27,40, 34,40],
+   c:[31,19,4.4]}
+];
+var d=function(a){ return "M"+a[0]+" "+a[1]+" C"+a[2]+" "+a[3]+","+a[4]+" "+a[5]+","+a[6]+" "+a[7]; };
+var lerp=function(a,b,t){ return a+(b-a)*t; };
+var lerpArr=function(a,b,t){ return a.map(function(v,i){ return +lerp(v,b[i],t).toFixed(2); }); };
+var ease=function(t){ return t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2; };
+
+var TARGETS=[["p1","p2","c1"]];
+function paintInto(svg,st){
+  var ps=svg.querySelectorAll("path"), c=svg.querySelector("circle");
+  ps[0].setAttribute("d",d(st.p1)); ps[1].setAttribute("d",d(st.p2));
+  c.setAttribute("cx",st.c[0]); c.setAttribute("cy",st.c[1]); c.setAttribute("r",st.c[2]);
+}
+var big=document.getElementById("bigmark");
+var smalls=[document.getElementById("sm1"),document.getElementById("sm2"),document.getElementById("sm3")];
+var reduced=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+var cur=0, anim=null, cycling=false, cycleTimer=null;
+function render(st){
+  paintInto(big,st);
+  smalls.forEach(function(s){ paintInto(s,st); });
+}
+function setState(to,animate){
+  var from=STATES[cur], target=STATES[to];
+  document.getElementById("statename").textContent=target.name;
+  big.setAttribute("aria-label","The mark, currently showing the "+target.name+" state");
+  ["pl0","pl1","pl2"].forEach(function(id,i){
+    document.getElementById(id).className = (i===to?"on":"");
+  });
+  if(anim) cancelAnimationFrame(anim);
+  if(!animate||reduced){ cur=to; render(target); return; }
+  var t0=performance.now(), DUR=520;
+  (function step(now){
+    var raw=Math.min(1,(now-t0)/DUR), t=ease(raw);
+    render({p1:lerpArr(from.p1,target.p1,t),p2:lerpArr(from.p2,target.p2,t),c:lerpArr(from.c,target.c,t)});
+    if(raw<1) anim=requestAnimationFrame(step); else cur=to;
+  })(t0);
+}
+render(STATES[0]);
+document.getElementById("scopes").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  var btns=[].slice.call(this.children);
+  if(b.dataset.s==="cycle"){
+    cycling=!cycling; b.setAttribute("aria-pressed",String(cycling));
+    if(cycling){
+      (function loop(){
+        cycleTimer=setTimeout(function(){
+          var next=(cur+1)%3;
+          btns.forEach(function(x){ x.setAttribute("aria-pressed",String(x.dataset.s===String(next))); });
+          document.querySelector('#scopes button[data-s="cycle"]').setAttribute("aria-pressed","true");
+          setState(next,true); loop();
+        },1250);
+      })();
+    } else { clearTimeout(cycleTimer); }
+    return;
+  }
+  cycling=false; clearTimeout(cycleTimer);
+  btns.forEach(function(x){ x.setAttribute("aria-pressed",String(x===b)); });
+  setState(+b.dataset.s,true);
+});
+
+/* ── tally ─────────────────────────────────────────────────────────── */
+var Q=[{id:"blue",label:"The blue"},{id:"canonical",label:"Fixed mark"},
+       {id:"signature",label:"Morph as signature"},{id:"shapes",label:"Shapes"}];
+var ans={};
+try{ ans=JSON.parse(localStorage.getItem("markpicks")||"{}")||{}; }catch(e){ ans={}; }
+function save(){ try{ localStorage.setItem("markpicks",JSON.stringify(ans)); }catch(e){} }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function render2(){
+  var h="",lines=[];
+  Q.forEach(function(q){
+    var v=ans[q.id];
+    h+='<li><span class="k">'+esc(q.label)+'</span><span class="v'+(v?"":" none")+'">'+esc(v||"not picked")+'</span></li>';
+    lines.push(q.label+": "+(v||"—"));
+  });
+  document.getElementById("tl").innerHTML=h;
+  document.getElementById("out").value="Mark & blue — my picks\n\n"+lines.join("\n");
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".pick button"); if(!b) return;
+  var q=b.closest(".pick").dataset.q;
+  document.querySelectorAll('.pick[data-q="'+q+'"] button').forEach(function(x){
+    x.setAttribute("aria-pressed",String(x===b));
+  });
+  ans[q]=b.dataset.v; save(); render2();
+});
+Q.forEach(function(q){
+  if(!ans[q.id]) return;
+  document.querySelectorAll('.pick[data-q="'+q.id+'"] button').forEach(function(x){
+    if(x.dataset.v===ans[q.id]) x.setAttribute("aria-pressed","true");
+  });
+});
+render2();
+document.getElementById("copy").addEventListener("click",function(){
+  var ta=document.getElementById("out"), m=document.getElementById("msg");
+  ta.select(); var ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){m.textContent="Copied.";},
+      function(){m.textContent=ok?"Copied.":"Select the text above and copy.";});
+  } else { m.textContent=ok?"Copied.":"Select the text above and copy."; }
+  setTimeout(function(){m.textContent="";},2600);
+});
+document.getElementById("clear").addEventListener("click",function(){
+  ans={}; save();
+  document.querySelectorAll(".pick button").forEach(function(x){x.setAttribute("aria-pressed","false");});
+  render2();
+});
+</script>
