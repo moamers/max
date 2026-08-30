@@ -1,0 +1,528 @@
+<title>Dune Studies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Public+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Libre+Franklin:wght@400;500;600&display=swap">
+
+<style>
+/* ─── rig (unchanged from the bench, so the chrome stays familiar and
+       nothing in it competes with the options under test) ───────────── */
+:root{
+  --ground:#EDECE8; --surface:#FFFFFF; --sunk:#E3E2DC;
+  --ink:#1A1A17; --ink-2:#55554E; --ink-3:#84837B;
+  --rule:#D6D4CE; --accent:#41526F; --accent-soft:#E4E8F0; --accent-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(26,26,23,.06),0 8px 24px -12px rgba(26,26,23,.18);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216;
+  --ink:#E9E8E4; --ink-2:#A5A69F; --ink-3:#7A7B75;
+  --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --ground:#15161A; --surface:#1C1E23; --sunk:#111216;
+  --ink:#E9E8E4; --ink-2:#A5A69F; --ink-3:#7A7B75;
+  --rule:#2A2C32; --accent:#9CB0D0; --accent-soft:#232833; --accent-ink:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font:400 16px/1.55 Archivo,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:800px;margin:0 auto;padding:32px 20px 48px;display:flex;flex-direction:column;gap:42px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1{margin:0;font-size:clamp(30px,7vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05}
+h2{margin:0;font-size:clamp(21px,4.4vw,26px);font-weight:650;letter-spacing:-.018em;line-height:1.2;text-wrap:balance}
+.mast{display:flex;flex-direction:column;gap:13px;padding-bottom:26px;border-bottom:1px solid var(--rule)}
+.sf{margin:0;max-width:64ch;color:var(--ink-2);font-size:16.5px}
+.sf strong{color:var(--ink);font-weight:600}
+.sec{display:flex;flex-direction:column;gap:17px}
+.sh{display:flex;flex-direction:column;gap:8px}
+.tnum{display:inline-flex;align-items:center;gap:9px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.tnum::before{content:"";width:20px;height:1px;background:var(--accent);opacity:.5}
+.q{margin:0;color:var(--ink-2);max-width:64ch;font-size:15.5px}
+.note{display:flex;gap:12px;padding:13px 15px;background:var(--surface);border:1px solid var(--rule);
+  border-left:2px solid var(--accent);border-radius:3px;font-size:14px;color:var(--ink-2);line-height:1.5}
+.note b{color:var(--ink);font-weight:600}
+.who{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);white-space:nowrap;padding-top:3px}
+.opts{display:grid;gap:16px}
+@media(min-width:760px){.opts.three{grid-template-columns:repeat(3,1fr)}}
+.opt{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);
+  border-radius:5px;overflow:hidden;box-shadow:var(--shadow)}
+.ohead{padding:14px 15px 12px;display:flex;flex-direction:column;gap:5px}
+.oname{font-size:15px;font-weight:650;letter-spacing:-.01em}
+.odesc{font-size:13.2px;color:var(--ink-2);line-height:1.45}
+.ostage{background:var(--sunk);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:15px 13px}
+.pick{display:flex;border-top:1px solid var(--rule)}
+.pick button{flex:1;appearance:none;border:0;border-right:1px solid var(--rule);background:transparent;
+  color:var(--ink-2);font:500 12.5px/1 Archivo,sans-serif;padding:11px 6px;cursor:pointer;transition:background .12s,color .12s}
+.pick button:last-child{border-right:0}
+.pick button:hover{background:var(--accent-soft);color:var(--ink)}
+.pick button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.pick button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ─── palette specimens: literal values, they depict the app ──────── */
+.pair{display:flex;gap:10px}
+.mini{flex:1;min-width:0;border-radius:11px;padding:12px 11px 13px;border:1px solid;font-size:11px;line-height:1.4}
+.mini .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:10px}
+.mini .mfig{font-size:19px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.mini .mq{font-size:9.5px;margin-top:3px}
+.mini .row{display:flex;justify-content:space-between;gap:9px;font-size:10px;margin-top:10px;font-weight:600;white-space:nowrap}
+.mini .trk{height:5px;border-radius:99px;margin-top:5px;overflow:hidden}
+.mini .fl{height:100%;border-radius:99px}
+.mini .chip{display:inline-block;margin-top:11px;padding:4px 9px;border-radius:99px;font-size:9.5px;font-weight:600;white-space:nowrap}
+.sw{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap}
+.sw i{width:26px;height:16px;border-radius:3px;display:block;border:1px solid rgba(128,128,128,.25)}
+.mlbl{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:6px;display:block}
+
+/* ─── type specimens ─────────────────────────────────────────────── */
+.tsp{background:var(--sunk);border-radius:8px;padding:16px 15px}
+.tsp .disp{font-size:38px;line-height:1.02;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.tsp .lbl{font-size:11px;letter-spacing:.02em;opacity:.62;margin-bottom:9px}
+.tsp .body{font-size:14px;line-height:1.5;opacity:.86}
+.tsp .fig{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:11px}
+.f-a,.f-a .disp{font-family:"Instrument Sans",system-ui,sans-serif}
+.f-a .disp{font-weight:700}
+.f-b{font-family:"Public Sans",system-ui,sans-serif}
+.f-b .disp{font-family:Fraunces,Georgia,serif;font-weight:600;font-variation-settings:"SOFT" 60,"WONK" 1}
+.f-c{font-family:"Libre Franklin",system-ui,sans-serif}
+.f-c .disp{font-family:Newsreader,Georgia,serif;font-weight:400}
+
+/* ─── logo stage ─────────────────────────────────────────────────── */
+.marks{display:flex;align-items:flex-end;gap:18px;justify-content:center;padding:6px 0 2px}
+.marks svg{color:var(--ink)}
+.markwm{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px;
+  font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--ink-2)}
+
+/* ─── structure wireframes ───────────────────────────────────────── */
+.wf{background:var(--sunk);border-radius:8px;padding:13px 12px;display:flex;flex-direction:column;gap:7px}
+.wfphone{border:1.5px solid var(--rule);border-radius:12px;padding:9px 8px 8px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.blk{border:1px dashed var(--rule);border-radius:5px;padding:7px 8px;font-size:10.5px;color:var(--ink-2);line-height:1.35}
+.blk.solid{border-style:solid;background:var(--accent-soft);color:var(--ink);font-weight:600;border-color:transparent}
+.blk .sm{display:block;font-size:9.5px;color:var(--ink-3);font-weight:400;margin-top:2px}
+.hstrip{display:flex;gap:5px;overflow:hidden}
+.hstrip .blk{flex:0 0 62%;font-size:10px}
+.hstrip .blk:nth-child(2){flex:0 0 30%;opacity:.55}
+.pillbar{display:flex;gap:4px;justify-content:center;margin-top:2px}
+.pillbar span{font-family:"IBM Plex Mono",monospace;font-size:8.5px;letter-spacing:.06em;
+  padding:4px 8px;border-radius:99px;background:var(--rule);color:var(--ink-2)}
+.pillbar span.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+
+/* ─── motion levels ──────────────────────────────────────────────── */
+.lvl{display:flex;flex-direction:column;gap:7px;padding:14px 15px;background:var(--sunk);border-radius:8px;font-size:13.3px}
+.lvl ul{margin:0;padding-left:17px;color:var(--ink-2);line-height:1.5}
+.lvl li{margin:3px 0}
+.lvl li b{color:var(--ink);font-weight:600}
+
+/* ─── tally ──────────────────────────────────────────────────────── */
+.tally{background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:20px;
+  display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.tl{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.tl li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--rule);font-size:14px;align-items:baseline}
+.tl li:last-child{border-bottom:0}
+.tl .k{color:var(--ink-2)}
+.tl .v{font-family:"IBM Plex Mono",monospace;font-size:12.5px;text-align:right;font-weight:500}
+.tl .v.none{color:var(--ink-3);font-weight:400}
+.btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  font:600 13.5px/1 Archivo,sans-serif;padding:11px 16px;border-radius:4px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row2{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.copied{font-size:13px;color:var(--ink-3)}
+textarea.out{width:100%;min-height:130px;background:var(--sunk);color:var(--ink);border:1px solid var(--rule);
+  border-radius:4px;padding:11px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.55;resize:vertical}
+.foot{border-top:1px solid var(--rule);padding-top:22px;color:var(--ink-3);font-size:13.5px;max-width:64ch}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <span class="eyebrow">Round 5 · options</span>
+  <h1>Dune Studies</h1>
+  <p class="sf">Your notes, turned into choices. <strong>Two or three of everything</strong> — colour, type, mark, structure, motion. Pick one per section and send me the tally.</p>
+  <p class="sf" style="font-size:14.5px">Structure is shown as plain wireframe and look is shown in full colour, deliberately. Three layouts times three palettes is nine pictures and no answer.</p>
+</header>
+
+<!-- ══ 1 · COLOUR ══════════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">01 · colour</span>
+    <h2>Three ways into Dune</h2>
+    <p class="q">You said clay works because of red desert, to borrow the greenery, and that dark should feel like stargazing — navy, not black. Each option is a different answer to <em>which element leads</em>. All three carry sand, green and a night sky; they disagree about which one you see first.</p>
+  </div>
+  <div class="note"><span class="who">why not cream</span><span>Cream ground plus terracotta accent is a well-worn look — it is exactly the <b>"yoga studio"</b> you named, and the last round walked into it. Every option below breaks it the same way: by bringing in a <b>cool</b> or a <b>green</b>, so the palette has a spine instead of only warmth.</span></div>
+
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · Sand &amp; Spice</span><span class="odesc">The desert floor leads. Mineral sand, spice accent, sage as the second voice. Warmest of the three.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" style="background:#E7E2D5;border-color:#D3CCBB;color:#241F1A">
+            <div class="mh"><b>August</b><span style="color:#5C554A">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#5C554A">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#D3CCBB"><div class="fl" style="width:19%;background:#241F1A"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#D3CCBB"><div class="fl" style="width:85%;background:#241F1A"></div></div>
+            <span class="chip" style="background:#C0562B;color:#fff">Add one-off</span>
+          </div>
+          <div class="mini" style="background:#16171C;border-color:#2E3038;color:#EDE7DA">
+            <div class="mh"><b>August</b><span style="color:#A8A296">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#A8A296">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#2E3038"><div class="fl" style="width:19%;background:#EDE7DA"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#2E3038"><div class="fl" style="width:85%;background:#EDE7DA"></div></div>
+            <span class="chip" style="background:#DD8355;color:#16171C">Add one-off</span>
+          </div>
+        </div>
+        <div class="sw">
+          <i style="background:#E7E2D5"></i><i style="background:#241F1A"></i><i style="background:#C0562B"></i>
+          <i style="background:#7C8B6F"></i><i style="background:#16171C"></i><i style="background:#DD8355"></i>
+        </div>
+      </div>
+      <div class="pick" data-q="colour"><button data-v="A · Sand &amp; Spice">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Sky over Sand</span><span class="odesc">The sky leads. Cool daylight, deep navy night, spice used sparingly. Furthest from the wellness look.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" style="background:#E3E9ED;border-color:#CBD5DC;color:#1B2430">
+            <div class="mh"><b>August</b><span style="color:#566270">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#566270">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#CBD5DC"><div class="fl" style="width:19%;background:#1B2430"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#CBD5DC"><div class="fl" style="width:85%;background:#1B2430"></div></div>
+            <span class="chip" style="background:#B4552F;color:#fff">Add one-off</span>
+          </div>
+          <div class="mini" style="background:#0F1621;border-color:#24303F;color:#E7EDF3">
+            <div class="mh"><b>August</b><span style="color:#97A5B4">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#97A5B4">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#24303F"><div class="fl" style="width:19%;background:#E7EDF3"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#24303F"><div class="fl" style="width:85%;background:#E7EDF3"></div></div>
+            <span class="chip" style="background:#D97F52;color:#0F1621">Add one-off</span>
+          </div>
+        </div>
+        <div class="sw">
+          <i style="background:#E3E9ED"></i><i style="background:#1B2430"></i><i style="background:#B4552F"></i>
+          <i style="background:#6E8A73"></i><i style="background:#0F1621"></i><i style="background:#D97F52"></i>
+        </div>
+      </div>
+      <div class="pick" data-q="colour"><button data-v="B · Sky over Sand">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Low Sun</span><span class="odesc">The greenery leads. Golden light, desert green as the accent instead of red, gold held in reserve.</span></div>
+      <div class="ostage">
+        <span class="mlbl">light &nbsp;/&nbsp; dark</span>
+        <div class="pair">
+          <div class="mini" style="background:#F0E9D9;border-color:#DED3BC;color:#2A2317">
+            <div class="mh"><b>August</b><span style="color:#60584A">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#60584A">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#DED3BC"><div class="fl" style="width:19%;background:#2A2317"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#DED3BC"><div class="fl" style="width:85%;background:#2A2317"></div></div>
+            <span class="chip" style="background:#4F6650;color:#F0E9D9">Add one-off</span>
+          </div>
+          <div class="mini" style="background:#14140F;border-color:#2B2B22;color:#EFEADC">
+            <div class="mh"><b>August</b><span style="color:#A39C89">wk 4</span></div>
+            <div class="mfig">£245.68</div><div class="mq" style="color:#A39C89">left of £545 this week</div>
+            <div class="row"><span>Everyday</span><span>£210.45</span></div>
+            <div class="trk" style="background:#2B2B22"><div class="fl" style="width:19%;background:#EFEADC"></div></div>
+            <div class="row"><span>Weekend</span><span>£29.21</span></div>
+            <div class="trk" style="background:#2B2B22"><div class="fl" style="width:85%;background:#EFEADC"></div></div>
+            <span class="chip" style="background:#86A187;color:#14140F">Add one-off</span>
+          </div>
+        </div>
+        <div class="sw">
+          <i style="background:#F0E9D9"></i><i style="background:#2A2317"></i><i style="background:#4F6650"></i>
+          <i style="background:#C68A3A"></i><i style="background:#14140F"></i><i style="background:#86A187"></i>
+        </div>
+      </div>
+      <div class="pick" data-q="colour"><button data-v="C · Low Sun">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2 · TYPE ════════════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">02 · type</span>
+    <h2>Less voice, more surface</h2>
+    <p class="q">You called the last one <em>sassy and distracting</em> — that was Instrument Serif, a high-contrast display face with a strong opinion. All three below are calmer. Same words, same sizes; only the faces change.</p>
+  </div>
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · One voice</span><span class="odesc">No display face at all. One sans, three weights. Nothing has a personality to get tired of.</span></div>
+      <div class="ostage"><div class="tsp f-a">
+        <div class="lbl">Forecast · spare on 30 Aug</div>
+        <div class="disp">£3,027.24</div>
+        <div class="body">1 week to go. Spend the weekly budget that's left and this is where August lands.</div>
+        <div class="fig">£705.71 left</div>
+      </div></div>
+      <div class="pick" data-q="type"><button data-v="A · One voice">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Warm serif</span><span class="odesc">Fraunces on its soft setting — a serif with warmth and no fashion. Sits closer to Dune than to a magazine.</span></div>
+      <div class="ostage"><div class="tsp f-b">
+        <div class="lbl">Forecast · spare on 30 Aug</div>
+        <div class="disp">£3,027.24</div>
+        <div class="body">1 week to go. Spend the weekly budget that's left and this is where August lands.</div>
+        <div class="fig">£705.71 left</div>
+      </div></div>
+      <div class="pick" data-q="type"><button data-v="B · Warm serif">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Bookish</span><span class="odesc">Newsreader — low contrast, quiet, reads like a printed page rather than a brand.</span></div>
+      <div class="ostage"><div class="tsp f-c">
+        <div class="lbl">Forecast · spare on 30 Aug</div>
+        <div class="disp">£3,027.24</div>
+        <div class="body">1 week to go. Spend the weekly budget that's left and this is where August lands.</div>
+        <div class="fig">£705.71 left</div>
+      </div></div>
+      <div class="pick" data-q="type"><button data-v="C · Bookish">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 3 · MARK ════════════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">03 · the mark</span>
+    <h2>A little more substance</h2>
+    <p class="q">Direction kept, weight added, and the bowl is gone. Each is shown at 44px and at 20px — the small size is the real test, since that is the tab and the home screen.</p>
+  </div>
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · The Dune</span><span class="odesc">Two ridges and a low sun. Landscape rather than object — the most literal reading of what you said you liked.</span></div>
+      <div class="ostage"><div class="marks">
+        <svg width="44" height="44" viewBox="0 0 48 48" aria-label="Dune mark, large"><g fill="none" stroke="currentColor" stroke-linecap="round">
+          <path d="M4 35 C 12 19, 22 19, 30 35" stroke-width="4.4"/><path d="M17 35 C 26 25, 35 25, 44 35" stroke-width="4.4"/></g>
+          <circle cx="34" cy="14" r="3.6" fill="currentColor"/></svg>
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round">
+          <path d="M4 35 C 12 19, 22 19, 30 35" stroke-width="6"/><path d="M17 35 C 26 25, 35 25, 44 35" stroke-width="6"/></g>
+          <circle cx="34" cy="14" r="4.6" fill="currentColor"/></svg>
+      </div><div class="markwm">
+        <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round">
+          <path d="M4 35 C 12 19, 22 19, 30 35" stroke-width="6"/><path d="M17 35 C 26 25, 35 25, 44 35" stroke-width="6"/></g>
+          <circle cx="34" cy="14" r="4.6" fill="currentColor"/></svg><span>the app</span></div></div>
+      <div class="pick" data-q="mark"><button data-v="A · The Dune">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · The Open Ring</span><span class="odesc">The month, unclosed, with the gap given a resting point. Heavier stroke and a real terminal, so it holds at 20px.</span></div>
+      <div class="ostage"><div class="marks">
+        <svg width="44" height="44" viewBox="0 0 48 48" aria-label="Open ring mark, large">
+          <path d="M35 13.5 A16 16 0 1 0 39.5 27" fill="none" stroke="currentColor" stroke-width="5.6" stroke-linecap="round"/>
+          <circle cx="38" cy="12" r="3.9" fill="currentColor"/></svg>
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M35 13.5 A16 16 0 1 0 39.5 27" fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round"/>
+          <circle cx="38" cy="12" r="4.8" fill="currentColor"/></svg>
+      </div><div class="markwm">
+        <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M35 13.5 A16 16 0 1 0 39.5 27" fill="none" stroke="currentColor" stroke-width="7.4" stroke-linecap="round"/>
+          <circle cx="38" cy="12" r="4.8" fill="currentColor"/></svg><span>the app</span></div></div>
+      <div class="pick" data-q="mark"><button data-v="B · The Open Ring">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Horizon</span><span class="odesc">Two rules of different length and a sun between them. Reads as a landscape close up and as structure at a glance.</span></div>
+      <div class="ostage"><div class="marks">
+        <svg width="44" height="44" viewBox="0 0 48 48" aria-label="Horizon mark, large"><g stroke="currentColor" stroke-linecap="round" fill="none">
+          <path d="M5 31 H43" stroke-width="4.8"/><path d="M14 39.5 H34" stroke-width="4"/></g>
+          <circle cx="31" cy="19" r="4.4" fill="currentColor"/></svg>
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><g stroke="currentColor" stroke-linecap="round" fill="none">
+          <path d="M5 31 H43" stroke-width="6.4"/><path d="M14 40 H34" stroke-width="5.4"/></g>
+          <circle cx="31" cy="19" r="5.4" fill="currentColor"/></svg>
+      </div><div class="markwm">
+        <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><g stroke="currentColor" stroke-linecap="round" fill="none">
+          <path d="M5 31 H43" stroke-width="6.4"/><path d="M14 40 H34" stroke-width="5.4"/></g>
+          <circle cx="31" cy="19" r="5.4" fill="currentColor"/></svg><span>the app</span></div></div>
+      <div class="pick" data-q="mark"><button data-v="C · Horizon">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 4 · STRUCTURE ═══════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">04 · structure</span>
+    <h2>Home is a week now</h2>
+    <p class="q">You specced this yourself, and it is a better answer than either director reached: <strong>home is the current week</strong>, transactions collapsed; the month becomes its own screen; year stays year. All three below use your rules for which week opens — <em>old month opens on its last week, future month on its first</em>.</p>
+  </div>
+  <div class="note"><span class="who">what changed</span><span>The old home tried to be the whole month at once — that is where the nine figures came from, and the per-week breakdown you called unnecessary. Making home <b>one week</b> removes them by making them someone else's job, rather than by hiding them.</span></div>
+
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · Exactly as you said</span><span class="odesc">Week detail straight away. Month is horizontal cards: one-offs, recurring, then weeks.</span></div>
+      <div class="ostage"><div class="wf">
+        <div class="wfphone">
+          <div class="blk solid">This week · 17–23 Aug<span class="sm">£245.68 left of £545</span></div>
+          <div class="blk">Everyday &nbsp;£210.45<span class="sm">tap to expand · collapsed</span></div>
+          <div class="blk">Weekend &nbsp;£29.21<span class="sm">tap to expand · collapsed</span></div>
+          <div class="blk">Transport &nbsp;£6.02<span class="sm">tap to expand · collapsed</span></div>
+          <div class="pillbar"><span class="on">home</span><span>month</span><span>year</span></div>
+        </div>
+        <span class="mlbl" style="margin-top:4px">month tab</span>
+        <div class="wfphone"><div class="hstrip">
+          <div class="blk solid">One-offs<span class="sm">add is the common act</span></div>
+          <div class="blk">Recurring</div>
+        </div><div class="blk">Weeks · 4<span class="sm">totals only, no breakdown</span></div></div>
+      </div></div>
+      <div class="pick" data-q="structure"><button data-v="A · as specced">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Week with an anchor</span><span class="odesc">Same, but one headline figure sits above the categories, so there is something to land on before the detail.</span></div>
+      <div class="ostage"><div class="wf">
+        <div class="wfphone">
+          <div class="blk solid" style="padding:11px 8px">£245.68 left<span class="sm">this week · 3 days to go</span></div>
+          <div class="blk">17–23 Aug<span class="sm">Everyday · Weekend · Transport, collapsed</span></div>
+          <div class="blk" style="opacity:.55">▾ three category rows</div>
+          <div class="pillbar"><span class="on">home</span><span>month</span><span>year</span></div>
+        </div>
+        <span class="mlbl" style="margin-top:4px">month tab</span>
+        <div class="wfphone"><div class="hstrip">
+          <div class="blk solid">One-offs</div><div class="blk">Recurring</div>
+        </div><div class="blk">Weeks · 4<span class="sm">totals only</span></div></div>
+      </div></div>
+      <div class="pick" data-q="structure"><button data-v="B · with anchor">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Month as a list</span><span class="odesc">Same home. Month is a vertical list instead of cards — nothing hidden off the right edge, and it works on desktop unchanged.</span></div>
+      <div class="ostage"><div class="wf">
+        <div class="wfphone">
+          <div class="blk solid">This week · 17–23 Aug<span class="sm">£245.68 left of £545</span></div>
+          <div class="blk">three categories, collapsed</div>
+          <div class="pillbar"><span class="on">home</span><span>month</span><span>year</span></div>
+        </div>
+        <span class="mlbl" style="margin-top:4px">month tab</span>
+        <div class="wfphone">
+          <div class="blk solid">One-offs &nbsp;£573.00</div>
+          <div class="blk">Recurring &nbsp;£3,767.70</div>
+          <div class="blk">Weeks &nbsp;£2,180<span class="sm">four rows, totals only</span></div>
+        </div>
+      </div></div>
+      <div class="pick" data-q="structure"><button data-v="C · month as list">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 5 · MOTION ══════════════════════════════════════════════════ -->
+<section class="sec">
+  <div class="sh">
+    <span class="tnum">05 · motion</span>
+    <h2>"Is this it?" — mostly, yes</h2>
+    <p class="q">Three signature moments was your own instruction taken literally: <em>a few signature pieces, not a busy design</em>. But the demo only showed those three and none of the <strong>invisible layer</strong> — the transitions you would actually feel all day. So the question is not <em>which</em> animations, it is <strong>how much</strong>.</p>
+  </div>
+  <div class="opts three">
+    <div class="opt">
+      <div class="ohead"><span class="oname">A · Restrained</span><span class="odesc">What was specced. What you saw.</span></div>
+      <div class="ostage"><div class="lvl"><ul>
+        <li>The three signature moments</li>
+        <li>Screen changes cross-fade</li>
+        <li>Bars settle <b>only</b> on the add</li>
+        <li>Nothing else moves</li>
+      </ul></div></div>
+      <div class="pick" data-q="motion"><button data-v="A · restrained">Pick</button><button data-v="A?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">B · Present <span style="color:var(--accent)">— suggested</span></span><span class="odesc">The invisible layer made deliberate. Still three signatures.</span></div>
+      <div class="ostage"><div class="lvl"><ul>
+        <li>Everything in A, plus:</li>
+        <li><b>Every</b> bar settles when its value changes</li>
+        <li>Sheets rise and fall with real weight</li>
+        <li>Collapsed rows open with a short stagger</li>
+        <li>The nav pill's indicator slides between tabs</li>
+        <li>Figures cross-fade on month change</li>
+      </ul></div></div>
+      <div class="pick" data-q="motion"><button data-v="B · present">Pick</button><button data-v="B?">Maybe</button></div>
+    </div>
+    <div class="opt">
+      <div class="ohead"><span class="oname">C · Alive</span><span class="odesc">B plus character. The risk is the busyness you said you did not want.</span></div>
+      <div class="ostage"><div class="lvl"><ul>
+        <li>Everything in B, plus:</li>
+        <li>App open plays a short entry sequence</li>
+        <li>Headers respond to scroll</li>
+        <li>Pull-to-refresh has its own gesture</li>
+        <li>Marks and icons animate on tap</li>
+      </ul></div></div>
+      <div class="pick" data-q="motion"><button data-v="C · alive">Pick</button><button data-v="C?">Maybe</button></div>
+    </div>
+  </div>
+  <div class="note"><span class="who">note</span><span>Only <b>A</b> has been built and felt. B and C are descriptions — if you pick one, the next thing I build is that level running on your real home screen, not another spec.</span></div>
+</section>
+
+<!-- ══ TALLY ═══════════════════════════════════════════════════════ -->
+<section class="tally">
+  <h2 style="font-size:19px">Your picks</h2>
+  <ul class="tl" id="tl"></ul>
+  <div class="row2">
+    <button class="btn" id="copy">Copy the tally</button>
+    <button class="btn ghost" id="clear">Clear</button>
+    <span class="copied" id="msg"></span>
+  </div>
+  <textarea class="out" id="out" readonly aria-label="Your picks as text"></textarea>
+  <p class="q" style="font-size:13.5px;color:var(--ink-3)">Paste this back to me. Nothing is decided until you do — and "maybe" is a useful answer, it just means I build that one properly before you commit.</p>
+</section>
+
+<footer class="foot">Figures throughout are real, from a seeded August at your scale. The name is still open — none of the previous candidates survived, and naming needs its own pass.</footer>
+</div>
+
+<script>
+var Q=[{id:"colour",label:"Colour"},{id:"type",label:"Type"},{id:"mark",label:"Mark"},
+       {id:"structure",label:"Structure"},{id:"motion",label:"Motion"}];
+var ans={};
+try{ ans=JSON.parse(localStorage.getItem("dunestudies")||"{}")||{}; }catch(e){ ans={}; }
+function save(){ try{ localStorage.setItem("dunestudies",JSON.stringify(ans)); }catch(e){} }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render(){
+  var h="",lines=[];
+  for(var i=0;i<Q.length;i++){
+    var v=ans[Q[i].id];
+    h+='<li><span class="k">'+esc(Q[i].label)+'</span><span class="v'+(v?"":" none")+'">'+esc(v||"not picked")+'</span></li>';
+    lines.push(Q[i].label+": "+(v||"—"));
+  }
+  document.getElementById("tl").innerHTML=h;
+  document.getElementById("out").value="Dune studies — my picks\n\n"+lines.join("\n");
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".pick button"); if(!b) return;
+  var q=b.closest(".pick").dataset.q;
+  document.querySelectorAll('.pick[data-q="'+q+'"] button').forEach(function(x){
+    x.setAttribute("aria-pressed",String(x===b));
+  });
+  ans[q]=b.dataset.v; save(); render();
+});
+Q.forEach(function(q){
+  if(!ans[q.id]) return;
+  document.querySelectorAll('.pick[data-q="'+q.id+'"] button').forEach(function(x){
+    if(x.dataset.v===ans[q.id]) x.setAttribute("aria-pressed","true");
+  });
+});
+render();
+document.getElementById("copy").addEventListener("click",function(){
+  var ta=document.getElementById("out"), m=document.getElementById("msg");
+  ta.select(); var ok=false;
+  try{ ok=document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){m.textContent="Copied.";},
+      function(){m.textContent=ok?"Copied.":"Select the text above and copy.";});
+  } else { m.textContent=ok?"Copied.":"Select the text above and copy."; }
+  setTimeout(function(){m.textContent="";},2600);
+});
+document.getElementById("clear").addEventListener("click",function(){
+  ans={}; save();
+  document.querySelectorAll(".pick button").forEach(function(x){x.setAttribute("aria-pressed","false");});
+  render();
+});
+</script>
