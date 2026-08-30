@@ -179,6 +179,75 @@ user's own words; never normalise them to match).
 `drizzle/0007_transaction_series.sql` with the next ordinal, carry existing rows
 across rather than rebuilding them, and **a human applies it.** Do not apply it.
 
+## Added by the founder: pushing a *new* recurring forward
+
+> add that if the users creates a new recurring transaction. It should ask
+> whether it needs to he inserted in future months (assuming periods have been
+> created) or not
+
+This is the first **forward** write in the feature. Everything above is
+backward-looking — a new month reaches back and copies what the last one had.
+This reaches forward from one action into months that already exist.
+
+**It brings `series_id` forward from groundwork to load-bearing.** The rows
+written into future months are siblings of the one being created, and stamping
+them at insert is what makes a later "remove this from the months ahead"
+possible without matching on merchant text. Build it in this task, not later.
+
+### Where the question is asked
+
+On `/add`, inline, only when `kind === "recurring"` **and at least one period
+starts after the current one.** With no future periods there is exactly one
+possible answer, and a question with one answer is noise.
+
+It is part of the Add form, not a confirmation step after saving. A second step
+after the write is a second chance to lose it.
+
+### What it says
+
+Name the consequence with a number, not a category — the user should never have
+to work out what "future months" means for them:
+
+> **Also add this to the 2 later months** — September and October
+
+**Default it on.** The user has already chosen the *recurring* kind, which is
+the claim that this happens every month; defaulting off would make them say so
+twice. But the copy must state the scope plainly, because the default writes to
+more than one month.
+
+### The rows it writes
+
+Same rules as replication above: `pending = true` in every future month (a bill
+that has not happened yet is a prediction), `needs_attention = false`,
+`raw_import = null`, `occurred_on` shifted to the same relative day or null.
+The row in the *current* month is exactly what the user typed — the choices they
+made are not overridden by the propagation rule.
+
+### Timing — say it out loud, per AGENTS.md
+
+**One user action. One server action. One database transaction. N+1 rows.**
+
+Two things this must not become:
+
+1. **N round trips.** Use a single multi-row insert inside
+   `db.transaction(...)`, the way `createPeriod` already does. A loop of inserts
+   over the network is the mistake `store.ts` was rewritten to avoid.
+2. **N revalidations.** Writing to five months must still revalidate the
+   *routes* once — `/`, `/recurring`, `/year` — not once per row. Revalidating
+   `/` re-runs the home screen's queries, and doing that in a loop is precisely
+   what took production down before. Collect the affected paths into a `Set`
+   and revalidate each once.
+
+### The asymmetry to state in the report, not paper over
+
+**Creating** a recurring can now reach forward. **Editing** one still changes
+only its own month. That will feel inconsistent the first time a rent rise is
+typed into a month that has ten copies ahead of it.
+
+That is the right place to stop for now — the founder asked to start simple —
+but it is the next thing this feature will need, and `series_id` is what will
+make it a small change rather than a rewrite. Do not build it in this task.
+
 ## Open decision
 
 **Nothing blocking** — the above is implementable as specified. The one thing to
@@ -230,6 +299,12 @@ So the choice is really between two packages:
 | Needs "apply to this and later months" | not yet | **immediately, in this task** |
 | Matches "start with a simple logic for now" | yes | no |
 | Year screen shows future months | as not-yet-started | as created and empty |
+
+**Note the founder's addition to Task B shifts this slightly.** Now that a *new*
+recurring can be pushed into every future month in one action, the full-year
+option is less painful than it was — creating bills forward is solved. What is
+still unsolved is *editing* an existing one across months, which is where the
+ten-months-by-hand problem actually lives.
 
 **Recommendation: the rolling window.** It satisfies both stated goals — a new
 user is never faced with an empty app, and recurring never start from zero —
