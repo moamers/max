@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 function safeFileName(label: string): string {
   const clean = label.replace(/[^\x20-\x7e]|[\\/:*?"<>|]/g, "-").trim();
-  return `${clean || "Max export"}.xlsx`;
+  return `${clean || "Ravel export"}.xlsx`;
 }
 
 function encodedFileName(label: string): string {

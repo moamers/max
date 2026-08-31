@@ -20,7 +20,7 @@ function Sparkline({ values }: { values: number[] }) {
   return (
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ width: WIDTH, height: HEIGHT, marginLeft: "auto", display: "block" }} aria-hidden>
       <line x1={0} y1={BASELINE_Y} x2={WIDTH} y2={BASELINE_Y} stroke="var(--hairline-2)" strokeWidth={1} strokeDasharray="3 4" />
-      {values.length > 1 && <polyline points={points} fill="none" stroke="var(--lime-fill)" strokeWidth={2} strokeLinejoin="round" />}
+      {values.length > 1 && <polyline points={points} fill="none" stroke="var(--lime-ink)" strokeWidth={2} strokeLinejoin="round" />}
     </svg>
   );
 }

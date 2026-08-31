@@ -1,108 +1,29 @@
 @import "tailwindcss";
+@import "./brand-tokens.css";
 
 /*
-  Max design tokens
-  ------------------
-  Source: docs/design/handoff/README.md ("Design tokens" + "The one chart
-  grammar" sections), cross-checked against the literal values baked into
-  docs/design/handoff/Max App v1(.dc| Light.dc).html.
+  Ravel design tokens
+  -------------------
+  The palette itself now lives in `brand-tokens.css`, which maps the Ravel
+  brand kit's eight tokens onto the richer set this app's components read.
+  Read that file first — it is the only place a colour is decided.
 
-  Semantic role names are identical across themes — components read the
-  role, never the theme. Light is the bare-:root default (and the
-  prefers-color-scheme: light behaviour); dark is applied either by
-  prefers-color-scheme: dark or by an explicit data-theme="dark" override on
-  <html>. data-theme="light" always wins over the media query so the
-  Appearance switch on screen 10 can force either mode.
+  What stays here is everything that is NOT a colour: the radius, spacing and
+  motion scales, the keyframes, and the interaction rules that need real
+  `:hover` selectors. Those are identical across both themes and both modes,
+  which is the brief's own rule: "Do not alter layout, typography scale,
+  spacing, component geometry, or logo geometry between themes."
 
-  The one rule worth re-stating here because it is easy to get backwards:
-  lime (--lime-fill) stays the saturated brand hex #C6FF3D in BOTH themes
-  when used as a fill (buttons, pills, the hero gradient). It only changes
-  when used as ink (text/links/mono accents) — there it is --lime-ink, which
-  is #C6FF3D in dark mode and darkens to #3F6B0A in light mode so it stays
-  legible on a light page.
+  Two attributes drive everything, both on <html>:
+
+      data-theme="quiet-voltage" | "butter-static"
+      data-mode="light" | "dark" | (absent -> follow prefers-color-scheme)
+
+  data-mode has three states, not two. An explicit choice wins over the OS; with
+  no choice at all the OS decides, in CSS alone, with no JavaScript involved.
 */
 
 :root {
-  /* ---- surfaces ---- */
-  --bg: #f6f6f2;
-  --surface: #ffffff;
-  --surface-inset: #f0f0ea;
-  --surface-inset-deep: #eaebe4;
-  --surface-raised: #f2f2ed;
-  --surface-hover: #ededE7;
-  --control-active: #e7e7e0;
-
-  /* ---- hairlines (subtlest -> most visible) ---- */
-  --hairline-1: #e7e7e0;
-  --hairline-2: #dedecf;
-  --hairline-3: #d7d7cd;
-  --hairline-4: #d7d7cd;
-
-  /* ---- text ---- */
-  --text-primary: #15150f;
-  --text-secondary: #5c5c55;
-  --text-secondary-2: #5c5c55;
-  --text-tertiary: #6c6c64;
-  --text-disabled: #9b9b92;
-  --text-disabled-2: #9b9b92;
-
-  /* ---- lime accent (see rule above) ---- */
-  --lime-fill: #c6ff3d;
-  --lime-fill-hover: #d4ff5f;
-  --lime-ink-on-fill: #12210a;
-  --lime-ink: #3f6b0a;
-
-  /* ---- chart grammar: the one bar ---- */
-  --bar-track: var(--surface-inset);
-  --bar-fill: #8a8a80;
-  --bar-over: #b93a34;
-  --bar-over-strong: #d0332f;
-
-  /* ---- pending (amber) — a transaction flag, never a bar colour ---- */
-  --amber-ink: #8a5e00;
-  --amber-tint-bg: #faf0d0;
-
-  /* ---- needs a look — unresolved placement/state, never a warning ---- */
-  --attention-ink: #9a4e06;
-  --attention-tint-bg: #fbe6d2;
-
-  /* ---- label / tag (cyan) ---- */
-  --cyan-ink: #0a7391;
-  --cyan-tint-bg: #dff1f7;
-
-  /* ---- stat-tile borders ---- */
-  --tile-positive-border: #bfd98a;
-  --tile-negative-border: #f2d8d7;
-
-  /* ---- hero gradient (unchanged across themes) ---- */
-  --hero-gradient: linear-gradient(140deg, #c6ff3d, #4de0ff);
-  /*
-    The same 140deg two-stop construction, on the warm end of the palette, for
-    a forecast that lands below zero. A negative number on a lime-to-cyan field
-    read as good news; the gradient is the loudest thing on the screen and it
-    has to agree with the figure it is behind. Ink stays dark for contrast — the
-    stops are light enough to carry it, so the number is still legible.
-  */
-  --hero-gradient-over: linear-gradient(140deg, #f0904b, #e8736f);
-
-  /*
-    The one bar's fill ramp. Painted across the track, not the fill, so the
-    colour at any point means "this much of the budget".
-
-    Stops sit late on purpose. This app is for people who feel judged by money
-    apps; a bar that reddens at half is the product working against itself. It
-    stays calm to 70%, warms through 85%, and only reaches the warm end as the
-    budget does.
-  */
-  --bar-ramp: linear-gradient(90deg, #8fd14f 0%, #8fd14f 62%, #f0c64b 82%, #f0904b 94%, #e8736f 100%);
-  --hero-ink-1: #0f2118;
-  --hero-ink-2: #123028;
-  --hero-ink-3: #1e3a16;
-
-  /* ---- chrome ---- */
-  --shadow-card: 0 10px 24px rgba(30, 32, 24, 0.18);
-  --scrim: rgba(40, 42, 34, 0.32);
-
   /* ---- radii ---- */
   --radius-chip: 9px;
   --radius-field: 12px;
@@ -142,107 +63,6 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e0f14;
-    --surface: #14171c;
-    --surface-inset: #191c23;
-    --surface-inset-deep: #0e1015;
-    --surface-raised: #1c1f27;
-    --surface-hover: #1a1d24;
-    --control-active: #262a33;
-
-    --hairline-1: #16191f;
-    --hairline-2: #1e212a;
-    --hairline-3: #23262f;
-    --hairline-4: #262a33;
-
-    --text-primary: #f2f4ee;
-    --text-secondary: #9da2ae;
-    --text-secondary-2: #8b8f9c;
-    --text-tertiary: #6e7382;
-    --text-disabled: #4a4f5a;
-    --text-disabled-2: #5b6270;
-
-    --lime-fill: #c6ff3d;
-    --lime-fill-hover: #d4ff5f;
-    --lime-ink-on-fill: #12210a;
-    --lime-ink: #c6ff3d;
-
-    --bar-fill: #7a8296;
-    --bar-over: #e8736f;
-    --bar-over-strong: #ff5a5f;
-
-    --amber-ink: #f0c64b;
-    --amber-tint-bg: #1e1a0c;
-
-    --attention-ink: #f0904b;
-    --attention-tint-bg: #241606;
-
-    --cyan-ink: #4de0ff;
-    --cyan-tint-bg: #0f1d24;
-
-    --tile-positive-border: #2b3417;
-    --tile-negative-border: #3a2224;
-
-    --hero-ink-1: #0f2118;
-    --hero-ink-2: #123028;
-    --hero-ink-3: #1e3a16;
-
-    --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.4);
-    --scrim: rgba(8, 9, 12, 0.72);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0e0f14;
-  --surface: #14171c;
-  --surface-inset: #191c23;
-  --surface-inset-deep: #0e1015;
-  --surface-raised: #1c1f27;
-  --surface-hover: #1a1d24;
-  --control-active: #262a33;
-
-  --hairline-1: #16191f;
-  --hairline-2: #1e212a;
-  --hairline-3: #23262f;
-  --hairline-4: #262a33;
-
-  --text-primary: #f2f4ee;
-  --text-secondary: #9da2ae;
-  --text-secondary-2: #8b8f9c;
-  --text-tertiary: #6e7382;
-  --text-disabled: #4a4f5a;
-  --text-disabled-2: #5b6270;
-
-  --lime-fill: #c6ff3d;
-  --lime-fill-hover: #d4ff5f;
-  --lime-ink-on-fill: #12210a;
-  --lime-ink: #c6ff3d;
-
-  --bar-fill: #7a8296;
-  --bar-over: #e8736f;
-  --bar-over-strong: #ff5a5f;
-
-  --amber-ink: #f0c64b;
-  --amber-tint-bg: #1e1a0c;
-
-  --attention-ink: #f0904b;
-  --attention-tint-bg: #241606;
-
-  --cyan-ink: #4de0ff;
-  --cyan-tint-bg: #0f1d24;
-
-  --tile-positive-border: #2b3417;
-  --tile-negative-border: #3a2224;
-
-  --hero-ink-1: #0f2118;
-  --hero-ink-2: #123028;
-  --hero-ink-3: #1e3a16;
-
-  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.4);
-  --scrim: rgba(8, 9, 12, 0.72);
-}
 
 * {
   box-sizing: border-box;
@@ -329,7 +149,7 @@ a {
   }
 
   .max-chip--quiet:hover {
-    border-color: var(--lime-fill);
+    border-color: var(--lime-ink);
     color: var(--lime-ink);
   }
 }

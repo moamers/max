@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState, type DragEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { Chip, Pill } from "@/components/ui/Chip";
-import { MaxMark } from "@/components/home/MaxMark";
+import { Counterbalance } from "@/components/brand/Counterbalance";
 import { formatGBP } from "@/components/home/format";
 import { AttentionCard } from "./AttentionCard";
 import type { ImportDateProposal, ImportPreview, UploadResult } from "./types";
@@ -38,7 +38,7 @@ function postFile(
       if (xhr.status >= 200 && xhr.status < 300) resolve(response);
       else reject(new Error(response.error ?? "Couldn't read this file. Try another one."));
     };
-    xhr.onerror = () => reject(new Error("Couldn't reach Max. Try again."));
+    xhr.onerror = () => reject(new Error("Couldn't reach Ravel. Try again."));
     const body = new FormData();
     body.set("file", file);
     body.set("mode", mode);
@@ -100,7 +100,7 @@ export function ImportScreen() {
     setError(null);
     try {
       const response = await postFile(selected, "preview", [], setProgress, () => setUploadComplete(true));
-      if (!response.preview) throw new Error("Max couldn't describe this file.");
+      if (!response.preview) throw new Error("Ravel couldn't describe this file.");
       setPreview(response.preview);
       setDates(response.preview.dates);
       setProgress(100);
@@ -119,7 +119,7 @@ export function ImportScreen() {
     setError(null);
     try {
       const response = await postFile(file, "save", dates, setProgress, () => setUploadComplete(true));
-      if (!response.preview || !response.attention) throw new Error("Max couldn't finish this import.");
+      if (!response.preview || !response.attention) throw new Error("Ravel couldn't finish this import.");
       setProgress(100);
       setResult({ preview: response.preview, attention: response.attention, saved: response.saved ?? [] });
       setPhase("result");
@@ -140,7 +140,7 @@ export function ImportScreen() {
   if (phase === "invite") {
     return (
       <main style={frame}>
-        <MaxMark size={34} />
+        <Counterbalance size={34} idSuffix="import" />
         <div style={{ marginTop: 34, display: "flex", flexDirection: "column", gap: 12 }}>
           <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.06, letterSpacing: "-0.035em", fontWeight: 800 }}>Send me<br />the spreadsheet.</h1>
           <p style={{ margin: 0, fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55 }}>Sheets, screenshots, statements — I&apos;ll do the tidying.</p>
@@ -176,7 +176,7 @@ export function ImportScreen() {
         <p style={{ margin: "0 0 30px", color: "var(--text-secondary)", fontSize: 14 }}>{preview ? `${preview.sheetCount} sheets · ${preview.rowCount.toLocaleString("en-GB")} rows · ${preview.periodCount} periods` : "Reading what is actually in the file."}</p>
         <ReadingRows preview={preview} />
         <div style={{ marginTop: "auto", paddingTop: 32 }}>
-          <div style={{ height: 4, borderRadius: 99, background: "var(--surface-inset)", overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, background: "var(--lime-fill)", transition: "width .15s linear" }} /></div>
+          <div style={{ height: 4, borderRadius: 99, background: "var(--surface-inset)", overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, background: "var(--lime-ink)", transition: "width .15s linear" }} /></div>
           <span style={{ display: "block", marginTop: 8, textAlign: "right", fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
             {uploadComplete ? "Reading your file…" : `${progress}% uploaded`}
           </span>
@@ -211,7 +211,7 @@ export function ImportScreen() {
   if (!result) return null;
   const { preview: done, attention, saved } = result;
 
-  // Import an old month and Max should show you that month, not whichever one
+  // Import an old month and Ravel should show you that month, not whichever one
   // happens to be current. Several periods in one workbook: the last the file
   // listed, which is the newest in every sheet this has been run against.
   const importedPeriodId = saved.at(-1)?.periodId ?? null;
@@ -229,7 +229,7 @@ export function ImportScreen() {
       {done.labels.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Your words, not mine</span><div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>{done.labels.slice(0, 8).map((label) => <Pill key={label} tone="cyan">{label}</Pill>)}{done.labels.length > 8 && <Pill tone="cyan">+ {done.labels.length - 8} names</Pill>}</div></div>}
       {showInline && <div style={{ border: "1px solid var(--hairline-4)", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--attention-ink)" }}>{attention.length} I placed by guessing</span>{attention.map((row) => <AttentionCard key={row.id} row={row} />)}<span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", lineHeight: 1.5 }}>everything else I filed myself — correct me later if I got one wrong</span></div>}
       {attention.length >= 6 && <p style={{ margin: "20px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>{attention.length} I placed by guessing. <Link href="/review" style={{ color: "var(--text-secondary)" }}>Review them</Link></p>}
-      <Link href={continueHref} style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>Continue</span></Link>
+      <Link href={continueHref} style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", border: "var(--fill-outline)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>Continue</span></Link>
     </main>
   );
 }

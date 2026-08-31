@@ -222,7 +222,7 @@ export const incomeMonths = pgTable(
       .notNull()
       .references(() => periods.id, { onDelete: "cascade" }),
     amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-    /** True when the user typed it; false when Max derived it from an import. */
+    /** True when the user typed it; false when Ravel derived it from an import. */
     setByUser: boolean("set_by_user").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

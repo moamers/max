@@ -1,0 +1,41 @@
+/* Ravel theme tokens — set data-theme and data-mode on <html>. */
+
+:root[data-theme="quiet-voltage"][data-mode="light"] {
+  --color-canvas: #F5F3FC;
+  --color-surface: #FFFFFF;
+  --color-text: #25213B;
+  --color-primary: #6757E5;
+  --color-health: #0DAE83;
+  --color-money: #E99900;
+  --color-spark: #E8456C;
+}
+
+:root[data-theme="quiet-voltage"][data-mode="dark"] {
+  --color-canvas: #121426;
+  --color-surface: #20233D;
+  --color-text: #FBFAFF;
+  --color-primary: #8F7CFF;
+  --color-health: #45E0B7;
+  --color-money: #FFC247;
+  --color-spark: #FF5C7C;
+}
+
+:root[data-theme="butter-static"][data-mode="light"] {
+  --color-canvas: #FFF3A6;
+  --color-surface: #FFF9D9;
+  --color-text: #17151C;
+  --color-primary: #A99BF3;
+  --color-health: #B9F35C;
+  --color-spark: #F2A3B8;
+  --color-outline: #17151C;
+}
+
+:root[data-theme="butter-static"][data-mode="dark"] {
+  --color-canvas: #17131F;
+  --color-surface: #252032;
+  --color-text: #FFF7B7;
+  --color-primary: #B8A9FF;
+  --color-health: #C2F970;
+  --color-spark: #FF9DB8;
+  --color-outline: #F7EFC5;
+}

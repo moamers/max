@@ -1,39 +1,50 @@
 import {
-  MAX_MARK_BODY,
-  MAX_MARK_LEAF,
-  MAX_MARK_VIEWBOX,
-} from "@/components/home/max-mark-paths";
+  APP_ICON_MARK_OFFSET,
+  APP_ICON_MARK_SCALE,
+  APP_ICON_RADIUS,
+  APP_ICON_SIZE,
+  COUNTERBALANCE_A,
+  COUNTERBALANCE_B,
+} from "@/components/brand/counterbalance-paths";
 
 /**
- * The app icon: the Max mark on a dark ground.
+ * The app icon: the Counterbalance mark on the theme's dark ground.
  *
- * Same two paths the month bar and the menu draw — imported, not copied, so
- * the mark on the phone's home screen cannot drift from the mark inside the
- * app. The colours are literals because Satori (next/og) has no CSS variables;
- * they are the dark theme's `--text-primary` and the brand `--lime-fill`,
- * which is the same in both themes.
+ * Same three paths `Counterbalance.tsx` draws — imported, not copied, so the
+ * mark on the phone's home screen cannot drift from the mark inside the app.
+ *
+ * The colours are literals because Satori (next/og) has no CSS variables. They
+ * are the Ravel kit's quiet-voltage dark values, which is the artwork the kit
+ * ships as `logos/svg/ravel-quiet-voltage-dark-app-icon.svg` (also copied to
+ * `public/brand/logos/`). One icon has to serve every theme and mode — a route
+ * cannot know which the viewer has chosen — so it uses the default theme on a
+ * dark ground, which is what iOS composites transparency onto anyway.
  *
  * The mark is delivered as a data-URI `<img>` rather than inline SVG: Satori's
- * inline-SVG support is partial, and an image is the path it renders reliably.
+ * inline-SVG support is partial (it does not honour `clip-path`, which this
+ * mark needs for its intersection), and an image is the path it renders
+ * reliably.
  */
-const GROUND = "#0e0f14";
-const BODY = "#f2f4ee";
-const LEAF = "#c6ff3d";
+const GROUND = "#121426";
+const FORM_A = "#8F7CFF";
+const FORM_B = "#45E0B7";
+const INTERSECTION = "#FF5C7C";
 
-function markDataUri(): string {
+/** The kit's app-icon artwork, verbatim, as a data URI. */
+export function appIconDataUri(): string {
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MAX_MARK_VIEWBOX}">` +
-    `<path d="${MAX_MARK_BODY}" fill="${BODY}"/>` +
-    `<path d="${MAX_MARK_LEAF}" fill="${LEAF}"/>` +
-    `</svg>`;
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${APP_ICON_SIZE} ${APP_ICON_SIZE}">` +
+    `<rect width="${APP_ICON_SIZE}" height="${APP_ICON_SIZE}" rx="${APP_ICON_RADIUS}" fill="${GROUND}"/>` +
+    `<g transform="translate(${APP_ICON_MARK_OFFSET} ${APP_ICON_MARK_OFFSET}) scale(${APP_ICON_MARK_SCALE})">` +
+    `<defs><clipPath id="app-clip"><path d="${COUNTERBALANCE_A}"/></clipPath></defs>` +
+    `<path fill="${FORM_A}" d="${COUNTERBALANCE_A}"/>` +
+    `<path fill="${FORM_B}" d="${COUNTERBALANCE_B}"/>` +
+    `<path fill="${INTERSECTION}" clip-path="url(#app-clip)" d="${COUNTERBALANCE_B}"/>` +
+    `</g></svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
 export function IconMark({ size }: { size: number }) {
-  // The mark's own artwork sits high in its 100×100 box (the leaf starts at
-  // y=3, the body ends at y=95), so it is centred as drawn rather than nudged.
-  const inner = Math.round(size * 0.62);
-
   return (
     <div
       style={{
@@ -46,7 +57,7 @@ export function IconMark({ size }: { size: number }) {
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={markDataUri()} width={inner} height={inner} alt="" />
+      <img src={appIconDataUri()} width={size} height={size} alt="" />
     </div>
   );
 }

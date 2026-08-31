@@ -67,8 +67,8 @@ export async function saveTransaction(
   if (!(input.amount > 0)) throw new Error("Add an amount before saving.");
   if (!isValidKindCategory(kind, input.category)) throw new Error("Pick a category before saving.");
   if (!validDateOrNull(input.occurredOn)) throw new Error("Check the date before saving.");
-  if (input.rawImport && input.rawImport.length > 2_000) throw new Error("The source text is longer than Max can keep.");
-  if (input.attentionReason && input.attentionReason.length > 1_000) throw new Error("The note about this row is longer than Max can keep.");
+  if (input.rawImport && input.rawImport.length > 2_000) throw new Error("The source text is longer than Ravel can keep.");
+  if (input.attentionReason && input.attentionReason.length > 1_000) throw new Error("The note about this row is longer than Ravel can keep.");
 
   const ok = await updateTransaction(user.id, id, {
     // D-10: validation may inspect the value, but persistence does not rewrite

@@ -91,7 +91,8 @@ export function Slider({ value, min = SLIDER_MIN, max = SLIDER_MAX, step = SLIDE
           width: `${pct}%`,
           height: 4,
           borderRadius: "var(--radius-pill)",
-          background: "var(--lime-fill)",
+          // A 4px mark: ink, not a fill. See the note in ui/Chip.tsx.
+          background: "var(--lime-ink)",
         }}
       />
       <div
@@ -101,7 +102,7 @@ export function Slider({ value, min = SLIDER_MIN, max = SLIDER_MAX, step = SLIDE
           width: 16,
           height: 16,
           borderRadius: "var(--radius-pill)",
-          background: "var(--lime-fill)",
+          background: "var(--lime-ink)",
           boxShadow: "0 0 0 3px var(--surface)",
         }}
       />

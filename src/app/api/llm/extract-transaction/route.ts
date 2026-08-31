@@ -13,12 +13,12 @@ import { createUserRateLimiter } from "@/lib/llm/rate-limit";
 
 export const runtime = "nodejs";
 
-export const CAPTURE_FILE_ERROR = "Max can read PNG, JPEG, WebP, HEIC or HEIF images up to 10 MB.";
+export const CAPTURE_FILE_ERROR = "Ravel can read PNG, JPEG, WebP, HEIC or HEIF images up to 10 MB.";
 export const CAPTURE_TIMEOUT_ERROR =
   "Reading that image took longer than expected. Try again, or type it by hand.";
-export const CAPTURE_PROVIDER_ERROR = "Max couldn't read that image just now. Try again, or type it by hand.";
+export const CAPTURE_PROVIDER_ERROR = "Ravel couldn't read that image just now. Try again, or type it by hand.";
 export const CAPTURE_NO_TRANSACTION =
-  "Max couldn't find a transaction in that image. Choose another image, or type it by hand.";
+  "Ravel couldn't find a transaction in that image. Choose another image, or type it by hand.";
 export const CAPTURE_RATE_LIMIT_ERROR = "Give it a moment, then try again or type it by hand.";
 
 const extractionLimiter = createUserRateLimiter(

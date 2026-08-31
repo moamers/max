@@ -1,0 +1,56 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "brand": "Ravel",
+  "themes": {
+    "quiet-voltage": {
+      "name": "Quiet Voltage",
+      "origin": "Original Electric Calm / Sunlit Structure palette",
+      "idea": "A composed neutral field with precise, energetic signals.",
+      "modes": {
+        "light": {
+          "canvas": "#F5F3FC",
+          "surface": "#FFFFFF",
+          "text": "#25213B",
+          "primary": "#6757E5",
+          "health": "#0DAE83",
+          "money": "#E99900",
+          "spark": "#E8456C"
+        },
+        "dark": {
+          "canvas": "#121426",
+          "surface": "#20233D",
+          "text": "#FBFAFF",
+          "primary": "#8F7CFF",
+          "health": "#45E0B7",
+          "money": "#FFC247",
+          "spark": "#FF5C7C"
+        }
+      }
+    },
+    "butter-static": {
+      "name": "Butter Static",
+      "origin": "New butter / lilac / lime palette",
+      "idea": "Soft editorial warmth interrupted by bright, slightly strange energy.",
+      "modes": {
+        "light": {
+          "canvas": "#FFF3A6",
+          "surface": "#FFF9D9",
+          "text": "#17151C",
+          "primary": "#A99BF3",
+          "health": "#B9F35C",
+          "spark": "#F2A3B8",
+          "outline": "#17151C"
+        },
+        "dark": {
+          "canvas": "#17131F",
+          "surface": "#252032",
+          "text": "#FFF7B7",
+          "primary": "#B8A9FF",
+          "health": "#C2F970",
+          "spark": "#FF9DB8",
+          "outline": "#F7EFC5"
+        }
+      }
+    }
+  }
+}

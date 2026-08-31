@@ -27,7 +27,7 @@ function input(overrides: Partial<SaveTransactionInput> = {}): SaveTransactionIn
     amount: 12.65,
     pending: false,
     needsAttention: true,
-    attentionReason: "Max was not sure about the amount.",
+    attentionReason: "Ravel was not sure about the amount.",
     rawImport: "SAINSBURYS S/MKT  £12.65",
     ...overrides,
   };
@@ -51,7 +51,7 @@ describe("screenshot draft persistence on Save", () => {
         merchant: "SAINSBURYS S/MKT ",
         label: "DXB-26 ",
         occurredOn: "2026-08-18",
-        attentionReason: "Max was not sure about the amount.",
+        attentionReason: "Ravel was not sure about the amount.",
         rawImport: "SAINSBURYS S/MKT  £12.65",
       })
     );

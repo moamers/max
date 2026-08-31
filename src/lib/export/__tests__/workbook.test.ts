@@ -85,7 +85,7 @@ describe("period workbook export", () => {
     });
     const week = workbook.getWorksheet("Week 1")!;
     expect(week.getCell("A2").value).toBe("Corner shop");
-    expect(week.getCell("B2").value).toBe("Max export: no week was recorded, so I put this in Week 1.");
+    expect(week.getCell("B2").value).toBe("Ravel export: no week was recorded, so I put this in Week 1.");
     expect(week.getCell("C2").value).toBe(12.5);
     expect(week.getCell("D2").value).toBe("my-label");
 

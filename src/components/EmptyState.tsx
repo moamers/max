@@ -35,7 +35,7 @@ export function EmptyState() {
         Nothing imported yet
       </p>
       <p style={{ fontSize: 15, color: "var(--text-secondary)", margin: 0, maxWidth: 320 }}>
-        Bring in a spreadsheet or statement and Max will build your first month here.
+        Bring in a spreadsheet or statement and Ravel will build your first month here.
       </p>
       <Button
         href="/import"

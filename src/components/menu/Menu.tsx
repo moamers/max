@@ -6,12 +6,15 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Row } from "@/components/ui/Row";
 import { Scrim } from "@/components/ui/Scrim";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { MaxMark } from "@/components/home/MaxMark";
+import { ThemeControls } from "@/components/theme/ThemeControls";
+import { Wordmark } from "@/components/brand/Counterbalance";
+import type { ModeChoice, ThemeId } from "@/lib/brand";
 import { clearDataAction } from "./actions";
 
 interface MenuProps {
   periodCount: number;
+  /** The stored brand preference, read on the server so the switch renders selected. */
+  brand: { theme: ThemeId; mode: ModeChoice };
   onDismiss: () => void;
 }
 
@@ -22,7 +25,7 @@ interface MenuProps {
  * drawer is a third shape it doesn't offer, so this composes `Scrim`
  * directly the same way `Sheet`'s bottom variant does internally.
  */
-export function Menu({ periodCount, onDismiss }: MenuProps) {
+export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
   const router = useRouter();
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -62,10 +65,7 @@ export function Menu({ periodCount, onDismiss }: MenuProps) {
           animation: "fadeUp var(--duration-fade) ease both",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-          <MaxMark size={26} />
-          <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.03em" }}>Max</span>
-        </div>
+        <Wordmark size={26} idSuffix="menu" />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Link href="/goals" style={{ color: "inherit", textDecoration: "none" }}>
@@ -77,9 +77,8 @@ export function Menu({ periodCount, onDismiss }: MenuProps) {
             </Row>
           </Link>
 
-          <Row divider padding="14px 0" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Appearance</span>
-            <ThemeToggle />
+          <Row divider padding="16px 0" style={{ alignItems: "stretch" }}>
+            <ThemeControls theme={brand.theme} mode={brand.mode} />
           </Row>
 
           <Link href="/import" style={{ color: "inherit", textDecoration: "none" }}>

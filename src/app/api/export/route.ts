@@ -4,7 +4,7 @@ import { listPeriodsMeta } from "@/lib/queries";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const LOSSY_NOTE = "Spreadsheet round trips lose the recurring group because the sheet has one flat bills list and Max has four.";
+const LOSSY_NOTE = "Spreadsheet round trips lose the recurring group because the sheet has one flat bills list and Ravel has four.";
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -23,6 +23,6 @@ export async function GET() {
   const links = periods.map((period) =>
     `<li><a href="/api/export/workbook/${period.id}">${escapeHtml(period.label)}</a></li>`
   ).join("");
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Export from Max</title><style>body{font:16px system-ui,sans-serif;max-width:38rem;margin:3rem auto;padding:0 1.25rem;line-height:1.5;background:#0e0f14;color:#f2f4ee}a{color:#c6ff3d}aside{color:#9da2ae;border-left:3px solid #4de0ff;padding-left:1rem}li{margin:.75rem 0}</style></head><body><h1>Export from Max</h1><aside>${escapeHtml(LOSSY_NOTE)}</aside><h2>Monthly workbooks</h2>${links ? `<ul>${links}</ul>` : "<p>There are no periods to export yet.</p>"}<h2>Year round-up</h2><p><a href="/api/export/year">Download every period as CSV</a></p></body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Export from Ravel</title><style>body{font:16px system-ui,sans-serif;max-width:38rem;margin:3rem auto;padding:0 1.25rem;line-height:1.5;background:#121426;color:#fbfaff}a{color:#8f7cff}aside{color:#c8c7cf;border-left:3px solid #45e0b7;padding-left:1rem}li{margin:.75rem 0}</style></head><body><h1>Export from Ravel</h1><aside>${escapeHtml(LOSSY_NOTE)}</aside><h2>Monthly workbooks</h2>${links ? `<ul>${links}</ul>` : "<p>There are no periods to export yet.</p>"}<h2>Year round-up</h2><p><a href="/api/export/year">Download every period as CSV</a></p></body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

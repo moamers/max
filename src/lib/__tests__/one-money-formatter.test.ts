@@ -21,7 +21,7 @@ const CANONICAL = path.join(ROOT, "lib", "money.ts");
 /** Files that legitimately show pounds without formatting an amount. */
 const EXEMPT = new Set([
   path.join(ROOT, "components", "ui", "NumericField.tsx"), // renders a bare "£" prefix beside an input
-  path.join(ROOT, "app", "styleguide", "page.tsx"), // static demo values, never real money
+  path.join(ROOT, "app", "styleguide", "StyleguideView.tsx"), // static demo values, never real money
 ]);
 
 function walk(dir: string): string[] {

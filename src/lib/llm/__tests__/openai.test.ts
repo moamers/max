@@ -136,7 +136,7 @@ describe("OpenAI provider adapter", () => {
     });
   });
 
-  it("aborts one slow request at Max's deadline without retrying", async () => {
+  it("aborts one slow request at Ravel's deadline without retrying", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockImplementation((_input, init) =>
       new Promise((_resolve, reject) => {
         init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));

@@ -1,5 +1,5 @@
 /**
- * T-10: Max depends on this contract, never on a provider SDK's types.
+ * T-10: Ravel depends on this contract, never on a provider SDK's types.
  * It is deliberately broad enough for the next caller: a streamed, multi-turn
  * conversation with optional images and a capability-owned JSON schema.
  */

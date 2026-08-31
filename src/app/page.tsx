@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { requireUser } from "@/lib/session";
+import { MODE_COOKIE, THEME_COOKIE, parseMode, parseTheme } from "@/lib/brand";
 import {
   monthOverview,
   weeklyBreakdown,
@@ -142,5 +144,13 @@ export default async function HomePage(props: PageProps<"/">) {
     rollover,
   };
 
-  return <HomeScreen data={data} />;
+  // The settings drawer's theme switch renders its current selection from the
+  // server, not from a client-side read — see ThemeControls for why.
+  const jar = await cookies();
+  const brand = {
+    theme: parseTheme(jar.get(THEME_COOKIE)?.value),
+    mode: parseMode(jar.get(MODE_COOKIE)?.value),
+  };
+
+  return <HomeScreen data={data} brand={brand} />;
 }

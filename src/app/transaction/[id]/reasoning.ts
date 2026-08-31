@@ -1,5 +1,5 @@
 /**
- * Screen 04's "short line of Max's reasoning" ("Saturday night, so I filed
+ * Screen 04's "short line of Ravel's reasoning" ("Saturday night, so I filed
  * it under Weekend"). There's no stored rationale for a categorisation
  * anywhere in the schema — `transactions` carries `kind`/`category` and
  * nothing that explains why. Rather than fabricate a reason for every

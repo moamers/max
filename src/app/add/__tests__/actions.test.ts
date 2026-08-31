@@ -4,7 +4,7 @@
  * "Needs a look" existed in the transaction editor but not in the add sheet,
  * so the same control offered two options in one place and three in another.
  * The spec (docs/design/15-attention-and-periods.md §1) says the user sets this
- * flag as well as Max, and the moment you are typing an unrecognised charge is
+ * flag as well as Ravel, and the moment you are typing an unrecognised charge is
  * exactly when you would want to.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,7 +114,7 @@ describe("writes happen once, on Add it", () => {
         label: "DXB-26 ",
         occurredOn: "2026-08-18",
         needsAttention: true,
-        attentionReason: "Max was not sure about the amount.",
+        attentionReason: "Ravel was not sure about the amount.",
         rawImport: "SAINSBURYS S/MKT  £12.65",
       })
     );
@@ -122,7 +122,7 @@ describe("writes happen once, on Add it", () => {
       merchant: "SAINSBURYS S/MKT ",
       label: "DXB-26 ",
       occurredOn: "2026-08-18",
-      attentionReason: "Max was not sure about the amount.",
+      attentionReason: "Ravel was not sure about the amount.",
       rawImport: "SAINSBURYS S/MKT  £12.65",
     });
   });

@@ -124,7 +124,7 @@ describe("POST /api/llm/extract-transaction", () => {
     expect(response.status).toBe(503);
     expect(await body(response)).toEqual({
       code: "provider",
-      error: "Max couldn't read that image just now. Try again, or type it by hand.",
+      error: "Ravel couldn't read that image just now. Try again, or type it by hand.",
     });
   });
 

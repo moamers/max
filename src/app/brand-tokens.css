@@ -1,0 +1,339 @@
+/*
+  Ravel brand tokens — the mapping layer
+  =====================================
+
+  Source of truth: the Ravel brand kit (`themes/ravel-themes.css`). The kit
+  supplies eight tokens per theme/mode:
+
+      --color-canvas  --color-surface  --color-text  --color-primary
+      --color-health  --color-money*   --color-spark --color-outline*
+
+      * --color-money exists ONLY in quiet-voltage.
+        --color-outline exists ONLY in butter-static.
+
+  This app's components read a much richer set (secondary/tertiary text, four
+  hairline weights, inset surfaces, disabled states, --bar-over, tint
+  backgrounds, the hero gradient...). Those names are the INTERFACE and do not
+  change; the kit is the SOURCE. Everything the kit does not supply is DERIVED
+  here — nowhere else — so a reviewer can audit the whole translation by
+  reading one file.
+
+  The derivation has exactly two directions:
+
+      toward --color-text     = "more ink"  (darker in light, lighter in dark)
+      toward --color-canvas   = "less ink"  (the opposite, in both modes)
+
+  Because --color-text flips with the mode, one formula gives the right sign in
+  light and dark. There are no per-mode hex literals below the theme blocks.
+
+  --------------------------------------------------------------------------
+  The two missing tokens, and what they fall back to
+  --------------------------------------------------------------------------
+
+  1. --color-money (missing in butter-static).
+     Money is the app's amber channel: the "pending" flag and the middle of the
+     budget ramp. It has to sit BETWEEN health (calm) and spark (alert),
+     because that is the position it occupies in the ramp. So where the kit
+     does not supply it, it is the midpoint of the two tokens it sits between:
+
+         --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+
+     In butter-static that is lime + pink -> a warm sand (#d5cb8a light,
+     #e1cb94 dark), which reads as amber's role without borrowing either
+     neighbour's meaning. Aliasing money onto spark would have made "pending"
+     look identical to "over budget"; aliasing it onto health would have made
+     it look like progress. Both were rejected.
+
+  2. --color-outline (missing in quiet-voltage).
+     An outline is ink. Where the kit does not supply one it falls back to the
+     page's own ink:
+
+         --color-outline: var(--color-text);
+
+     so any component reading it gets a real, high-contrast colour rather than
+     `unset` (which would render transparent and lose the shape). Quiet
+     voltage additionally sets --outline-width: 0, so the outline is defined
+     but not drawn — see "the outlined style" below.
+
+  --------------------------------------------------------------------------
+  The outlined style (why butter-static is not a palette swap)
+  --------------------------------------------------------------------------
+
+  butter-static light is a strong yellow canvas (#FFF3A6) with a pale lilac
+  primary (#A99BF3). Measured: that fill against that canvas is 2.15:1 — below
+  the 3:1 a non-text control needs. A filled button would nearly vanish. That
+  is why this theme, and only this theme, ships --color-outline.
+
+  So the shape is carried by a real outline, with the accent as a fill inside
+  it: --color-outline (#17151C) against the canvas is 16.05:1, and the CTA
+  label on the lilac fill is 7.47:1. Components read --outline-width /
+  --color-outline; quiet-voltage sets the width to 0 and keeps its filled
+  style, where the fill itself already carries the shape (4.69:1).
+
+  Every accent-on-canvas pairing in this file was checked with a real WCAG
+  contrast calculation. Ratios quoted in comments are computed, not estimated.
+*/
+
+/* ==========================================================================
+   Layer 1 — the kit, verbatim, plus the fallbacks and knobs above.
+
+   Three mode states, not two: an explicit data-mode wins, and with no
+   data-mode at all the OS preference decides. quiet-voltage is the default
+   theme, so a document with no data-theme is still fully painted.
+   ========================================================================== */
+
+/* ---------- quiet-voltage · light (also: no attributes at all) ---------- */
+:root:not([data-theme="butter-static"]):not([data-mode="dark"]) {
+  --color-canvas: #f5f3fc;
+  --color-surface: #ffffff;
+  --color-text: #25213b;
+  --color-primary: #6757e5;
+  --color-health: #0dae83;
+  --color-money: #e99900;
+  --color-spark: #e8456c;
+  --color-outline: var(--color-text); /* fallback: kit supplies none here */
+
+  --tone-dark: var(--color-text);
+  --tone-light: var(--color-surface);
+  /* Ink drawn on a primary fill. #f5f3fc on #6757e5 = 4.69:1. */
+  --ink-on-primary: var(--color-canvas);
+  /* How much of an accent survives when it is used as INK rather than a fill. */
+  --k-primary-ink: 100%; /* #6757e5 on #ffffff = 5.16:1, on canvas 4.69:1 */
+  --k-signal-ink: 55%; /* health/money/spark are too light at full strength here */
+}
+
+/* ---------- quiet-voltage · dark (OS preference, no explicit choice) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="butter-static"]):not([data-mode="light"]) {
+    --color-canvas: #121426;
+    --color-surface: #20233d;
+    --color-text: #fbfaff;
+    --color-primary: #8f7cff;
+    --color-health: #45e0b7;
+    --color-money: #ffc247;
+    --color-spark: #ff5c7c;
+    --color-outline: var(--color-text);
+
+    --tone-dark: var(--color-canvas);
+    --tone-light: var(--color-text);
+    --ink-on-primary: var(--color-canvas); /* #121426 on #8f7cff = 5.63:1 */
+    --k-primary-ink: 100%; /* #8f7cff on #20233d = 4.74:1 */
+    --k-signal-ink: 100%; /* already bright enough against a dark ground */
+  }
+}
+
+/* ---------- quiet-voltage · dark (explicit choice, wins over the OS) ---------- */
+:root:not([data-theme="butter-static"])[data-mode="dark"] {
+  --color-canvas: #121426;
+  --color-surface: #20233d;
+  --color-text: #fbfaff;
+  --color-primary: #8f7cff;
+  --color-health: #45e0b7;
+  --color-money: #ffc247;
+  --color-spark: #ff5c7c;
+  --color-outline: var(--color-text);
+
+  --tone-dark: var(--color-canvas);
+  --tone-light: var(--color-text);
+  --ink-on-primary: var(--color-canvas);
+  --k-primary-ink: 100%;
+  --k-signal-ink: 100%;
+}
+
+/* ---------- butter-static · light ---------- */
+:root[data-theme="butter-static"]:not([data-mode="dark"]) {
+  --color-canvas: #fff3a6;
+  --color-surface: #fff9d9;
+  --color-text: #17151c;
+  --color-primary: #a99bf3;
+  --color-health: #b9f35c;
+  --color-spark: #f2a3b8;
+  --color-outline: #17151c;
+  /* fallback: no money hue in this theme — the midpoint of the ramp it sits in */
+  --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+
+  --tone-dark: var(--color-text);
+  --tone-light: var(--color-surface);
+  /*
+    NOT --color-canvas here: butter on lilac is 2.15:1. The outline ink is
+    7.47:1 on the same fill, so the label uses that.
+  */
+  --ink-on-primary: var(--color-outline);
+  --k-primary-ink: 60%; /* raw lilac as text is 2.28:1; at 60% it is 4.92:1 */
+  --k-signal-ink: 45%;
+}
+
+/* ---------- butter-static · dark (OS preference) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="butter-static"]:not([data-mode="light"]) {
+    --color-canvas: #17131f;
+    --color-surface: #252032;
+    --color-text: #fff7b7;
+    --color-primary: #b8a9ff;
+    --color-health: #c2f970;
+    --color-spark: #ff9db8;
+    --color-outline: #f7efc5;
+    --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+
+    --tone-dark: var(--color-canvas);
+    --tone-light: var(--color-text);
+    --ink-on-primary: var(--color-canvas); /* #17131f on #b8a9ff = 8.84:1 */
+    --k-primary-ink: 100%;
+    --k-signal-ink: 100%;
+  }
+}
+
+/* ---------- butter-static · dark (explicit choice) ---------- */
+:root[data-theme="butter-static"][data-mode="dark"] {
+  --color-canvas: #17131f;
+  --color-surface: #252032;
+  --color-text: #fff7b7;
+  --color-primary: #b8a9ff;
+  --color-health: #c2f970;
+  --color-spark: #ff9db8;
+  --color-outline: #f7efc5;
+  --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+
+  --tone-dark: var(--color-canvas);
+  --tone-light: var(--color-text);
+  --ink-on-primary: var(--color-canvas);
+  --k-primary-ink: 100%;
+  --k-signal-ink: 100%;
+}
+
+/*
+  The outlined component style is a property of the THEME, not the mode.
+  Components spread `var(--outline-width) solid var(--color-outline)`; at 0
+  the browser draws nothing, so quiet-voltage keeps its filled style with no
+  component branching.
+*/
+:root:not([data-theme="butter-static"]) {
+  --outline-width: 0px;
+}
+
+:root[data-theme="butter-static"] {
+  --outline-width: 1.5px;
+}
+
+/* ==========================================================================
+   Layer 2 — the derivation. One block, mode-agnostic, no hex literals.
+
+   Every rule below resolves against whichever theme/mode block above matched,
+   because var() is substituted at use time on the same element (:root).
+   ========================================================================== */
+
+:root {
+  /* ---- surfaces: the page, then successively more ink mixed into it ---- */
+  --bg: var(--color-canvas);
+  --surface: var(--color-surface);
+  --surface-raised: color-mix(in srgb, var(--color-surface) 96%, var(--color-text));
+  --surface-hover: color-mix(in srgb, var(--color-surface) 94.5%, var(--color-text));
+  --surface-inset: color-mix(in srgb, var(--color-surface) 93%, var(--color-text));
+  --surface-inset-deep: color-mix(in srgb, var(--color-canvas) 95.5%, var(--color-text));
+  --control-active: color-mix(in srgb, var(--color-surface) 88%, var(--color-text));
+
+  /* ---- hairlines: the same mix, four weights (subtlest -> most visible) ---- */
+  --hairline-1: color-mix(in srgb, var(--color-surface) 93%, var(--color-text));
+  --hairline-2: color-mix(in srgb, var(--color-surface) 88%, var(--color-text));
+  --hairline-3: color-mix(in srgb, var(--color-surface) 83%, var(--color-text));
+  --hairline-4: color-mix(in srgb, var(--color-surface) 78%, var(--color-text));
+
+  /*
+    ---- text: the kit's ink, faded toward the canvas ----
+    Percentages chosen so every step still clears 4.5:1 on BOTH the canvas and
+    the surface, in all four theme/mode combinations. Worst case measured:
+    --text-tertiary on butter-static light canvas, 5.94:1.
+  */
+  --text-primary: var(--color-text);
+  --text-secondary: color-mix(in srgb, var(--color-text) 78%, var(--color-canvas));
+  --text-secondary-2: color-mix(in srgb, var(--color-text) 73%, var(--color-canvas));
+  --text-tertiary: color-mix(in srgb, var(--color-text) 68%, var(--color-canvas));
+  /* Disabled is exempt from 1.4.3, but still clears 3:1 everywhere (worst 3.06:1). */
+  --text-disabled: color-mix(in srgb, var(--color-text) 50%, var(--color-canvas));
+  --text-disabled-2: color-mix(in srgb, var(--color-text) 56%, var(--color-canvas));
+
+  /*
+    ---- the accent ----
+    Historically named "lime" after the previous brand. The names are the
+    interface, so they stay; the colour behind them is now --color-primary.
+    A FILL keeps the brand hex. As INK it is pulled toward the text by
+    --k-primary-ink, which is 100% in three of the four combinations and 60%
+    in butter-static light, where raw lilac on butter is 2.28:1.
+  */
+  --lime-fill: var(--color-primary);
+  --lime-fill-hover: color-mix(in srgb, var(--color-primary) 86%, var(--color-text));
+  --lime-ink: color-mix(in srgb, var(--color-primary) var(--k-primary-ink), var(--color-text));
+  --lime-ink-on-fill: var(--ink-on-primary);
+
+  /* The outlined style, for components that carry their shape in a border. */
+  --fill-outline: var(--outline-width) solid var(--color-outline);
+
+  /* ---- label / tag channel (was cyan) -> health ---- */
+  --cyan-ink: color-mix(in srgb, var(--color-health) var(--k-signal-ink), var(--color-text));
+  --cyan-tint-bg: color-mix(in srgb, var(--color-health) 9%, var(--color-surface));
+
+  /* ---- pending flag (was amber) -> money ---- */
+  --amber-ink: color-mix(in srgb, var(--color-money) var(--k-signal-ink), var(--color-text));
+  --amber-tint-bg: color-mix(in srgb, var(--color-money) 9%, var(--color-surface));
+
+  /*
+    ---- "needs a look" — unresolved, never a warning ----
+    Sits between money and spark so it is distinguishable from BOTH the pending
+    flag and the over-budget red; leaning 70/30 toward money keeps it warm
+    rather than alarming.
+  */
+  --attention-base: color-mix(in srgb, var(--color-money) 70%, var(--color-spark));
+  --attention-ink: color-mix(in srgb, var(--attention-base) var(--k-signal-ink), var(--color-text));
+  --attention-tint-bg: color-mix(in srgb, var(--attention-base) 9%, var(--color-surface));
+
+  /* ---- chart grammar: the one bar (see src/components/ui/bar-grammar.ts) ---- */
+  --bar-track: var(--surface-inset);
+  --bar-fill: color-mix(in srgb, var(--color-text) 55%, var(--color-surface));
+  --bar-over: color-mix(in srgb, var(--color-spark) var(--k-signal-ink), var(--color-text));
+  --bar-over-strong: color-mix(in srgb, var(--bar-over) 80%, var(--color-text));
+  /*
+    Stops sit late on purpose — see the note in globals.css. The four colours
+    are the four signal channels at ink strength; every stop clears 3:1 against
+    the track in all four combinations (worst measured 4.01:1).
+  */
+  --bar-ramp: linear-gradient(
+    90deg,
+    var(--cyan-ink) 0%,
+    var(--cyan-ink) 62%,
+    var(--amber-ink) 82%,
+    var(--attention-ink) 94%,
+    var(--bar-over) 100%
+  );
+
+  /* ---- stat-tile borders ---- */
+  --tile-positive-border: color-mix(in srgb, var(--color-health) 35%, var(--color-surface));
+  --tile-negative-border: color-mix(in srgb, var(--color-spark) 35%, var(--color-surface));
+
+  /*
+    ---- hero gradient ----
+    Bright in BOTH modes, as in the original design: the accents are mixed
+    toward --tone-light (the surface in light mode, the text colour in dark
+    mode — whichever of the theme's tokens is the pale one), and the ink is
+    --tone-dark. Worst measured ink contrast across the four stops and four
+    combinations: 7.99:1.
+  */
+  --hero-gradient: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--color-health) 45%, var(--tone-light)),
+    color-mix(in srgb, var(--color-primary) 45%, var(--tone-light))
+  );
+  /* The warm end of the same construction, for a forecast that lands below zero. */
+  --hero-gradient-over: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--color-money) 45%, var(--tone-light)),
+    color-mix(in srgb, var(--color-spark) 45%, var(--tone-light))
+  );
+  --hero-ink-1: var(--tone-dark);
+  --hero-ink-2: var(--tone-dark);
+  --hero-ink-3: var(--tone-dark);
+
+  /* ---- chrome ---- */
+  --shadow-card: 0 10px 24px color-mix(in srgb, var(--tone-dark) 26%, transparent);
+  --scrim: color-mix(in srgb, var(--tone-dark) 55%, transparent);
+
+}

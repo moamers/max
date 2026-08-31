@@ -11,9 +11,9 @@ import {
 import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-transaction";
 
 const REQUEST_TIMEOUT_MS = 30_000;
-const FILE_ERROR = "Max can read PNG, JPEG, WebP, HEIC or HEIF images up to 10 MB.";
-const NETWORK_ERROR = "The image didn't reach Max. Check your connection and try again — your form is still here.";
-const RESPONSE_ERROR = "Max couldn't read that image just now. Try again, or type it by hand.";
+const FILE_ERROR = "Ravel can read PNG, JPEG, WebP, HEIC or HEIF images up to 10 MB.";
+const NETWORK_ERROR = "The image didn't reach Ravel. Check your connection and try again — your form is still here.";
+const RESPONSE_ERROR = "Ravel couldn't read that image just now. Try again, or type it by hand.";
 
 type CaptureStage = "idle" | "uploading" | "reading" | "done" | "error";
 
@@ -186,7 +186,7 @@ export function CaptureButton({ onDraft }: CaptureButtonProps) {
       )}
 
       <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "var(--text-secondary)", textWrap: "pretty" }}>
-        Max sends this image to OpenAI to read it. Nothing is saved until you check the form and tap Add it or Save.
+        Ravel sends this image to OpenAI to read it. Nothing is saved until you check the form and tap Add it or Save.
       </p>
       <p style={{ margin: 0, fontSize: 11, color: "var(--text-tertiary)" }}>
         PNG, JPEG, WebP, HEIC or HEIF · up to {CAPTURE_IMAGE_LIMITS.maxBytes / 1024 / 1024} MB

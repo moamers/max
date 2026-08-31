@@ -53,7 +53,7 @@ export function ChangeMonthSheet({ yearsByValue, bounds, initialYear, onDismiss 
             padding: "14px 10px",
             borderRadius: "var(--radius-card-sm)",
             background: "var(--surface)",
-            border: m.isCurrent ? "1px solid var(--lime-fill)" : "1px solid transparent",
+            border: m.isCurrent ? "1px solid var(--lime-ink)" : "1px solid transparent",
             opacity: available ? 1 : 0.4,
             textDecoration: "none",
             color: "inherit",

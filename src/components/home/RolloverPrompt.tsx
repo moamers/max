@@ -31,7 +31,7 @@ export function RolloverPrompt({ proposal }: { proposal: RolloverView }) {
       </div>
       <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "var(--text-secondary)" }}>I lined this up as whole Monday-to-Sunday weeks. Change the length if the end date is different.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {([4, 5] as const).map((count) => <button key={count} type="button" onClick={() => setWeeks(count)} style={{ height: 40, borderRadius: 99, border: `1px solid ${weeks === count ? "var(--lime-fill)" : "var(--hairline-4)"}`, background: weeks === count ? "var(--control-active)" : "transparent", color: "var(--text-primary)", fontFamily: "var(--font-jetbrains-mono)", cursor: "pointer" }}>{count} weeks</button>)}
+        {([4, 5] as const).map((count) => <button key={count} type="button" onClick={() => setWeeks(count)} style={{ height: 40, borderRadius: 99, border: `1px solid ${weeks === count ? "var(--lime-ink)" : "var(--hairline-4)"}`, background: weeks === count ? "var(--control-active)" : "transparent", color: "var(--text-primary)", fontFamily: "var(--font-jetbrains-mono)", cursor: "pointer" }}>{count} weeks</button>)}
       </div>
       {error && <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>{error}</span>}
       <Button disabled={pending} onClick={() => { setError(null); startTransition(async () => { try { const result = await acceptRollover(proposal.startDate, endDate); router.replace(result.next); } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't start this period."); } }); }}>{pending ? "Starting…" : "Start this period"}</Button>

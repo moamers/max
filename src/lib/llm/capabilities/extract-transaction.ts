@@ -19,7 +19,7 @@ const CONFIDENCE_THRESHOLD = 0.75;
 const MAX_AMOUNT = 99_999;
 
 /** T-2: read visible text only; never ask the model to calculate a total. */
-export const EXTRACT_TRANSACTION_PROMPT = `You read one transaction from an image for Max.
+export const EXTRACT_TRANSACTION_PROMPT = `You read one transaction from an image for Ravel.
 Return only the requested JSON shape.
 
 Rules:
@@ -228,7 +228,7 @@ function isoDate(year: number, month: number, day: number): string | null {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-/** A date must include a visible year; Max does not invent one from today. */
+/** A date must include a visible year; Ravel does not invent one from today. */
 export function parseVisibleDate(value: string | null): string | null {
   if (value === null) return null;
   let match = value.match(/^\s*(\d{4})[-/]([01]?\d)[-/]([0-3]?\d)\s*$/);
@@ -259,20 +259,20 @@ export function validateExtraction(value: unknown): ValidatedExtraction {
 
   const reasons: string[] = [];
   const merchant = raw.merchant.value === "" ? null : raw.merchant.value;
-  if (!merchant) reasons.push("Max could not read the merchant name.");
-  else if (raw.merchant.confidence < CONFIDENCE_THRESHOLD) reasons.push("Max was not sure about the merchant name.");
+  if (!merchant) reasons.push("Ravel could not read the merchant name.");
+  else if (raw.merchant.confidence < CONFIDENCE_THRESHOLD) reasons.push("Ravel was not sure about the merchant name.");
 
   const amount = parseVisibleAmount(raw.amount.value);
-  if (amount === null) reasons.push("Max could not read one transaction amount.");
-  else if (raw.amount.confidence < CONFIDENCE_THRESHOLD) reasons.push("Max was not sure about the amount.");
+  if (amount === null) reasons.push("Ravel could not read one transaction amount.");
+  else if (raw.amount.confidence < CONFIDENCE_THRESHOLD) reasons.push("Ravel was not sure about the amount.");
 
   const occurredOn = parseVisibleDate(raw.date.value);
-  if (raw.date.value !== null && occurredOn === null) reasons.push("Max could not place the visible date safely.");
-  else if (occurredOn && raw.date.confidence < CONFIDENCE_THRESHOLD) reasons.push("Max was not sure about the date.");
+  if (raw.date.value !== null && occurredOn === null) reasons.push("Ravel could not place the visible date safely.");
+  else if (occurredOn && raw.date.confidence < CONFIDENCE_THRESHOLD) reasons.push("Ravel was not sure about the date.");
 
   const suggestedKind = validKind(raw.kind.value);
   const kind = suggestedKind && raw.kind.confidence >= CONFIDENCE_THRESHOLD ? suggestedKind : null;
-  if (!kind) reasons.push("Max was not sure which kind of transaction this is.");
+  if (!kind) reasons.push("Ravel was not sure which kind of transaction this is.");
 
   const suggestedCategory = validCategory(kind, raw.category.value);
   const category =
@@ -282,7 +282,7 @@ export function validateExtraction(value: unknown): ValidatedExtraction {
         ? suggestedCategory
         : null;
   if (kind !== null && kind !== "one_off" && category === null) {
-    reasons.push("Max was not sure which category fits.");
+    reasons.push("Ravel was not sure which category fits.");
   }
 
   return {

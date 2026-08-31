@@ -11,10 +11,13 @@ import { buildCumulativeChart } from "./chart";
 import { YEAR_EMPTY_COPY, YEAR_UNKNOWN_INCOME_COPY, YEAR_UNKNOWN_RUNNING_COPY, yearNetSentence } from "./copy";
 
 const SHARE_COLORS: Record<YearOverview["shares"][number]["key"], string> = {
-  recurring: "#3A4152",
-  weekly: "#4A5164",
-  oneOff: "#5B637A",
-  kept: "var(--lime-fill)",
+  // Were dark-theme-only hex literals, which is why they went muddy on a light
+  // page. Three weights of the same neutral ink, so the three spend slices read
+  // as one family and only "kept" carries the accent.
+  recurring: "var(--text-secondary)",
+  weekly: "var(--text-tertiary)",
+  oneOff: "var(--text-disabled-2)",
+  kept: "var(--lime-ink)",
 };
 
 function formatPercent(value: number | null): string {

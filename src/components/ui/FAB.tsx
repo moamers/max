@@ -19,7 +19,8 @@ export function FAB({ icon, className, style, ...rest }: FABProps) {
         borderRadius: "var(--radius-pill)",
         background: "var(--lime-fill)",
         color: "var(--lime-ink-on-fill)",
-        border: "none",
+        // See Button: 0 in quiet-voltage, a real outline in butter-static.
+        border: "var(--fill-outline)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

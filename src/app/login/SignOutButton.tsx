@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 export function SignOutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      height={54}
       disabled={pending}
-      className="rounded-md px-4 py-2 font-medium text-white"
-      style={{ background: "var(--series-bills)" }}
       onClick={async () => {
         setPending(true);
         await fetch("/api/auth/logout", { method: "POST" }).catch(() => null);
@@ -21,6 +21,6 @@ export function SignOutButton() {
       }}
     >
       {pending ? "Signing out…" : "Sign out"}
-    </button>
+    </Button>
   );
 }

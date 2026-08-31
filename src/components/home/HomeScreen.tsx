@@ -9,8 +9,9 @@ import { Menu } from "@/components/menu/Menu";
 import { ChangeMonthSheet } from "./ChangeMonthSheet";
 import { formatGBP } from "./format";
 import { HeroCard, type HeroMode } from "./HeroCard";
-import { MaxMark } from "./MaxMark";
+import { Counterbalance } from "@/components/brand/Counterbalance";
 import type { HomeData } from "./types";
+import type { ModeChoice, ThemeId } from "@/lib/brand";
 import { WeeksCard } from "./WeeksCard";
 import { YearStrip } from "./YearStrip";
 import { RolloverPrompt } from "./RolloverPrompt";
@@ -30,7 +31,7 @@ import { RolloverPrompt } from "./RolloverPrompt";
  * screen"), so this screen supplies the same kind of fixed, full-height
  * frame the styleguide's Sheet demos wrap around it by hand.
  */
-export function HomeScreen({ data }: { data: HomeData }) {
+export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: ThemeId; mode: ModeChoice } }) {
   const [heroMode, setHeroMode] = useState<HeroMode>("forecast");
   // Collapsed by default: the home screen answers "where do I stand" first,
   // and a five-week list pushes everything else below the fold.
@@ -48,7 +49,7 @@ export function HomeScreen({ data }: { data: HomeData }) {
               onClick={() => setMonthPickerOpen(true)}
               style={{ display: "flex", alignItems: "center", gap: 11, background: "none", border: "none", padding: 0, cursor: "pointer", color: "inherit" }}
             >
-              <MaxMark size={24} />
+              <Counterbalance size={24} idSuffix="home" />
               <span style={{ fontSize: 21, fontWeight: 800, letterSpacing: "-0.03em" }}>{data.monthLabel}</span>
               <span style={{ color: "var(--text-tertiary)", display: "flex" }}>
                 <ChevronDownIcon />
@@ -99,7 +100,7 @@ export function HomeScreen({ data }: { data: HomeData }) {
         />
       )}
 
-      {menuOpen && <Menu periodCount={data.periodOptions.length} onDismiss={() => setMenuOpen(false)} />}
+      {menuOpen && <Menu periodCount={data.periodOptions.length} brand={brand} onDismiss={() => setMenuOpen(false)} />}
     </div>
   );
 }

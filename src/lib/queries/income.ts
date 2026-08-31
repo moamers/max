@@ -20,7 +20,7 @@ export interface PeriodIncome {
   periodId: number;
   amount: number | null;
   source: IncomeSource;
-  /** True when the user typed the figure rather than Max reading it off a sheet. */
+  /** True when the user typed the figure rather than Ravel reading it off a sheet. */
   setByUser: boolean;
 }
 

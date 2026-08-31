@@ -35,7 +35,6 @@ export function Button({ variant = "primary", height = 56, className, style, ...
     fontWeight: 700,
     letterSpacing: "-0.01em",
     cursor: "pointer",
-    border: "none",
     fontFamily: "var(--font-grotesk)",
     textDecoration: "none",
   } satisfies CSSProperties;
@@ -48,6 +47,13 @@ export function Button({ variant = "primary", height = 56, className, style, ...
             ...base,
             background: "var(--lime-fill)",
             color: "var(--lime-ink-on-fill)",
+            // The outlined style. --outline-width is 0 in quiet-voltage, where
+            // the fill already carries the shape (4.69:1 against the canvas);
+            // it is 1.5px in butter-static, where a pale lilac fill on a butter
+            // canvas is only 2.15:1 and the outline (16.05:1) carries it
+            // instead. Geometry is unchanged either way — box-sizing is
+            // border-box, so the button is still 56px tall.
+            border: "var(--fill-outline)",
             ...style,
           },
         }
@@ -58,7 +64,7 @@ export function Button({ variant = "primary", height = 56, className, style, ...
               ...base,
               background: "transparent",
               color: "var(--bar-over)",
-              border: "1px solid var(--tile-negative-border)",
+              border: "1px solid var(--bar-over)",
               fontSize: 16,
               fontWeight: 600,
               ...style,

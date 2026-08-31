@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] as const;
 
 /**
- * A period can cross a calendar boundary. Max uses the period's start month
+ * A period can cross a calendar boundary. Ravel uses the period's start month
  * everywhere else (Home does too), so this is a stable label rather than an
  * invented calendar-month allocation.
  */

@@ -8,7 +8,7 @@ const WEEK_SECTIONS: readonly { section: Section; title: string }[] = [
   { section: "transport", title: "Transport" },
 ];
 const WEEK_SECTION_NAMES = new Set<Section>(WEEK_SECTIONS.map(({ section }) => section));
-const NO_WEEK_NOTE = "Max export: no week was recorded, so I put this in Week 1.";
+const NO_WEEK_NOTE = "Ravel export: no week was recorded, so I put this in Week 1.";
 
 const COLORS = {
   section: "FF434343",
@@ -299,7 +299,7 @@ function writeSummarySheet(
 /** Generate a new, data-sized workbook. Templates are references, never mutation targets. */
 export function buildPeriodWorkbook(period: PeriodWorkbookInput): ExcelJS.Workbook {
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = "Max";
+  workbook.creator = "Ravel";
   workbook.created = new Date(0);
   workbook.modified = new Date(0);
   workbook.calcProperties.fullCalcOnLoad = true;

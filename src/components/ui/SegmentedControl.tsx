@@ -66,7 +66,10 @@ export function SegmentedControl<T extends string>({
               borderRadius: "var(--radius-pill)",
               cursor: "pointer",
               whiteSpace: "nowrap",
-              border: "none",
+              // Drawn on every segment so the track does not jump by 3px when
+              // the selection moves; only the active one is opaque. Zero-width
+              // in quiet-voltage, so nothing changes there.
+              border: `var(--outline-width) solid ${active ? "var(--color-outline)" : "transparent"}`,
               background: active ? activeBg : "transparent",
               color: active ? activeColor : inactiveColor,
               fontWeight: active ? 700 : 500,

@@ -32,7 +32,11 @@ export function Chip({ tone = "quiet", selected = false, className, style, ...re
         fontSize: 11,
         color: selected ? "var(--lime-ink)" : toneStyle.color,
         background: toneStyle.background,
-        border: tone === "quiet" ? `1px solid ${selected ? "var(--lime-fill)" : "var(--hairline-4)"}` : "none",
+        // A one-pixel line is ink, not a fill, so it uses --lime-ink (checked
+        // at >=4.5:1 on both the surface and the canvas in all four
+        // theme/mode combinations). --lime-fill here would be a pale lilac
+        // hairline on butter — 2.28:1, effectively invisible.
+        border: tone === "quiet" ? `1px solid ${selected ? "var(--lime-ink)" : "var(--hairline-4)"}` : "none",
         borderRadius: "var(--radius-chip)",
         padding: "7px 12px",
         cursor: "pointer",
@@ -78,6 +82,7 @@ export function Pill({ tone = "neutral", uppercase = false, className, style, ..
         borderRadius: "var(--radius-pill)",
         padding: "4px 8px",
         display: "inline-block",
+        border: tone === "lime" ? "var(--fill-outline)" : undefined,
         fontWeight: tone === "lime" ? 700 : 400,
         ...style,
       }}
