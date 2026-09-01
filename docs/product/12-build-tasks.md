@@ -55,6 +55,14 @@ was re-checked against the tree at that date.*
 > glass bars (Instagram's iOS tab bar is the founder's reference): it hovers
 > above the content rather than sitting in a fixed chrome band.
 >
+> ⚠️ **Codex began this task against the EARLIER item set** (Home / This week /
+> Calendar, no Settings, hamburger untouched). The revision below arrived after
+> it started, so what lands on `codex/bottom-nav-pill` will not match this
+> section. The founder's call: let it finish, then apply the change as a
+> follow-up rather than interrupting a run mid-flight. Retitling and
+> re-pointing three links is minutes of work; the menu-becomes-a-screen half is
+> the part with real scope, and is written up as Task F below.
+>
 > **Items, left to right** (revised by the founder 2026-09-01 after seeing the
 > motion prototype — this supersedes the Home / This week / Calendar set in the
 > brief above):
@@ -421,3 +429,149 @@ propagation feature comes with it**, and Task B grows accordingly.
 
 **A** is independent and can start now. **B** must land before **C**, because
 creating a month is what replicates the bills into it.
+
+
+---
+
+# Task D — the month view opens into one thing at a time · SPECCED
+
+## The brief, in the founder's words
+
+> On "month" view, the default should be one-offs not weekly. There must be a
+> way to tie the selected card at the top to the detailed view. The "selected"
+> card has to have another style, that is visually linked to the below view.
+> Each week can be opened not just the last one. Each line is a card/link in
+> itself. "Add one" "see them" — remove this BS.
+
+> It should open on one-offs and one-offs transactions under it. When you click
+> recurring it'd be recurring under it, when you click weeks it'd be weeks under
+> it.
+
+And, from the original design pain points:
+
+> Too many numbers in one screen. No progressive information download.
+
+## What home does today
+
+A single vertical stack in `src/components/home/HomeScreen.tsx`: header,
+`HeroCard`, an optional `RolloverPrompt`, `WeeksCard` (an inline expander that
+lists every week of the month at once), then a **Recurring** card and a
+**One-offs** card that are both `Link`s *away* to `/recurring` and `/one-offs`,
+then `YearStrip`.
+
+So the three things are currently three different interaction models: one
+expands in place, two navigate away. That is the "too many numbers, no
+progressive disclosure" complaint in structural form — the weeks card dumps
+every week's figures on the screen whether or not anyone asked.
+
+## The design
+
+**Three cards, one detail region.** One-offs · Recurring · Weeks, in that
+order, as a selectable set. Exactly one is selected; the region beneath it
+shows that selection's rows and nothing else. **One-offs is selected on open.**
+
+**The selected card is visually joined to the region below it.** Not merely
+highlighted — the two must read as one shape. Losing the join is how the
+prototype ended up showing "one-offs" selected while weeks were listed
+underneath, which is worse than no selection at all because it lies.
+
+**Every week is openable, not just the current one**, and each week is its own
+card that links to `/week/<n>?period=<id>`. Today `WeeksCard` gives the last
+week special treatment; that goes.
+
+**Cut the invitational microcopy.** "Add one →", "See them →", "Totals →" are
+gone. A card that is tappable should look tappable; a row does not need to ask.
+
+## Decisions to make, not to guess
+
+- **Does the inline region replace `/recurring` and `/one-offs`, or preview
+  them?** Both routes exist and are reachable from elsewhere. Recommendation:
+  the region shows the rows in full and the routes stay as deep links, so
+  nothing breaks and there is one fewer hop. Say which you chose.
+- **Where does the hero's own figure sit** once the month has a selected
+  section — it is the month's headline, not one-offs'. It should not move.
+- **Selection is view state, not a preference.** It must not be written to the
+  database, and it must not be a route change either: a scope switch is not a
+  new page.
+
+## Constraints
+
+- `AGENTS.md` rule 8 — nothing here writes on a keystroke or on a tap.
+- The tone gate applies to every string that survives the microcopy cull.
+- Use the existing primitives; `Bar.tsx` still owns the one chart grammar.
+
+---
+
+# Task E — motion, in the build rather than a prototype · SPECCED
+
+## The correction
+
+The prototype was built as a fresh design carrying motion. What was asked for
+was motion carrying **the existing app**. The founder's verdict — "looks like a
+wireframe", "far from the current app", "don't change the IA" of the year and
+transaction screens — is all one point: the components are fixed, and the
+interaction layer goes on top of them.
+
+The four moments themselves are accepted ("all good re animation types"). The
+objection is execution: *"they're laggy, I'm not impressed, they need to be
+flawless in build."*
+
+## Two defects diagnosed in the prototype, both real
+
+Neither is an artefact of it being a prototype, and both would ship into the
+app if the timings were copied across.
+
+**1 · The headline cross-dissolve is double vision.** `morph()` fades the
+outgoing ghost out across 0–62% of a 320ms travel while the incoming ghost
+fades in from 24% — a 121ms window with both painted, superimposed, at
+different scales. That reads as a morph only when the figure is *the same
+number*. Week→Month shares £245.68, so it works. Week→Year shares nothing,
+falls back to headline-to-headline, and cross-dissolves £245.68 into
+£11,806.05 — two different numbers on top of each other.
+
+> **Rule: a shared-element transition requires a shared element.** Morph only
+> on an exact key match. Where the figures differ, hand off hard — the old one
+> is gone before the new one arrives — with no overlap window at all.
+
+**2 · The two views paint on top of each other.** `.view.leaving` is
+`position:absolute; top:0`, so the outgoing view sits exactly over the
+incoming one. Outgoing cards fade over 220ms with up to 90ms of stagger,
+finishing at 310ms; incoming cards begin at 140ms. That is ~170ms of genuine
+double-painting, and any jank stretches it.
+
+> **Rule: out finishes before in starts.** No overlap between an exit and the
+> entrance that replaces it, at either end of the stagger.
+
+## Flawless in build means these are measured, not asserted
+
+- Animate `transform` and `opacity` only. Anything that animates layout —
+  height, top, width — is a bug, not a slow path.
+- Every moment must hold 60fps on a real phone, not a desktop browser at
+  desktop width. Measure it; do not eyeball it.
+- No animation may gate a tap: any input finishes what is in flight to its end
+  state on the next frame.
+- Durations come from the five-step scale in `globals.css`. Reduced motion is
+  clamped at the token level, so using the tokens handles it and hardcoding a
+  duration breaks it.
+- Verify against the real screens with the real data, and show screenshots
+  before merging — the founder's own suggested process, and the one that
+  worked for the status colours.
+
+---
+
+# Task F — the menu becomes a screen · SPECCED
+
+Split out of Task A because it is an IA change rather than a control. The
+hamburger goes; `Settings` becomes a nav destination.
+
+`src/components/menu/Menu.tsx` is currently a drawer rendered over home, with
+`menuOpen` state and a `HamburgerIcon` in `HomeScreen`. It moves behind a real
+`/settings` route. Everything it carries comes with it — including **Clear
+data**, which is destructive and keeps its two-step confirmation exactly as it
+is.
+
+Two things to decide rather than discover: `/settings` is the only route with
+no period, and every other route carries one, so decide whether it takes
+`?period=` for the trip back; and `Menu` today receives `periodCount` and
+`brand` as props from a screen that had already loaded them, which a standalone
+route has to fetch for itself.
