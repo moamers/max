@@ -204,7 +204,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
             <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--hero-ink-3)" }}>
               Forecast · spare on 31 Aug
             </span>
-            <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.04em" }}>£307</span>
+            <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 400, letterSpacing: "-0.015em" }}>£307</span>
           </Card>
         </div>
       </Section>

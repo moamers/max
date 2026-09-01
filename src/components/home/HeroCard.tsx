@@ -71,7 +71,7 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
         {eyebrow}
       </span>
 
-      <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 0.94, color: ink1 }}>
+      <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 400, letterSpacing: "-0.015em", lineHeight: 1, color: ink1 }}>
         {spare === null ? "£—" : formatGBP(spare)}
       </span>
 

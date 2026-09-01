@@ -47,8 +47,13 @@ export function SegmentedControl<T extends string>({
     >
       {options.map((option) => {
         const active = option.value === value;
-        const activeBg = option.activeBackground ?? (tone === "onGradient" ? "rgba(255,255,255,0.82)" : "var(--control-active)");
-        const activeColor = option.activeColor ?? (tone === "onGradient" ? "var(--lime-ink-on-fill)" : "var(--text-primary)");
+        // The active segment on a gradient is a near-white pill, so its label
+        // is INK. It used to be --lime-ink-on-fill, which resolves to the
+        // canvas — a near-white — and rendered "End of month" white on white.
+        // It escaped the contrast suite because the pill's background was a
+        // hardcoded rgba() rather than a token, so nothing was checking it.
+        const activeBg = option.activeBackground ?? (tone === "onGradient" ? "var(--segment-on-gradient)" : "var(--control-active)");
+        const activeColor = option.activeColor ?? (tone === "onGradient" ? "var(--tone-dark)" : "var(--text-primary)");
         const inactiveColor = tone === "onGradient" ? "var(--hero-ink-3)" : "var(--text-tertiary)";
 
         return (

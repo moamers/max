@@ -515,6 +515,13 @@
   --hero-ink-2: var(--tone-dark);
   --hero-ink-3: var(--tone-dark);
 
+  /*
+    The active segment of a control sitting on the hero gradient. A token
+    rather than an inline rgba(), so the contrast suite can see it: the
+    version it replaces was invisible on the busiest card in the app.
+  */
+  --segment-on-gradient: color-mix(in oklab, var(--tone-light) 82%, transparent);
+
   /* ---- chrome ---- */
   --shadow-card: 0 10px 24px color-mix(in oklab, var(--tone-dark) 26%, transparent);
   --scrim: color-mix(in oklab, var(--tone-dark) 55%, transparent);

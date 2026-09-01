@@ -195,7 +195,7 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
           <>
             <section style={{ display: "flex", flexDirection: "column", gap: 11 }}>
               <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Net position</span>
-              <h1 style={{ margin: 0, fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: netColor }}>
+              <h1 style={{ margin: 0, fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 400, letterSpacing: "-0.015em", lineHeight: 1, color: netColor }}>
                 {data.netPosition === null ? "—" : formatSignedGBP(data.netPosition)}
               </h1>
               <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-secondary-2)" }}>

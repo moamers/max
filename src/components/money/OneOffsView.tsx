@@ -67,8 +67,8 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
             style={{
               margin: 0,
               fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)",
-              fontWeight: 800,
-              letterSpacing: "-0.04em",
+              fontWeight: 400,
+              letterSpacing: "-0.015em",
               lineHeight: 1,
               color: spare.amount === null || spare.amount >= 0 ? "var(--lime-ink)" : "var(--bar-over)",
             }}

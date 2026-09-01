@@ -59,8 +59,23 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
   };
 
   return (
-    <section>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+    <section
+      style={{
+        background: "var(--surface)",
+        borderRadius: "var(--radius-card-lg)",
+        boxShadow: "var(--shadow-card)",
+        overflow: "hidden",
+      }}
+    >
+      {/*
+        One card, not a row of tabs above a separate panel. The first attempt
+        drew three cards and joined the selected one to a full-width region
+        below; because the tab was a third of the width and the region was all
+        of it, the join read as a mis-drawn shape rather than a connection.
+        Putting the control and its detail inside one surface ties them by
+        construction, which is what the join was trying to fake.
+      */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
         {ORDER.map((key) => {
           const selected = key === section;
           return (
@@ -73,28 +88,26 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                gap: 4,
-                padding: "13px 14px",
+                gap: 3,
+                padding: "14px 14px 12px",
                 border: "none",
                 cursor: "pointer",
                 textAlign: "left",
-                background: selected ? "var(--surface)" : "var(--surface-inset)",
-                color: selected ? "var(--text-primary)" : "var(--text-secondary)",
-                // Square where it meets the region below, so the selected card
-                // and its detail read as one shape rather than two.
-                borderRadius: selected
-                  ? "var(--radius-card-sm) var(--radius-card-sm) 0 0"
-                  : "var(--radius-card-sm)",
-                marginBottom: selected ? -1 : 0,
-                transition:
-                  "background var(--motion-quick) var(--ease-standard), color var(--motion-quick) var(--ease-standard)",
+                background: "transparent",
+                color: selected ? "var(--text-primary)" : "var(--text-tertiary)",
+                // The selected section is marked by a rule along the edge it
+                // shares with its rows, so the mark points at what it opens.
+                boxShadow: selected
+                  ? "inset 0 -2px 0 0 var(--lime-fill)"
+                  : "inset 0 -1px 0 0 var(--hairline-2)",
+                transition: "color var(--motion-quick) var(--ease-standard)",
               }}
             >
               <span style={{ fontSize: "var(--type-caption)", fontWeight: 600 }}>{TITLE[key]}</span>
               <span
                 style={{
                   fontSize: "var(--type-body)",
-                  fontWeight: 700,
+                  fontWeight: selected ? 700 : 500,
                   letterSpacing: "-0.02em",
                   fontVariantNumeric: "tabular-nums",
                 }}
@@ -106,14 +119,7 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
         })}
       </div>
 
-      <div
-        style={{
-          background: "var(--surface)",
-          borderRadius: "0 0 var(--radius-card-lg) var(--radius-card-lg)",
-          padding: "4px 16px 6px",
-          boxShadow: "var(--shadow-card)",
-        }}
-      >
+      <div style={{ padding: "2px 16px 6px" }}>
         {section === "one-offs" && <Rows items={oneOffs.items} periodId={periodId} empty="Nothing one-off this month." />}
         {section === "recurring" && (
           <Rows items={recurring.groups.flatMap((g) => g.items)} periodId={periodId} empty="Nothing recurring in this month yet." />
@@ -124,7 +130,22 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
   );
 }
 
+/**
+ * A badge marks an exception. When every row in a section carries the same
+ * status — which is the normal case for a month whose bills were just copied
+ * forward, where all of them are pending — repeating the badge on every line
+ * is not information, it is six identical pills down the page. So it is said
+ * once, above the rows, and the rows stay quiet.
+ */
+function sharedStatus(items: readonly TransactionRow[]): "pending" | "review" | null {
+  if (items.length < 2) return null;
+  if (items.every((i) => i.pending)) return "pending";
+  if (items.every((i) => i.needsAttention)) return "review";
+  return null;
+}
+
 function Rows({ items, periodId, empty }: { items: readonly TransactionRow[]; periodId: number; empty: string }) {
+  const shared = sharedStatus(items);
   if (items.length === 0) {
     return (
       <Row padding="18px 4px">
@@ -134,16 +155,41 @@ function Rows({ items, periodId, empty }: { items: readonly TransactionRow[]; pe
   }
   return (
     <>
+      {shared && (
+        <Row padding="12px 4px 10px">
+          <StatusPill status={shared}>
+            {shared === "pending"
+              ? `All ${items.length} pending — confirm each when it goes out`
+              : `All ${items.length} need a look`}
+          </StatusPill>
+        </Row>
+      )}
       {items.map((item, i) => (
         <Link
           key={item.id}
           href={`/transaction/${item.id}?period=${periodId}`}
           style={{ color: "inherit", textDecoration: "none" }}
         >
-          <Row interactive divider={i > 0} padding="14px 4px">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <span style={{ fontSize: "var(--type-label)", fontWeight: 500, letterSpacing: "-0.01em" }}>
-                {item.merchant ?? item.note ?? item.label ?? "—"}
+          <Row interactive divider={i > 0 || shared !== null} padding="14px 4px">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span
+                  style={{
+                    fontSize: "var(--type-label)",
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.merchant ?? item.note ?? item.label ?? "—"}
+                </span>
+                {shared ? null : item.needsAttention ? (
+                  <StatusPill status="review">needs a look</StatusPill>
+                ) : item.pending ? (
+                  <StatusPill status="pending">pending</StatusPill>
+                ) : null}
               </span>
               <span
                 style={{
@@ -151,20 +197,12 @@ function Rows({ items, periodId, empty }: { items: readonly TransactionRow[]; pe
                   fontWeight: 700,
                   letterSpacing: "-0.015em",
                   fontVariantNumeric: "tabular-nums",
+                  flexShrink: 0,
                 }}
               >
                 {formatGBP(item.amount)}
               </span>
             </div>
-            {(item.pending || item.needsAttention) && (
-              <div style={{ marginTop: 7 }}>
-                {item.needsAttention ? (
-                  <StatusPill status="review">needs a look</StatusPill>
-                ) : (
-                  <StatusPill status="pending">pending</StatusPill>
-                )}
-              </div>
-            )}
           </Row>
         </Link>
       ))}
