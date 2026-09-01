@@ -46,3 +46,9 @@ next-env.d.ts
 
 # local sqlite data
 /data/
+
+# Agent worktrees. Isolated checkouts a subagent works in, created and removed
+# by the harness — a full copy of this repo, inside this repo. Ignored rather
+# than committed. Scoped to the subdirectory so project-level Claude settings
+# can still be tracked if they are ever added.
+.claude/worktrees/
