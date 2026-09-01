@@ -55,12 +55,32 @@ was re-checked against the tree at that date.*
 > glass bars (Instagram's iOS tab bar is the founder's reference): it hovers
 > above the content rather than sitting in a fixed chrome band.
 >
-> **Items, left to right:**
-> 1. **Home** → `/?period=<selectedPeriodId>`
-> 2. **This week** → `/week/<currentWeekNumber>?period=<selectedPeriodId>`
-> 3. **Calendar** → `/year?period=<selectedPeriodId>`
+> **Items, left to right** (revised by the founder 2026-09-01 after seeing the
+> motion prototype — this supersedes the Home / This week / Calendar set in the
+> brief above):
+> 1. **Week** → `/week/<currentWeekNumber>?period=<selectedPeriodId>`
+> 2. **Month** → `/?period=<selectedPeriodId>` (home *is* the month view)
+> 3. **Year** → `/year?period=<selectedPeriodId>`
+> 4. **Settings** → `/settings`
 >
-> Do not add further items without justifying each in your report.
+> Do not add further items.
+>
+> **The hamburger goes, and the menu becomes a screen.** Today the menu is a
+> drawer: `src/components/home/HomeScreen.tsx` holds `menuOpen` state, opens it
+> from a `HamburgerIcon` `IconButton`, and renders `<Menu>` over the page. The
+> founder's instruction is that "Settings" is a nav destination instead. So:
+> move `src/components/menu/Menu.tsx` behind a real `/settings` route, delete
+> the hamburger and its state from `HomeScreen`, and keep every control the menu
+> currently carries — including "Clear data", which is a destructive action and
+> must keep its existing two-step confirmation exactly as it is.
+>
+> This is an IA change, not just a new component, so it is the part most likely
+> to have consequences you did not expect. Two in particular: `/settings` has no
+> period, and every other route carries one — decide whether it takes
+> `?period=` for the trip back and say why; and the menu currently receives
+> `periodCount` and `brand` as props from a screen that has already loaded them,
+> which a standalone route will have to fetch for itself. Do not let that fetch
+> happen on every render of the pill.
 >
 > **It is a shortcut pill, not a tab bar.** Every item navigates to a route and
 > nothing maintains its own history stack. The app's model is hub-and-spoke —
