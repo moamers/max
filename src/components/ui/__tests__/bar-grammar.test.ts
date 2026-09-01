@@ -50,36 +50,40 @@ describe("computeBarReading — the one chart grammar", () => {
   });
 });
 
-describe("the fill ramp measures the track, not the fill", () => {
-  // The gradient is painted across the whole budget and the fill reveals the
-  // left part of it. Without this, every bar would show the full green-to-red
-  // ramp compressed into its own width, so a 10%-full bar would look as urgent
-  // as a full one.
-  it("scales the gradient so a quarter-full bar shows only the first quarter", () => {
-    expect(computeBarReading(25, 100).gradientSizePct).toBeCloseTo(400, 6);
+describe("the fill is solid, and colour marks a state rather than a magnitude", () => {
+  // The four-stop ramp this replaces put magnitude into colour, which the bar
+  // grammar forbids. These assertions exist so that reintroducing a gradient
+  // has to delete a test that says why it was removed.
+  it("reports no gradient geometry at all", () => {
+    for (const spend of [0, 25, 50, 100, 150]) {
+      expect(computeBarReading(spend, 100)).toEqual({
+        widthPct: Math.min(spend, 100),
+        tone: spend > 100 ? "over" : "spend",
+      });
+    }
   });
 
-  it("paints the gradient at exactly the track width when full", () => {
-    expect(computeBarReading(100, 100).gradientSizePct).toBeCloseTo(100, 6);
+  it("stays calm at half a budget", () => {
+    expect(computeBarReading(50, 100).tone).toBe("spend");
   });
 
-  it("keeps the ramp calm at half a budget", () => {
-    const half = computeBarReading(50, 100);
-    expect(half.tone).toBe("spend");
-    // 200% means only the first half of the ramp is visible, which is all in
-    // the calm stops.
-    expect(half.gradientSizePct).toBeCloseTo(200, 6);
+  it("keeps one tone the whole way to the target, and changes only past it", () => {
+    // Nothing between 1% and 100% may differ: approaching a limit is not a
+    // state change, so it must not be a colour change either.
+    for (const spend of [1, 25, 50, 75, 99, 100]) {
+      expect(computeBarReading(spend, 100).tone).toBe("spend");
+    }
+    expect(computeBarReading(100.01, 100).tone).toBe("over");
   });
 
-  it("drops the ramp entirely once over budget", () => {
-    // Past the limit there is nothing left to approach, so the fill is flat red.
+  it("pins the fill at the track width once over, so length never carries the overspend", () => {
     expect(computeBarReading(150, 100).tone).toBe("over");
     expect(computeBarReading(150, 100).widthPct).toBe(100);
+    expect(computeBarReading(1500, 100).widthPct).toBe(100);
   });
 
   it("does not divide by zero on an empty bar", () => {
-    const empty = computeBarReading(0, 100);
-    expect(empty.widthPct).toBe(0);
-    expect(Number.isFinite(empty.gradientSizePct)).toBe(true);
+    expect(computeBarReading(0, 100).widthPct).toBe(0);
+    expect(computeBarReading(0, 0).widthPct).toBe(0);
   });
 });
