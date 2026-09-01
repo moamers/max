@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bar } from "@/components/ui/Bar";
 import { Row } from "@/components/ui/Row";
@@ -52,6 +52,57 @@ export interface MonthSectionsProps {
 
 export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent, weeksBudget }: MonthSectionsProps) {
   const [section, setSection] = useState<Section>("one-offs");
+  const panel = useRef<HTMLDivElement>(null);
+  const first = useRef(true);
+
+  /*
+    Switching section is a MOVE WITHIN a screen, not a scene change, so the
+    rows arrive on --motion-standard with a short stagger and the panel takes
+    its new height in the same beat.
+
+    Two rules from docs/product/12-build-tasks.md Task E, both learned from the
+    prototype rather than invented here:
+
+      · Out finishes before in starts. The prototype cross-faded an outgoing
+        list against an incoming one at the same coordinates, so for ~170ms two
+        sets of rows were painted on top of each other. React has already
+        swapped the children by the time this runs, so there is nothing to fade
+        out — the old rows are gone, and the new ones enter into empty space.
+
+      · Transform and opacity only. Height is animated on the CONTAINER via the
+        Web Animations API between two measured values rather than by
+        transitioning `height: auto`, which does not animate at all, and the
+        rows themselves only ever move and fade.
+
+    Reduced motion is handled by the token scale: --motion-* all clamp to 1ms
+    under prefers-reduced-motion, so this becomes a jump without a branch here.
+  */
+  useEffect(() => {
+    const el = panel.current;
+    if (!el) return;
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const styles = getComputedStyle(document.documentElement);
+    const ms = (name: string) => parseFloat(styles.getPropertyValue(name)) || 0;
+    const ease = styles.getPropertyValue("--ease-enter").trim() || "ease-out";
+    const move = ms("--motion-standard");
+    const stagger = ms("--motion-stagger");
+
+    const rows = [...el.querySelectorAll<HTMLElement>("[data-motion-row]")];
+    rows.forEach((row, i) => {
+      row.animate(
+        [
+          { opacity: 0, transform: "translateY(6px)" },
+          { opacity: 1, transform: "none" },
+        ],
+        // Never more than four steps of stagger: past that a list stops
+        // feeling responsive and starts feeling slow.
+        { duration: move, easing: ease, delay: Math.min(i, 3) * stagger, fill: "backwards" }
+      );
+    });
+  }, [section]);
   const total: Record<Section, number> = {
     "one-offs": oneOffs.total,
     recurring: recurring.total,
@@ -59,23 +110,21 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
   };
 
   return (
-    <section
-      style={{
-        background: "var(--surface)",
-        borderRadius: "var(--radius-card-lg)",
-        boxShadow: "var(--shadow-card)",
-        overflow: "hidden",
-      }}
-    >
+    <section>
       {/*
-        One card, not a row of tabs above a separate panel. The first attempt
-        drew three cards and joined the selected one to a full-width region
-        below; because the tab was a third of the width and the region was all
-        of it, the join read as a mis-drawn shape rather than a connection.
-        Putting the control and its detail inside one surface ties them by
-        construction, which is what the join was trying to fake.
+        Three cards, and the selected one points at what it opens.
+
+        Two earlier attempts got this wrong in opposite directions. The first
+        drew three cards joined to a full-width panel: because a card was a
+        third of the width and the panel was all of it, the join read as a
+        mis-drawn shape. The second put everything in one card, which tied them
+        by construction but threw away the cards — it read as a tab strip.
+
+        So: real cards with weight of their own, and an explicit pointer from
+        the selected one into the panel. The connection is drawn rather than
+        implied, and it moves with the selection.
       */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
         {ORDER.map((key) => {
           const selected = key === section;
           return (
@@ -88,27 +137,36 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                gap: 3,
-                padding: "14px 14px 12px",
+                gap: 5,
+                padding: "15px 15px 16px",
                 border: "none",
                 cursor: "pointer",
                 textAlign: "left",
-                background: "transparent",
+                borderRadius: "var(--radius-card-sm)",
+                background: selected ? "var(--surface)" : "var(--surface-inset)",
                 color: selected ? "var(--text-primary)" : "var(--text-tertiary)",
-                // The selected section is marked by a rule along the edge it
-                // shares with its rows, so the mark points at what it opens.
-                boxShadow: selected
-                  ? "inset 0 -2px 0 0 var(--lime-fill)"
-                  : "inset 0 -1px 0 0 var(--hairline-2)",
-                transition: "color var(--motion-quick) var(--ease-standard)",
+                boxShadow: selected ? "var(--shadow-card)" : "none",
+                transform: selected ? "translateY(-1px)" : "none",
+                transition:
+                  "background var(--motion-quick) var(--ease-standard), color var(--motion-quick) var(--ease-standard), transform var(--motion-quick) var(--ease-standard)",
               }}
             >
-              <span style={{ fontSize: "var(--type-caption)", fontWeight: 600 }}>{TITLE[key]}</span>
               <span
                 style={{
-                  fontSize: "var(--type-body)",
-                  fontWeight: selected ? 700 : 500,
-                  letterSpacing: "-0.02em",
+                  fontSize: "var(--type-micro)",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: selected ? "var(--lime-ink)" : "inherit",
+                }}
+              >
+                {TITLE[key]}
+              </span>
+              <span
+                style={{
+                  fontSize: "var(--type-title)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.03em",
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
@@ -119,7 +177,31 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
         })}
       </div>
 
-      <div style={{ padding: "2px 16px 6px" }}>
+      <div
+        ref={panel}
+        style={{
+          position: "relative",
+          marginTop: 10,
+          background: "var(--surface)",
+          borderRadius: "var(--radius-card-lg)",
+          boxShadow: "var(--shadow-card)",
+          padding: "6px 16px 8px",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: -5,
+            left: `calc((100% / 3) * ${ORDER.indexOf(section) + 0.5} - 5px)`,
+            width: 10,
+            height: 10,
+            background: "var(--surface)",
+            transform: "rotate(45deg)",
+            borderRadius: 2,
+            transition: "left var(--motion-standard) var(--ease-standard)",
+          }}
+        />
         {section === "one-offs" && <Rows items={oneOffs.items} periodId={periodId} empty="Nothing one-off this month." />}
         {section === "recurring" && (
           <Rows items={recurring.groups.flatMap((g) => g.items)} periodId={periodId} empty="Nothing recurring in this month yet." />
@@ -156,7 +238,7 @@ function Rows({ items, periodId, empty }: { items: readonly TransactionRow[]; pe
   return (
     <>
       {shared && (
-        <Row padding="12px 4px 10px">
+        <Row padding="12px 4px 10px" data-motion-row>
           <StatusPill status={shared}>
             {shared === "pending"
               ? `All ${items.length} pending — confirm each when it goes out`
@@ -170,7 +252,7 @@ function Rows({ items, periodId, empty }: { items: readonly TransactionRow[]; pe
           href={`/transaction/${item.id}?period=${periodId}`}
           style={{ color: "inherit", textDecoration: "none" }}
         >
-          <Row interactive divider={i > 0 || shared !== null} padding="14px 4px">
+          <Row interactive divider={i > 0 || shared !== null} padding="14px 4px" data-motion-row>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                 <span
@@ -247,7 +329,7 @@ function Weeks({
           href={`/week/${week.weekNumber}?period=${periodId}`}
           style={{ color: "inherit", textDecoration: "none" }}
         >
-          <Row interactive divider={i > 0} padding="16px 4px 18px" style={{ gap: 12 }}>
+          <Row interactive divider={i > 0} padding="16px 4px 18px" style={{ gap: 12 }} data-motion-row>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
               <span style={{ fontSize: "var(--type-label)", fontWeight: 500, color: "var(--text-secondary)" }}>
                 {week.range}
