@@ -480,25 +480,51 @@ export interface RecurringCarry {
 const NOTHING_CARRIED: RecurringCarry = { copied: 0, sourceLabel: null };
 
 /** Every period this user owns, with whether it holds any recurring rows. */
+/**
+ * Which of this user's periods hold recurring rows.
+ *
+ * Two queries and a Set, deliberately, rather than one query with an `exists`
+ * subquery in the projection. The subquery version was WRONG in a way nothing
+ * caught: a raw `sql` fragment inside a select projection is rendered without
+ * table qualification, so
+ *
+ *     sql`exists (select 1 from ${transactions}
+ *                 where ${transactions.periodId} = ${periods.id} ...)`
+ *
+ * came out as `where "period_id" = "id"` — and inside the subquery `"id"`
+ * binds to `transactions.id`, not to the outer `periods.id`. The result was
+ * not correlated to anything. It asked "is there a recurring row whose
+ * period_id equals its own id", which is true for the whole account the moment
+ * transaction #1 happens to be a recurring row in period #1 — so every period
+ * reported hasRecurring, the idempotence guard in `carryRecurring` fired on a
+ * brand-new empty month, and the copy silently did nothing.
+ *
+ * It typechecked, linted, passed its unit tests against a recording driver and
+ * only failed against a real database. Hence no raw SQL here at all.
+ */
 async function carryCandidates(
   tx: Transaction,
   userId: UserId
 ): Promise<(CarryCandidate & { label: string; endDate: string | null })[]> {
-  return tx
+  const rows = await tx
     .select({
       id: periods.id,
       label: periods.label,
       startDate: periods.startDate,
       endDate: periods.endDate,
       sheetOrder: periods.sheetOrder,
-      hasRecurring: sql<boolean>`exists (
-        select 1 from ${transactions}
-        where ${transactions.periodId} = ${periods.id}
-          and ${transactions.kind} = 'recurring'
-      )`,
     })
     .from(periods)
     .where(eq(periods.userId, userId));
+
+  const carrying = await tx
+    .selectDistinct({ periodId: transactions.periodId })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(periods.userId, userId), eq(transactions.kind, "recurring")));
+  const withRecurring = new Set(carrying.map((row) => row.periodId));
+
+  return rows.map((row) => ({ ...row, hasRecurring: withRecurring.has(row.id) }));
 }
 
 /**
@@ -629,20 +655,11 @@ export async function recurringCarrySource(
     .where(and(eq(periods.id, periodId), eq(periods.userId, userId)));
   if (!target) return null;
 
-  const candidates = await db
-    .select({
-      id: periods.id,
-      label: periods.label,
-      startDate: periods.startDate,
-      sheetOrder: periods.sheetOrder,
-      hasRecurring: sql<boolean>`exists (
-        select 1 from ${transactions}
-        where ${transactions.periodId} = ${periods.id}
-          and ${transactions.kind} = 'recurring'
-      )`,
-    })
-    .from(periods)
-    .where(eq(periods.userId, userId));
+  // Same helper the write path uses, for the same reason — see carryCandidates.
+  // This screen decides whether to OFFER the button; if it disagreed with the
+  // write about which months carry recurring rows, the button would appear and
+  // then do nothing.
+  const candidates = await carryCandidates(db as unknown as Transaction, userId);
 
   const source = pickCarrySource(target, candidates);
   if (!source) return null;

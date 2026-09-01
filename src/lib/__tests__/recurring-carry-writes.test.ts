@@ -47,12 +47,26 @@ const SOURCE = 9;
 
 /** `select({ id, startDate, endDate })` — column order follows the select. */
 const targetRow = [[TARGET, "2026-08-31", "2026-09-27"]];
-/** `select({ id, label, startDate, endDate, sheetOrder, hasRecurring })`. */
-function candidateRows(targetHasRecurring: boolean) {
-  return [
-    [TARGET, "Aug 31st – Sep 27th", "2026-08-31", "2026-09-27", 1, targetHasRecurring],
-    [SOURCE, "Aug 3rd – Aug 30th", "2026-08-03", "2026-08-30", 0, true],
+/**
+ * `carryCandidates()` is TWO statements, not one, and this fake has to model
+ * both — which is the whole point of updating it.
+ *
+ * It used to be a single select with `hasRecurring` as an `exists` subquery in
+ * the projection. Drizzle rendered that subquery unqualified, so it correlated
+ * to nothing and reported true for every period; the copy then refused to run.
+ * These tests PASSED throughout, because a recording driver returns whatever
+ * the fixture says and never evaluates the SQL. Modelling the real two-query
+ * shape is what keeps them honest — see no-uncorrelated-subquery.test.ts.
+ */
+function candidateResponses(targetHasRecurring: boolean) {
+  /** `select({ id, label, startDate, endDate, sheetOrder })` — no boolean. */
+  const periodRows = [
+    [TARGET, "Aug 31st – Sep 27th", "2026-08-31", "2026-09-27", 1],
+    [SOURCE, "Aug 3rd – Aug 30th", "2026-08-03", "2026-08-30", 0],
   ];
+  /** `selectDistinct({ periodId })` — which periods actually hold recurring. */
+  const carryingRows = targetHasRecurring ? [[TARGET], [SOURCE]] : [[SOURCE]];
+  return [periodRows, carryingRows];
 }
 /** `select({ category, merchant, note, amount, label, occurredOn })`. */
 const sourceRows = [
@@ -72,7 +86,7 @@ beforeEach(() => {
 
 describe("copying last month's recurring into this one", () => {
   it("writes every bill in a single insert, not one insert per bill", async () => {
-    hoisted.responses.push(targetRow, candidateRows(false), sourceRows, []);
+    hoisted.responses.push(targetRow, ...candidateResponses(false), sourceRows, []);
 
     const result = await copyRecurringFromLastMonth(USER, TARGET);
 
@@ -86,11 +100,15 @@ describe("copying last month's recurring into this one", () => {
     // Three rows arrive as three value groups in one statement. Three
     // statements would be three round trips from a phone.
     expect(insert.sql.split("(default,").length - 1).toBe(3);
-    expect(hoisted.queries).toHaveLength(4);
+    // Five statements: own the target, list the periods, ask which of them
+    // carry recurring, read the source rows, write them. The "which carry"
+    // question is its own statement rather than a subquery in the projection,
+    // deliberately — see no-uncorrelated-subquery.test.ts.
+    expect(hoisted.queries).toHaveLength(5);
   });
 
   it("marks every copied row pending, and clears the flags that were about last month", async () => {
-    hoisted.responses.push(targetRow, candidateRows(false), sourceRows, []);
+    hoisted.responses.push(targetRow, ...candidateResponses(false), sourceRows, []);
     await copyRecurringFromLastMonth(USER, TARGET);
 
     const [insert] = inserts();
@@ -103,7 +121,7 @@ describe("copying last month's recurring into this one", () => {
   });
 
   it("moves a recorded day the same distance into the new month, and drops one that would not fit", async () => {
-    hoisted.responses.push(targetRow, candidateRows(false), sourceRows, []);
+    hoisted.responses.push(targetRow, ...candidateResponses(false), sourceRows, []);
     await copyRecurringFromLastMonth(USER, TARGET);
 
     const [insert] = inserts();
@@ -114,14 +132,14 @@ describe("copying last month's recurring into this one", () => {
   });
 
   it("refuses to copy into a month that already holds recurring rows", async () => {
-    hoisted.responses.push(targetRow, candidateRows(true));
+    hoisted.responses.push(targetRow, ...candidateResponses(true));
 
     const result = await copyRecurringFromLastMonth(USER, TARGET);
 
     expect(result).toEqual({ copied: 0, sourceLabel: null });
     expect(inserts()).toHaveLength(0);
     // It stops as soon as it knows: the source rows are never even read.
-    expect(hoisted.queries).toHaveLength(2);
+    expect(hoisted.queries).toHaveLength(3);
   });
 
   it("writes nothing for a period that is not this user's", async () => {
@@ -138,7 +156,8 @@ describe("copying last month's recurring into this one", () => {
   });
 
   it("writes nothing when no earlier month has any recurring in it", async () => {
-    hoisted.responses.push(targetRow, [[TARGET, "Aug 31st – Sep 27th", "2026-08-31", "2026-09-27", 1, false]]);
+    // Only the target exists, and nothing carries recurring: no source to copy from.
+    hoisted.responses.push(targetRow, [[TARGET, "Aug 31st – Sep 27th", "2026-08-31", "2026-09-27", 1]], []);
 
     const result = await copyRecurringFromLastMonth(USER, TARGET);
 
