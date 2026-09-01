@@ -87,10 +87,19 @@ export function ChangeMonthSheet({ yearsByValue, bounds, initialYear, onDismiss 
           );
 
           if (!available) {
+            // A month with no period is still somewhere you can go: it opens
+            // the empty-month screen, which offers to start it. Opening it
+            // creates nothing — the write is behind that screen's button.
+            const monthKey = `${year}-${String(m.monthIndex + 1).padStart(2, "0")}`;
             return (
-              <div key={m.monthIndex} style={tileStyle}>
+              <Link
+                key={m.monthIndex}
+                href={`/start-month?month=${monthKey}`}
+                style={tileStyle}
+                onClick={onDismiss}
+              >
                 {inner}
-              </div>
+              </Link>
             );
           }
 

@@ -112,6 +112,16 @@ Today's schema is flat (one `periods` row, with `week_number` on line items), wh
 | **G-4** | **A sheet round-trip loses the recurring group.** The V1 model splits recurring spend into Housing / Childcare / Bills / Subscriptions; the founder's template keeps one flat bills list. Re-file rent under Housing, export, re-import, and it returns as `bills`. The mapping is one-to-one forward and four-to-one back — total, but lossy. | Export is the escape hatch and the honesty test. It must not present a round-trip as lossless when it isn't. Options: accept and say so in the export UI, add a column to the template, or carry the group in the label. Pinned by a test so it can't be discovered by accident later. |
 ---
 
+## Follow-ups from the recurring carry and the highlight import
+
+| # | Item | Why it matters |
+|---|---|---|
+| **G-5** | **A recurring row can be pushed forward when it is created, but not when it is edited.** A new month reaches back and copies what the last one had; editing a bill still changes only its own month. Type a rent rise into a month that has copies ahead of it and nothing follows it. `docs/product/12-build-tasks.md` Task B specs `series_id` as the groundwork that makes "change this and every month after" a small change rather than a rewrite; it is **not built** — nothing in the shipped carry uses it, and adding an unapplied column to the schema on a branch that auto-deploys would break every insert until a human ran the migration. Owner: founder to say whether editing-forward is wanted before the third month of copies exists. | The asymmetry is invisible until somebody's rent changes, and then it is ten months of hand-editing. |
+| **G-6** | **Pending does not survive a workbook round trip.** Import reads a yellow row as `pending`; export writes both `pending` and `needs a look` as one orange row, as asked. Orange is deliberately outside the yellow band the importer reads, so re-importing a Ravel export returns those rows as ordinary ones. Stated in the export page and in the download's `X-Max-Export-Limitation` header. | Same class as `G-4`: the escape hatch must not imply a fidelity it does not have. |
+| **G-7** | **Indexed fill colours are resolved through the ECMA-376 default palette.** A workbook that redefines `<indexedColors>` in its styles part would be read against the wrong palette, and a redefined index that happens to be yellow by default would mark a settled bill pending. exceljs exposes no custom palette, so this cannot be detected. Every other unresolvable colour (theme colours, gradients, patterns, near-transparent fills) is treated as not-highlighted instead. | It is the one path in `src/lib/cell-fill.ts` that can produce a false positive, and a false positive is the expensive direction. |
+
+---
+
 ## Resolved
 
 | Date | Decision |

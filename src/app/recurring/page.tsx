@@ -10,6 +10,7 @@ import {
   type PeriodSearchParams,
 } from "@/lib/queries";
 import { requireUser } from "@/lib/session";
+import { recurringCarrySource } from "@/lib/store";
 
 export default async function RecurringPage({
   searchParams,
@@ -31,12 +32,20 @@ export default async function RecurringPage({
   ]);
   if (!overview) notFound();
 
+  // Only asked when the month is empty — a screen with rows on it has no use
+  // for the answer, and this is a read either way. Reading is not copying:
+  // nothing is written until the button is pressed.
+  const carrySource = recurring.total === 0 && recurring.groups.every((group) => group.items.length === 0)
+    ? await recurringCarrySource(user.id, periodId)
+    : null;
+
   return (
     <RecurringView
       periodId={periodId}
       highlightId={highlightIdFrom(sp.highlight)}
       monthLabel={overview.window ? formatMonth(overview.window.start) : overview.label}
       recurring={recurring}
+      carrySourceLabel={carrySource?.label ?? null}
     />
   );
 }

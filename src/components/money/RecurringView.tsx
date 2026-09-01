@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Accordion, Caret } from "@/components/ui/Accordion";
 import { JustChanged } from "@/components/ui/JustChanged";
 import { Pill } from "@/components/ui/Chip";
@@ -12,6 +13,8 @@ import { formatMoney } from "./format";
 import { sheetParent } from "@/lib/routes";
 import { MoneySheet } from "./MoneySheet";
 import { ShareBar } from "./ShareBar";
+import { Button } from "@/components/ui/Button";
+import { copyRecurringAction } from "@/app/recurring/actions";
 
 const SHARE_COLORS: Record<RecurringCategory, string> = {
   housing: "#3A4152",
@@ -26,6 +29,12 @@ interface RecurringViewProps {
   recurring: RecurringBreakdown;
   /** The row just added or edited, to mark it wherever its amount sorts it. */
   highlightId?: number | null;
+  /**
+   * The month a copy would come from, or null when there is no earlier month
+   * holding any. Null hides the button rather than offering one that would
+   * quietly do nothing.
+   */
+  carrySourceLabel?: string | null;
 }
 
 /** The group a just-changed row is filed under, so it isn't marked inside a closed accordion. */
@@ -34,7 +43,13 @@ function groupHolding(recurring: RecurringBreakdown, id: number | null): Recurri
   return recurring.groups.find((g) => g.items.some((i) => i.id === id))?.category ?? null;
 }
 
-export function RecurringView({ periodId, monthLabel, recurring, highlightId = null }: RecurringViewProps) {
+export function RecurringView({
+  periodId,
+  monthLabel,
+  recurring,
+  highlightId = null,
+  carrySourceLabel = null,
+}: RecurringViewProps) {
   // Opening on the highlighted row's group beats the default: a marked row
   // inside a collapsed group is no more findable than an unmarked one.
   const [openGroup, setOpenGroup] = useState<RecurringCategory | null>(
@@ -70,6 +85,9 @@ export function RecurringView({ periodId, monthLabel, recurring, highlightId = n
           </h1>
         </div>
 
+        {recurring.groups.every((group) => group.items.length === 0) ? (
+          <EmptyRecurring periodId={periodId} sourceLabel={carrySourceLabel} />
+        ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {recurring.groups.map((group) => {
             const open = openGroup === group.category;
@@ -150,7 +168,73 @@ export function RecurringView({ periodId, monthLabel, recurring, highlightId = n
             );
           })}
         </div>
+        )}
       </div>
     </MoneySheet>
+  );
+}
+
+/**
+ * A month with no recurring in it yet.
+ *
+ * The offer is the founder's: "when recurring is empty in an existing month the
+ * empty state has a button that says 'copy from previous month'". One press,
+ * one write — opening this screen copies nothing.
+ */
+function EmptyRecurring({ periodId, sourceLabel }: { periodId: number; sourceLabel: string | null }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        padding: 18,
+        borderRadius: "var(--radius-card-sm)",
+        border: "1px solid var(--hairline-3)",
+        background: "var(--surface)",
+      }}
+    >
+      <p style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: "-0.02em" }}>
+        Nothing recurring in this month yet
+      </p>
+      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "var(--text-secondary)" }}>
+        {sourceLabel
+          ? `Bring last month's across and amend what has changed. They arrive marked pending, so you confirm each one when it goes out.`
+          : `Add the first one with the + button, and next month can start from a copy of this one.`}
+      </p>
+      {sourceLabel && (
+        <>
+          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+            from {sourceLabel}
+          </span>
+          <Button
+            height={54}
+            disabled={pending}
+            onClick={() => {
+              setError(null);
+              startTransition(async () => {
+                const result = await copyRecurringAction(periodId);
+                if (!result.ok) {
+                  setError(`I couldn't copy those across. (${result.message})`);
+                  return;
+                }
+                router.refresh();
+              });
+            }}
+          >
+            {pending ? "Copying…" : "Copy from last month"}
+          </Button>
+        </>
+      )}
+      {error && (
+        <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>
+          {error}
+        </span>
+      )}
+    </div>
   );
 }

@@ -180,6 +180,44 @@ export function proposeFirstPeriod(today: Date = new Date()): NextPeriodProposal
   return proposal;
 }
 
+/**
+ * The period that would cover a given calendar month, if the user asked for it.
+ *
+ * Periods are 4–5 whole weeks, not calendar months, so "September" is not a
+ * date range — it is whichever period `dominantMonth` names September. This
+ * chains forward from the last period the account has until it reaches that
+ * month, and returns null when the month is behind the chain (already covered,
+ * or in the past) or too far ahead to be reached sanely.
+ *
+ * Nothing here creates anything. It is the arithmetic behind an offer, so a
+ * month that does not exist yet can be opened and looked at without a write —
+ * the line #46 held and the one this feature must not cross.
+ */
+export function proposePeriodForMonth(
+  target: { year: number; monthIndex: number },
+  latestEndIso: string | null,
+  today: Date = new Date()
+): NextPeriodProposal | null {
+  let proposal: NextPeriodProposal | null = latestEndIso
+    ? proposeNextPeriod(latestEndIso)
+    : proposeFirstPeriod(today);
+
+  // Bounded: each pass advances at least 28 days, so three years of chaining is
+  // a tripwire rather than a limit anyone should reach.
+  for (let guard = 0; proposal !== null && guard < 36; guard += 1) {
+    const month = dominantMonth(
+      new Date(`${proposal.startDate}T00:00:00Z`),
+      new Date(`${proposal.endDate}T00:00:00Z`)
+    );
+    const year = month.getUTCFullYear();
+    const monthIndex = month.getUTCMonth();
+    if (year === target.year && monthIndex === target.monthIndex) return proposal;
+    if (year > target.year || (year === target.year && monthIndex > target.monthIndex)) return null;
+    proposal = proposeNextPeriod(proposal.endDate);
+  }
+  return null;
+}
+
 export function periodHasEnded(endDateIso: string, today: Date = new Date()): boolean {
   const end = validIsoDate(endDateIso);
   return end !== null && utcDay(today).getTime() > end.getTime();

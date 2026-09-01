@@ -1,8 +1,9 @@
 # Build tasks — navigation, recurring, and periods by default
 
 Three tasks raised by the founder, split by how much thinking they need before
-anyone writes code. **Task A is ready to delegate. Tasks B and C are specced
-here and still need one decision each.**
+anyone writes code. **Task A is ready to delegate. Task B is built apart from
+its forward half, and Task C's open decision was overtaken by the founder — see
+the notes at the head of each.**
 
 None of these are design-direction work. The design overhaul (`docs/design/direction/`)
 is a separate, unlanded workstream — see the note at the end of Task A.
@@ -107,7 +108,17 @@ removed, nothing else has to be rebuilt.
 
 ---
 
-# Task B — recurring carry across months · SPECCED, ONE DECISION OPEN
+# Task B — recurring carry across months · BUILT (backward half)
+
+> **Built.** `createPeriod` carries the previous month's recurring in behind the
+> button that creates the month, and `/recurring` offers the same copy from its
+> empty state. Copied rows are `pending`, the copy is refused for a month that
+> already holds any recurring row, and the whole thing is one multi-row insert.
+> **Not built:** `series_id` and the forward push described under "Added by the
+> founder" below — nothing in the shipped carry uses either, and an unapplied
+> column on an auto-deploying branch breaks every insert until a human runs the
+> migration. Tracked as `G-5` in `docs/00-open-decisions.md`.
+
 
 ## The brief, in the founder's words
 
@@ -258,7 +269,22 @@ not been seen on a statement would be the app asserting a fact it does not have.
 
 ---
 
-# Task C — periods created by default · SPECCED, ONE REAL DECISION
+# Task C — periods created by default · SUPERSEDED BY THE FOUNDER
+
+> **The decision table below is moot.** The founder resolved it directly:
+>
+> > "for non created months a user should be allowed to click and see empty
+> > month state screen which shows the create month message/button with check to
+> > copy recurring I described earlier by default checked"
+>
+> So **nothing is pre-created** — not a rolling window, not a year. A month that
+> does not exist yet is navigable: tapping its tile in the month picker opens
+> `/start-month`, which shows what that month would cover and offers to start
+> it, with the copy-recurring checkbox ticked. Creation stays lazy and on the
+> press, which is also what keeps the "opening a screen must never write" line
+> intact. The rest of this section is kept for the reasoning about the past,
+> which still holds and is now enforced server-side.
+
 
 ## The brief, in the founder's words
 

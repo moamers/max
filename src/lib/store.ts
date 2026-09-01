@@ -19,6 +19,7 @@ import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
 import { getDb } from "./db";
 import { periods, transactions, budgets, periodSummaries, goals, incomeMonths, users } from "./schema";
 import { ParsedPeriod, summarizePeriod } from "./parser";
+import { pickCarrySource, shiftOccurredOn, type CarryCandidate } from "./recurring-carry";
 import type { UserId } from "./auth";
 import {
   SECTION_MAPPING,
@@ -402,15 +403,43 @@ export interface NewPeriodInput {
   endDate: string;
 }
 
-/** Creates an empty app-native period after the user has seen the rollover proposal. */
-export async function createPeriod(userId: UserId, input: NewPeriodInput): Promise<number> {
+export interface CreatedPeriod {
+  id: number;
+  /** How the recurring carry went, so the screen can say what it did. */
+  carried: RecurringCarry;
+}
+
+/**
+ * Creates an empty app-native period after the user has seen the proposal, and
+ * — when asked — carries last month's recurring into it.
+ *
+ * Replication happens *here*, behind the button that creates the month, and
+ * never when a screen is opened. "When you open a new month they need to be
+ * replicated" is the natural way to say it and a database write on page load is
+ * the literal reading; this project has already had one page-load write burst
+ * take production down.
+ */
+export async function createPeriod(
+  userId: UserId,
+  input: NewPeriodInput,
+  options: { copyRecurring?: boolean } = {}
+): Promise<CreatedPeriod> {
   const db = getDb();
   return db.transaction(async (tx) => {
     const [existing] = await tx
       .select({ id: periods.id })
       .from(periods)
       .where(and(eq(periods.userId, userId), eq(periods.startDate, input.startDate), eq(periods.endDate, input.endDate)));
-    if (existing) return existing.id;
+    // Pressing the same button twice re-runs the carry, which is a no-op
+    // whenever the month already holds recurring rows — see `carryRecurring`.
+    if (existing) {
+      return {
+        id: existing.id,
+        carried: options.copyRecurring
+          ? await carryRecurring(tx, userId, existing.id)
+          : NOTHING_CARRIED,
+      };
+    }
 
     const [order] = await tx
       .select({ value: sql<number>`coalesce(max(${periods.sheetOrder}), -1) + 1` })
@@ -430,8 +459,195 @@ export async function createPeriod(userId: UserId, input: NewPeriodInput): Promi
     if (!created) throw new Error("The next period could not be created.");
 
     await tx.insert(periodSummaries).values({ periodId: created.id });
-    return created.id;
+    return {
+      id: created.id,
+      carried: options.copyRecurring ? await carryRecurring(tx, userId, created.id) : NOTHING_CARRIED,
+    };
   });
+}
+
+// -------------------------------------------------------- recurring carry
+
+type Transaction = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
+
+export interface RecurringCarry {
+  /** How many rows were written. Zero is the normal answer for a month that already has some. */
+  copied: number;
+  /** The month they came from, for a screen that wants to say so. Null when nothing was copied. */
+  sourceLabel: string | null;
+}
+
+const NOTHING_CARRIED: RecurringCarry = { copied: 0, sourceLabel: null };
+
+/** Every period this user owns, with whether it holds any recurring rows. */
+async function carryCandidates(
+  tx: Transaction,
+  userId: UserId
+): Promise<(CarryCandidate & { label: string; endDate: string | null })[]> {
+  return tx
+    .select({
+      id: periods.id,
+      label: periods.label,
+      startDate: periods.startDate,
+      endDate: periods.endDate,
+      sheetOrder: periods.sheetOrder,
+      hasRecurring: sql<boolean>`exists (
+        select 1 from ${transactions}
+        where ${transactions.periodId} = ${periods.id}
+          and ${transactions.kind} = 'recurring'
+      )`,
+    })
+    .from(periods)
+    .where(eq(periods.userId, userId));
+}
+
+/**
+ * Copy last month's recurring rows into this one.
+ *
+ * **Idempotent by the only rule that cannot be got wrong twice:** a month that
+ * already holds a single recurring row is left alone. Copying is for a month
+ * that has none, so running this again — a double press, a re-created month,
+ * the button on an empty screen — can never double a bill.
+ *
+ * What is copied: merchant, note, amount, category and label, which is the row
+ * as the user wrote it. What is reset:
+ *
+ *  - `pending = true`, because a copied bill is a prediction until it is seen.
+ *  - `needs_attention = false` and no reason, because an unresolved flag is
+ *    about one past import and carrying it forward would manufacture alarm.
+ *  - `raw_import = null`, because this row did not come from a file and
+ *    provenance must not lie (doctrine 5).
+ *  - `occurred_on` shifted to the same distance into the new period, or dropped
+ *    when that lands outside it.
+ *
+ * Deleting a bill needs no tombstone: each month copies from the last one, so a
+ * row deleted this month is simply absent from next month.
+ *
+ * Cost: three statements — the candidate scan, the source rows, and **one**
+ * multi-row insert. Never one insert per bill.
+ */
+async function carryRecurring(
+  tx: Transaction,
+  userId: UserId,
+  periodId: number
+): Promise<RecurringCarry> {
+  const [target] = await tx
+    .select({ id: periods.id, startDate: periods.startDate, endDate: periods.endDate })
+    .from(periods)
+    .where(and(eq(periods.id, periodId), eq(periods.userId, userId)));
+  // Not this user's period, or none: indistinguishable from the caller's side.
+  if (!target) return NOTHING_CARRIED;
+
+  const candidates = await carryCandidates(tx, userId);
+  if (candidates.find((candidate) => candidate.id === periodId)?.hasRecurring) return NOTHING_CARRIED;
+
+  const source = pickCarrySource(target, candidates);
+  if (!source) return NOTHING_CARRIED;
+  const sourceLabel = candidates.find((candidate) => candidate.id === source.id)?.label ?? null;
+
+  const rows = await tx
+    .select({
+      category: transactions.category,
+      merchant: transactions.merchant,
+      note: transactions.note,
+      amount: transactions.amount,
+      label: transactions.label,
+      occurredOn: transactions.occurredOn,
+    })
+    .from(transactions)
+    .where(and(eq(transactions.periodId, source.id), eq(transactions.kind, "recurring")))
+    .orderBy(asc(transactions.id));
+  if (rows.length === 0) return NOTHING_CARRIED;
+
+  await tx.insert(transactions).values(
+    rows.map((row) => ({
+      periodId,
+      kind: "recurring" as const,
+      category: row.category,
+      // Recurring rows belong to the month, not to a week within it.
+      weekNumber: null,
+      merchant: row.merchant,
+      note: row.note,
+      amount: row.amount,
+      // D-10: the user's own word, carried across verbatim.
+      label: row.label,
+      occurredOn: shiftOccurredOn(row.occurredOn, source.startDate, target.startDate, target.endDate),
+      pending: true,
+      needsAttention: false,
+      attentionReason: null,
+      rawImport: null,
+    }))
+  );
+
+  return { copied: rows.length, sourceLabel };
+}
+
+/**
+ * Does this account hold any recurring rows at all?
+ *
+ * The question a create-a-month control needs: a month that does not exist yet
+ * has no id to look a source up against, and every existing period is earlier
+ * than the one being proposed. Offering a checkbox that would copy nothing is
+ * a control that lies about what it does.
+ */
+export async function userHasRecurring(userId: UserId): Promise<boolean> {
+  const db = getDb();
+  const rows = await db
+    .select({ id: transactions.id })
+    .from(transactions)
+    .innerJoin(periods, eq(periods.id, transactions.periodId))
+    .where(and(eq(periods.userId, userId), eq(transactions.kind, "recurring")))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/**
+ * The "copy from last month" button on an empty recurring screen. Same rules,
+ * same idempotence — this is `carryRecurring` on its own transaction.
+ */
+export async function copyRecurringFromLastMonth(
+  userId: UserId,
+  periodId: number
+): Promise<RecurringCarry> {
+  const db = getDb();
+  return db.transaction((tx) => carryRecurring(tx, userId, periodId));
+}
+
+/**
+ * Which month a copy would come from, or null when there is none. A read, so a
+ * screen can decide whether to offer the button at all rather than offering one
+ * that quietly does nothing.
+ */
+export async function recurringCarrySource(
+  userId: UserId,
+  periodId: number
+): Promise<{ periodId: number; label: string } | null> {
+  const db = getDb();
+  const [target] = await db
+    .select({ id: periods.id, startDate: periods.startDate })
+    .from(periods)
+    .where(and(eq(periods.id, periodId), eq(periods.userId, userId)));
+  if (!target) return null;
+
+  const candidates = await db
+    .select({
+      id: periods.id,
+      label: periods.label,
+      startDate: periods.startDate,
+      sheetOrder: periods.sheetOrder,
+      hasRecurring: sql<boolean>`exists (
+        select 1 from ${transactions}
+        where ${transactions.periodId} = ${periods.id}
+          and ${transactions.kind} = 'recurring'
+      )`,
+    })
+    .from(periods)
+    .where(eq(periods.userId, userId));
+
+  const source = pickCarrySource(target, candidates);
+  if (!source) return null;
+  const label = candidates.find((candidate) => candidate.id === source.id)?.label ?? null;
+  return label === null ? null : { periodId: source.id, label };
 }
 
 

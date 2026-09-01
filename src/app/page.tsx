@@ -11,6 +11,7 @@ import {
   findPeriod,
 } from "@/lib/queries";
 import { buildYearData, yearsWithData, type YearData } from "@/lib/queries/year";
+import { userHasRecurring } from "@/lib/store";
 import { HomeScreen } from "@/components/home/HomeScreen";
 import { EmptyState } from "@/components/EmptyState";
 import { buildWeekViews } from "@/components/home/derive";
@@ -103,12 +104,16 @@ export default async function HomePage(props: PageProps<"/">) {
     }, null);
   const next = latestDated?.window?.complete ? proposeNextPeriod(isoDate(latestDated.window.end)) : null;
   const nextStartMs = next ? new Date(`${next.startDate}T00:00:00Z`).getTime() : 0;
+  // Only asked when a month is actually being offered, so the ordinary render
+  // of Home costs nothing extra. The proposed month starts after every period
+  // this account owns, so any recurring row anywhere is a row it could copy.
   const rollover = next
     ? {
         startDate: next.startDate,
         fourWeekEnd: isoDate(new Date(nextStartMs + 27 * 86_400_000)),
         fiveWeekEnd: isoDate(new Date(nextStartMs + 34 * 86_400_000)),
         proposedWeeks: next.weekCount,
+        canCopyRecurring: await userHasRecurring(user.id),
       }
     : null;
 

@@ -9,6 +9,7 @@ export * from "./Button";
 export * from "./FAB";
 export * from "./SegmentedControl";
 export * from "./Chip";
+export * from "./Checkbox";
 export * from "./NumericField";
 export * from "./Row";
 export * from "./Accordion";

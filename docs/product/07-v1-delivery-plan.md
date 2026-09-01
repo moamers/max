@@ -103,6 +103,7 @@ agents building those screens must match them rather than choose again.
 | `/goals` | 11 Budget goals |
 | `/income` | 12 Income by month |
 | `/year` | 07 Year round-up |
+| `/start-month` | A month that does not exist yet: the empty-month state, with the control that starts it. No design; added for the founder's "for non created months a user should be allowed to click and see empty month state screen". |
 
 Routes are the seam between agents: nobody imports another's components.
 
