@@ -41,6 +41,17 @@ export interface HeroView {
     spend: number | null;
   };
   income: number | null;
+  /**
+   * The three kinds that `today.spend` is the sum of, so the hero figure can
+   * show its working rather than assert a total (D-5). Presentation adds no
+   * arithmetic here: these are `monthOverview`'s own `spent.weekly` /
+   * `.recurring` / `.oneOff`, unchanged.
+   */
+  spentByKind: {
+    weekly: number;
+    recurring: number;
+    oneOff: number;
+  };
 }
 
 export interface WeeksSummaryView {

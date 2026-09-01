@@ -73,7 +73,12 @@ export function AmountEditor({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+        {/*
+          The Landing measures this block on commit and lifts a ghost of it out
+          of the form — see `flyAmountToItsRow`. It is a stable hook, not a
+          style: nothing here may move or resize because of it.
+        */}
+        <div data-motion-amount style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
           <span
             style={{
               fontSize: "var(--type-display)",

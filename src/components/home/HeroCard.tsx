@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Tape } from "@/components/ui/Tape";
 import { formatGBP, heroForecastSentence, heroTodaySentence } from "./format";
+import { heroForecastTape, heroTodayTape } from "./evidence";
 import type { HeroView } from "./types";
 
 export type HeroMode = "today" | "forecast";
@@ -40,6 +44,9 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
         : "var(--lime-ink)";
   const ink2 = forecast ? "var(--hero-ink-2)" : "var(--text-secondary)";
   const ink3 = forecast ? "var(--hero-ink-3)" : "var(--text-tertiary)";
+  const figureText = spare === null ? "£—" : formatGBP(spare);
+  // Built per mode, and returned as null unless its lines reach the figure.
+  const openable = forecast ? heroForecastTape(hero) : heroTodayTape(hero);
 
   return (
     <Card
@@ -71,9 +78,44 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
         {eyebrow}
       </span>
 
-      <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 400, letterSpacing: "-0.015em", lineHeight: 1, color: ink1 }}>
-        {spare === null ? "£—" : formatGBP(spare)}
-      </span>
+      {/*
+        THE TAPE, on the one figure on this screen that cannot be checked
+        anywhere else.
+
+        Every other number on Home is one tap from the rows it is made of. This
+        one is income minus everything, and before this it was simply asserted:
+        the user either believed it or they closed the app. That is exactly the
+        number D-5 is about, and the two parser defects that made D-5 a rule
+        were both found by opening a figure up.
+
+        The tape opens beneath the figure and the figure does not move.
+      */}
+      <Tape
+        // Keyed by mode: Today and End of month are two different questions
+        // with two different workings, so switching hands off hard rather than
+        // resizing an open panel underneath a figure that just changed.
+        key={mode}
+        block={openable}
+        label={`Show how ${figureText} is worked out`}
+        ink={
+          forecast
+            ? {
+                // On the gradient the card supplies its own ink scale; the
+                // page's text tokens are chosen for the page's background and
+                // would be near-invisible here.
+                strong: "var(--hero-ink-1)",
+                line: "var(--hero-ink-2)",
+                quiet: "var(--hero-ink-3)",
+                rule: "color-mix(in oklab, var(--hero-ink-1) 22%, transparent)",
+                underline: "var(--hero-ink-1)",
+              }
+            : undefined
+        }
+      >
+        <span style={{ display: "block", fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 400, letterSpacing: "-0.015em", lineHeight: 1, color: ink1 }}>
+          {figureText}
+        </span>
+      </Tape>
 
       <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: ink2 }}>
         {spare === null ? "Add an income figure and this fills in." : sentence}
