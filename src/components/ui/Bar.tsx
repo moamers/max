@@ -18,7 +18,7 @@ export interface BarProps {
    * (7–8px), "total" bars (12px). Default "category".
    */
   size?: BarSize;
-  /** Use the strong red variant (--bar-over-strong) instead of the default. */
+  /** Use the strong variant of the over-target fill instead of the default. */
   strong?: boolean;
   className?: string;
   "aria-label"?: string;
@@ -30,11 +30,17 @@ export interface BarProps {
  * anywhere else; every budget bar in the product should go through here.
  */
 export function Bar({ spend, budget, size = "category", strong = false, className, ...rest }: BarProps) {
-  const { widthPct, tone, gradientSizePct } = computeBarReading(spend, budget);
+  const { widthPct, tone } = computeBarReading(spend, budget);
   const height = HEIGHT[size];
-  // Over budget stays a single flat red: the ramp is about approaching a
-  // limit, and once it is passed there is nothing left to approach.
-  const overColor = strong ? "var(--bar-over-strong)" : "var(--bar-over)";
+  // Both fills are the GRAPHIC channel, not the ink one: a bar is a meaningful
+  // non-text graphic, so its floor is 3:1 rather than the 4.5:1 text needs, and
+  // it keeps far more of the hue. See the signal channels in brand-tokens.css.
+  const fill =
+    tone === "over"
+      ? strong
+        ? "var(--bar-fill-over-strong)"
+        : "var(--bar-fill-over)"
+      : "var(--bar-fill)";
 
   return (
     <div
@@ -52,15 +58,9 @@ export function Bar({ spend, budget, size = "category", strong = false, classNam
         style={{
           height: "100%",
           width: `${widthPct}%`,
-          ...(tone === "over"
-            ? { background: overColor }
-            : {
-                backgroundImage: "var(--bar-ramp)",
-                backgroundSize: `${gradientSizePct}% 100%`,
-                backgroundRepeat: "no-repeat",
-              }),
+          background: fill,
           borderRadius: "var(--radius-pill)",
-          transition: `width var(--duration-bar) ease, background-color var(--duration-bar) ease`,
+          transition: `width var(--motion-deliberate) var(--ease-standard), background-color var(--motion-quick) var(--ease-standard)`,
         }}
       />
     </div>

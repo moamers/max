@@ -2,6 +2,9 @@ import {
   COUNTERBALANCE_A,
   COUNTERBALANCE_B,
   COUNTERBALANCE_VIEWBOX,
+  LOCKUP_VIEWBOX,
+  MARK_TO_LOCKUP,
+  WORDMARK_PATHS,
 } from "./counterbalance-paths";
 
 /**
@@ -54,31 +57,56 @@ export function Counterbalance({
 }
 
 /**
- * The mark plus the name — the kit's "lockup", used where the name still has to
- * be introduced (the auth screens, the menu drawer). The wordmark is live text
- * rather than the kit's outlined SVG so it inherits the app's own type and
- * stays legible at any size; the kit keeps the vector version for print.
+ * The kit's lockup — the mark and the name as one drawn asset, used where the
+ * name still has to be introduced (the auth screens, the menu drawer).
+ *
+ * This was previously the mark beside live text. Live text meant the wordmark
+ * was set in whatever face the app's UI happened to use, at whatever weight the
+ * component asked for, which is how the name came to be rendered in a
+ * neo-grotesque at weight 800 while the kit draws it in URW Gothic at 400. A
+ * lockup is a fixed brand asset, not styled UI text; drawing the kit's own
+ * outlines is what makes it one.
+ *
+ * `size` is still the MARK's size, so every existing call site keeps the mark
+ * at the pixel size it asked for. The lockup around it is scaled from that —
+ * see MARK_TO_LOCKUP. Only the fills change per theme, exactly as the kit
+ * ships it.
  */
 export function Wordmark({
   size = 26,
   idSuffix = "wordmark",
 }: {
+  /** The MARK's height in pixels. The lockup is drawn around it. */
   size?: number;
   idSuffix?: string;
 }) {
+  const clipId = `lockup-clip-${idSuffix}`;
+  const height = size * MARK_TO_LOCKUP;
+  const [, , vbWidth, vbHeight] = LOCKUP_VIEWBOX.split(" ").map(Number);
+
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: size * 0.42 }}>
-      <Counterbalance size={size} idSuffix={idSuffix} />
-      <span
-        style={{
-          fontSize: Math.round(size * 0.73),
-          fontWeight: 800,
-          letterSpacing: "-0.03em",
-          lineHeight: 1,
-        }}
-      >
-        Ravel
-      </span>
-    </span>
+    <svg
+      viewBox={LOCKUP_VIEWBOX}
+      height={height}
+      width={height * (vbWidth / vbHeight)}
+      style={{ flexShrink: 0, display: "block" }}
+      role="img"
+      aria-label="Ravel"
+    >
+      <defs>
+        <clipPath id={clipId}>
+          <path d={COUNTERBALANCE_A} />
+        </clipPath>
+      </defs>
+      <path d={COUNTERBALANCE_A} fill="var(--color-primary)" />
+      <path d={COUNTERBALANCE_B} fill="var(--color-health)" />
+      <path d={COUNTERBALANCE_B} fill="var(--color-spark)" clipPath={`url(#${clipId})`} />
+      {/* One group, one fill — the kit's own structure. */}
+      <g fill="var(--color-text)">
+        {WORDMARK_PATHS.map((d, i) => (
+          <path key={i} d={d} />
+        ))}
+      </g>
+    </svg>
   );
 }

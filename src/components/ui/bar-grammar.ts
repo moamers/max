@@ -9,16 +9,21 @@
  *    the magnitude of the overspend is carried by the number, never by
  *    bar length (there is no headroom beyond 100%, no notch)
  *
- * DEVIATION FROM THE HANDOFF, at the founder's request: the fill is a ramp
- * rather than flat grey. The gradient is painted across the *track*, and the
- * fill reveals the left part of it — so the colour at any point means "this
- * much of the budget", and a half-full bar is entirely calm because it has not
- * reached the warm stops yet.
+ * HISTORY. For a while the fill was a four-stop ramp (health -> money ->
+ * attention -> spark) painted across the track, a deviation from the handoff
+ * made at the founder's request so that the colour at any point meant "this
+ * much of the budget". It has been reversed, on review, for two reasons:
  *
- * The stops sit deliberately late (calm to 70%, warming through 85%, warm at
- * the end). This app is for people who feel judged by money apps, so a bar that
- * reddens early would be the product working against itself. It stays quiet
- * until the number is genuinely worth looking at.
+ *   1. At 3-12px tall, at arm's length, four stops do not read as four stages.
+ *      They read as a gradient, which is decoration.
+ *   2. It made colour encode magnitude. That is the one thing this file says
+ *      never to do — magnitude lives in the number.
+ *
+ * What the ramp got right is kept: the bar stays quiet. It is one solid fill
+ * that changes colour ONLY at a real state change (passing the target), and
+ * that state is carried by the number and the words too, never by colour
+ * alone. This app is for people who feel judged by money apps, so a bar that
+ * reddens on the way to a limit would be the product working against itself.
  *
  * This mirrors the prototype's own `bar(spend, budget)` method exactly
  * (docs/design/handoff/Max App v1.dc.html, ~line 947):
@@ -37,12 +42,6 @@ export interface BarReading {
   widthPct: number;
   /** Which colour role the fill should use. */
   tone: BarTone;
-  /**
-   * How wide the gradient must be painted, as a percentage of the *fill*, so
-   * that it spans the whole track. A 25%-full bar paints its gradient at 400%
-   * and therefore shows only the first quarter of the ramp.
-   */
-  gradientSizePct: number;
 }
 
 /**
@@ -53,13 +52,8 @@ export interface BarReading {
 export function computeBarReading(spend: number, budget: number): BarReading {
   const pct = budget > 0 ? (spend / budget) * 100 : 0;
   if (pct <= 0) {
-    return { widthPct: 0, tone: "spend", gradientSizePct: 100 };
+    return { widthPct: 0, tone: "spend" };
   }
   const widthPct = Math.min(pct, 100);
-  return {
-    widthPct,
-    tone: pct > 100 ? "over" : "spend",
-    // Scale the gradient so it always measures the track, never the fill.
-    gradientSizePct: (100 / widthPct) * 100,
-  };
+  return { widthPct, tone: pct > 100 ? "over" : "spend" };
 }

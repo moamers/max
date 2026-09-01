@@ -48,12 +48,65 @@
   --space-22: 22px;
   --space-26: 26px;
 
-  /* ---- motion ---- */
-  --ease-sheet: cubic-bezier(0.22, 0.9, 0.3, 1);
-  --duration-sheet: 0.26s;
-  --duration-fade: 0.28s;
-  --duration-scrim: 0.2s;
-  --duration-bar: 0.4s;
+  /*
+    ---- motion ----
+    Five steps and nothing between them, so a duration is chosen by what the
+    thing is DOING rather than by taste. The old set (0.15s / 160ms / 0.2s /
+    0.26s / 0.28s / 0.4s) was six ad-hoc values doing four jobs.
+
+      instant     press and release, colour, opacity
+      quick       an in-place state change
+      standard    a move within one screen
+      deliberate  something crossing a boundary — a sheet, a drawer
+      scene       a whole screen assembling
+
+    stagger is the stride between items in a sequence, never more than four
+    items deep. Anything above 500ms is NOT on this scale: a two-second fade is
+    a dwell, not a transition, and it has its own name so nobody reaches for it
+    as "the slow one".
+  */
+  --motion-instant: 90ms;
+  --motion-quick: 140ms;
+  --motion-standard: 220ms;
+  --motion-deliberate: 320ms;
+  --motion-scene: 480ms;
+  --motion-stagger: 30ms;
+
+  /* Off the interaction scale on purpose — how long a mark stays before it
+     fades, not how long it takes to move. */
+  --motion-dwell: 2000ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /*
+    Legacy names, kept as aliases while the call sites migrate. --duration-bar
+    was 0.4s and is now deliberate: a bar resolving is a move, not a scene.
+  */
+  --ease-sheet: var(--ease-enter);
+  --duration-sheet: var(--motion-deliberate);
+  --duration-fade: var(--motion-standard);
+  --duration-scrim: var(--motion-standard);
+  --duration-bar: var(--motion-deliberate);
+}
+
+/*
+  Reduced motion clamps the scale itself, in one place, so every transition and
+  animation in the app shortens at once and no component has to remember. The
+  durations collapse rather than going to zero: 1ms still fires transitionend,
+  so anything waiting on it still runs. Dwell is exempt — it is a mark sitting
+  still, not movement — and the ambient case is switched off entirely below.
+*/
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 1ms;
+    --motion-quick: 1ms;
+    --motion-standard: 1ms;
+    --motion-deliberate: 1ms;
+    --motion-scene: 1ms;
+    --motion-stagger: 0ms;
+  }
 }
 
 @theme inline {
@@ -172,7 +225,7 @@ a {
 
 .max-caret {
   display: inline-flex;
-  transition: transform 0.2s ease;
+  transition: transform var(--motion-standard) var(--ease-standard);
 }
 
 .max-caret--open {
@@ -180,15 +233,15 @@ a {
 }
 
 .max-scrim {
-  animation: scrimFade var(--duration-scrim) ease both;
+  animation: scrimFade var(--motion-standard) var(--ease-standard) both;
 }
 
 .max-sheet--full {
-  animation: sheetUp var(--duration-sheet) var(--ease-sheet) both;
+  animation: sheetUp var(--motion-deliberate) var(--ease-enter) both;
 }
 
 .max-sheet--bottom {
-  animation: sheetUp var(--duration-sheet) var(--ease-sheet) both;
+  animation: sheetUp var(--motion-deliberate) var(--ease-enter) both;
 }
 
 /*
@@ -214,7 +267,7 @@ a {
 
 .just-changed {
   border-radius: var(--radius-row);
-  animation: justChangedFade 2s ease-out 1 forwards;
+  animation: justChangedFade var(--motion-dwell) var(--ease-exit) 1 forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -41,7 +41,7 @@ export function Chip({ tone = "quiet", selected = false, className, style, ...re
         padding: "7px 12px",
         cursor: "pointer",
         whiteSpace: "nowrap",
-        transition: "border-color 0.15s ease, color 0.15s ease",
+        transition: "border-color var(--motion-quick) var(--ease-standard), color var(--motion-quick) var(--ease-standard)",
         ...style,
       }}
       {...rest}
