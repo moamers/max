@@ -37,29 +37,50 @@ import { motionToken } from "@/lib/motion";
 const SEEN = "ravel:arrived";
 
 /**
- * Survives React's development double-invocation of effects. StrictMode runs
- * every effect twice: the first pass recorded "seen" and started the
- * choreography, and the second pass read that record back and removed the
- * overlay on the spot — so the arrival never played in development at all,
- * and the fault was invisible because the end state looks identical.
+ * Two different questions, and conflating them was a bug.
  *
- * Module scope rather than a ref, because the question is "has this tab
- * already arrived", which outlives any one mount.
+ *   "Has this EFFECT already run for this mount?" — StrictMode invokes every
+ *   effect twice on the same component instance, and the second pass must not
+ *   restart or tear down what the first one began. A ref answers this: it
+ *   survives StrictMode's simulated remount and is fresh on a real one.
+ *
+ *   "Has this TAB already arrived?" — sessionStorage answers this, and it must
+ *   outlive every mount.
+ *
+ * A module-level flag was used for both, which broke navigation: leaving home
+ * for Year and coming back remounts this component, React re-renders the
+ * overlay, and the flag made the effect return early WITHOUT clearing it. The
+ * overlay then sat over the whole screen at full opacity — the app looked
+ * empty apart from the logo in the middle, with home rendered and unreachable
+ * behind it.
  */
-let armed = false;
 
 /** The axis the two halves separate along, from the kit's own geometry. */
 const AXIS = [0.87, 0.49] as const;
 
+/**
+ * Taken out of the way without being taken out of the DOM. React rendered this
+ * node and still owns it; removing it by hand invites a removeChild on a node
+ * React believes it still has. Hidden, inert and unreadable is enough.
+ */
+function hide(el: HTMLElement) {
+  el.style.display = "none";
+  el.style.pointerEvents = "none";
+}
+
 export function Arrival() {
   const host = useRef<HTMLDivElement>(null);
+  const ranThisMount = useRef(false);
 
   useEffect(() => {
     const el = host.current;
     if (!el) return;
 
-    if (armed) return;
-    armed = true;
+    // StrictMode's second pass on the same mount: the first pass is already
+    // running the choreography. Leave it alone — and in particular do not
+    // clear the overlay out from under it.
+    if (ranThisMount.current) return;
+    ranThisMount.current = true;
 
     let seen = false;
     try {
@@ -69,7 +90,7 @@ export function Arrival() {
       // is a far smaller cost than throwing on the first paint of the app.
     }
     if (seen) {
-      el.remove();
+      hide(el);
       return;
     }
 
@@ -129,7 +150,7 @@ export function Arrival() {
       });
     };
     const done = () => {
-      el.remove();
+      hide(el);
       // Recorded only once it has actually played. Writing it up front meant a
       // load interrupted before the animation finished still counted as an
       // arrival the user never saw.
