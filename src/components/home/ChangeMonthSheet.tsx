@@ -32,7 +32,7 @@ export function ChangeMonthSheet({ yearsByValue, bounds, initialYear, onDismiss 
           onClick={() => setYear((y) => Math.max(bounds.min, y - 1))}
           style={{ background: "var(--surface-inset)" }}
         />
-        <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>{year}</span>
+        <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.02em" }}>{year}</span>
         <IconButton
           size="md"
           icon={<span aria-hidden>&rsaquo;</span>}
@@ -68,11 +68,11 @@ export function ChangeMonthSheet({ yearsByValue, bounds, initialYear, onDismiss 
                   style={{ position: "absolute", top: 10, right: 10, width: 6, height: 6, borderRadius: 99, background: "var(--status-review-ink)" }}
                 />
               )}
-              <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>{m.monthLabel}</span>
+              <span style={{ fontSize: "var(--type-label)", fontWeight: 600, letterSpacing: "-0.01em" }}>{m.monthLabel}</span>
               <span
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono)",
-                  fontSize: 11,
+                  fontVariantNumeric: "tabular-nums",
+                  fontSize: "var(--type-caption)",
                   color:
                     m.net === null
                       ? "var(--text-disabled)"

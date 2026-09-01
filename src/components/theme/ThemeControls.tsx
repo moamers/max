@@ -102,7 +102,7 @@ export function ThemeControls({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-      <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>{label}</span>
+      <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" }}>{label}</span>
       {children}
     </div>
   );

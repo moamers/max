@@ -38,7 +38,7 @@ export function StartFirstPeriod({ label }: { label: string }) {
           border: "none",
           padding: "6px 4px",
           color: "var(--text-secondary)",
-          fontSize: 14,
+          fontSize: "var(--type-label)",
           textDecoration: "underline",
           textUnderlineOffset: 3,
           cursor: pending ? "default" : "pointer",
@@ -47,7 +47,7 @@ export function StartFirstPeriod({ label }: { label: string }) {
         {pending ? "Starting…" : `Or start ${label} now`}
       </button>
       {error && (
-        <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>
+        <span role="alert" style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>
           {error}
         </span>
       )}

@@ -72,10 +72,10 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
       <Sheet variant="full" onBack={() => router.back()}>
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 30px", display: "flex", flexDirection: "column", gap: 26 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08 }}>
+            <h1 style={{ margin: 0, fontSize: "var(--type-heading)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08 }}>
               What are you aiming for?
             </h1>
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, lineHeight: 1.6, color: "var(--text-secondary-2)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", lineHeight: 1.6, color: "var(--text-secondary-2)" }}>
               three weekly numbers, and what you expect to earn
             </span>
           </div>
@@ -93,10 +93,10 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
               </div>
             ))}
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, padding: "12px 16px 0" }}>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>that is</span>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>that is</span>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 7, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.03em" }}>{formatGBP(total)}</span>
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                <span style={{ fontSize: "var(--type-title)", fontWeight: 800, letterSpacing: "-0.03em" }}>{formatGBP(total)}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                   a week · {formatGBP(total * 5)} a month
                 </span>
               </div>
@@ -111,15 +111,15 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
             </div>
             <Link href="/income" style={{ color: "inherit", textDecoration: "none" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "14px 16px", cursor: "pointer" }}>
-                <span style={{ fontSize: 15, color: "var(--text-secondary)" }}>Some months differ — set them one by one</span>
-                <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>›</span>
+                <span style={{ fontSize: "var(--type-label)", color: "var(--text-secondary)" }}>Some months differ — set them one by one</span>
+                <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)" }} aria-hidden>›</span>
               </div>
             </Link>
           </section>
         </div>
         <div style={{ padding: "0 20px 22px", flexShrink: 0 }}>
           {error && (
-            <p role="alert" style={{ margin: 0, fontSize: 14, color: "var(--bar-over)" }}>
+            <p role="alert" style={{ margin: 0, fontSize: "var(--type-label)", color: "var(--bar-over)" }}>
               {error}
             </p>
           )}
@@ -133,8 +133,8 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
 }
 
 const eyebrowStyle = {
-  fontFamily: "var(--font-jetbrains-mono)",
-  fontSize: 10,
+  fontVariantNumeric: "tabular-nums",
+  fontSize: "var(--type-micro)",
   letterSpacing: "0.14em",
   textTransform: "uppercase" as const,
   color: "var(--text-tertiary)",
@@ -150,4 +150,4 @@ const fieldRowStyle = {
   gap: 12,
 };
 
-const rowLabelStyle = { fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" };
+const rowLabelStyle = { fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" };

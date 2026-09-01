@@ -27,8 +27,8 @@ function fieldLabel(text: string) {
   return (
     <span
       style={{
-        fontFamily: "var(--font-jetbrains-mono)",
-        fontSize: 10,
+        fontVariantNumeric: "tabular-nums",
+        fontSize: "var(--type-micro)",
         letterSpacing: "0.1em",
         textTransform: "uppercase",
         color: "var(--text-tertiary)",
@@ -185,11 +185,11 @@ export function TransactionView({ detail, captureEnabled = false }: TransactionV
           </div>
 
           {reasoning && (
-            <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0, textWrap: "pretty" }}>{reasoning}</p>
+            <p style={{ fontSize: "var(--type-body)", color: "var(--text-secondary)", margin: 0, textWrap: "pretty" }}>{reasoning}</p>
           )}
 
           {needsAttention && attentionReason && (
-            <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: 13, lineHeight: 1.45 }}>
+            <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: "var(--type-caption)", lineHeight: 1.45 }}>
               {attentionReason}
             </div>
           )}
@@ -199,8 +199,8 @@ export function TransactionView({ detail, captureEnabled = false }: TransactionV
               {fieldLabel("As imported")}
               <span
                 style={{
-                  fontFamily: "var(--font-jetbrains-mono)",
-                  fontSize: 11,
+                  fontVariantNumeric: "tabular-nums",
+                  fontSize: "var(--type-caption)",
                   color: "var(--text-tertiary)",
                   wordBreak: "break-word",
                 }}
@@ -211,7 +211,7 @@ export function TransactionView({ detail, captureEnabled = false }: TransactionV
           )}
 
           {error && (
-            <p style={{ fontSize: 13, color: "var(--bar-over)", margin: 0 }} role="alert">
+            <p style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)", margin: 0 }} role="alert">
               {error}
             </p>
           )}

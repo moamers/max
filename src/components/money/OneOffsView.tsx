@@ -43,8 +43,8 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 11,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-caption)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: "var(--text-tertiary)",
@@ -54,8 +54,8 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
           </span>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 10,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-micro)",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: "var(--text-tertiary)",
@@ -66,7 +66,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
           <h1
             style={{
               margin: 0,
-              fontSize: 44,
+              fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)",
               fontWeight: 800,
               letterSpacing: "-0.04em",
               lineHeight: 1,
@@ -76,15 +76,15 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
             {spare.amount === null ? "£—" : formatMoney(spare.amount)}
           </h1>
           {spare.spend !== null && spare.income !== null ? (
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
               {formatMoney(spare.spend)} forecast spend of {formatMoney(spare.income)} income
             </span>
           ) : spare.income === null ? (
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
               Add an income figure and this fills in.
             </span>
           ) : (
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
               This period has no dates for a forecast.
             </span>
           )}
@@ -93,8 +93,8 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 10,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-micro)",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: "var(--text-tertiary)",
@@ -108,7 +108,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {oneOffs.items.length === 0 ? (
             <Card size="sm" padding="16px">
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                 No one-offs in this period.
               </span>
             </Card>
@@ -124,7 +124,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                   <Card interactive size="sm" padding="15px 16px" style={{ gap: 9 }}>
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                        <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>
+                        <span style={{ fontSize: "var(--type-label)", fontWeight: 600, letterSpacing: "-0.01em" }}>
                           {item.merchant ?? "—"}
                         </span>
                         {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
@@ -133,7 +133,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                       <span
                         style={{
                           flexShrink: 0,
-                          fontSize: 16,
+                          fontSize: "var(--type-body)",
                           fontWeight: 700,
                           letterSpacing: "-0.025em",
                           color: item.needsAttention ? "var(--status-review-ink)" : item.pending ? "var(--status-pending-ink)" : "var(--text-primary)",
@@ -146,12 +146,12 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                       <div style={{ display: "flex", alignItems: "center", gap: 9, flexWrap: "wrap" }}>
                         {item.label && <Pill tone="cyan">{item.label}</Pill>}
                         {item.note && (
-                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                             {item.note}
                           </span>
                         )}
                         {due && (
-                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--status-pending-ink)" }}>
+                          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--status-pending-ink)" }}>
                             {due}
                           </span>
                         )}

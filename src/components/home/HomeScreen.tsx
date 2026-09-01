@@ -50,13 +50,13 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
               style={{ display: "flex", alignItems: "center", gap: 11, background: "none", border: "none", padding: 0, cursor: "pointer", color: "inherit" }}
             >
               <Counterbalance size={24} idSuffix="home" />
-              <span style={{ fontSize: 21, fontWeight: 800, letterSpacing: "-0.03em" }}>{data.monthLabel}</span>
+              <span style={{ fontSize: "var(--type-title)", fontWeight: 800, letterSpacing: "-0.03em" }}>{data.monthLabel}</span>
               <span style={{ color: "var(--text-tertiary)", display: "flex" }}>
                 <ChevronDownIcon />
               </span>
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                 {data.todayLabel} · {data.weekCounter}
               </span>
               <IconButton size="sm" icon={<HamburgerIcon />} aria-label="Open menu" onClick={() => setMenuOpen(true)} />
@@ -72,8 +72,8 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
           <Link href={`/recurring?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Card interactive>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>Recurring</span>
-                <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.recurringTotal)}</span>
+                <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>Recurring</span>
+                <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.recurringTotal)}</span>
               </div>
             </Card>
           </Link>
@@ -81,8 +81,8 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
           <Link href={`/one-offs?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Card interactive>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>One-offs</span>
-                <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.oneOffsTotal)}</span>
+                <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>One-offs</span>
+                <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.oneOffsTotal)}</span>
               </div>
             </Card>
           </Link>

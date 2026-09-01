@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Schibsted_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Newsreader, Libre_Franklin } from "next/font/google";
 import {
   APP_DESCRIPTION,
   APP_NAME,
@@ -12,17 +12,22 @@ import {
 } from "@/lib/brand";
 import "./globals.css";
 
-const grotesk = Schibsted_Grotesk({
-  variable: "--font-grotesk",
+/**
+ * Bookish, per docs/design/direction/00-SETTLED.md: Newsreader for the one
+ * large figure on a screen, Libre Franklin for everything else, and no
+ * monospace anywhere — tabular-nums does the aligning a terminal face used to.
+ */
+const franklin = Libre_Franklin({
+  variable: "--font-franklin",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["300", "400"],
   display: "swap",
 });
 
@@ -64,7 +69,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       data-theme={theme}
       {...(mode ? { "data-mode": mode } : {})}
-      className={`${grotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${franklin.variable} ${newsreader.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

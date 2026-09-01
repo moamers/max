@@ -43,8 +43,8 @@ export function YearStrip({ year }: { year: YearView }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
         <span
           style={{
-            fontFamily: "var(--font-jetbrains-mono)",
-            fontSize: 10,
+            fontVariantNumeric: "tabular-nums",
+            fontSize: "var(--type-micro)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: "var(--text-tertiary)",
@@ -54,7 +54,7 @@ export function YearStrip({ year }: { year: YearView }) {
         </span>
         <span
           style={{
-            fontSize: 19,
+            fontSize: "var(--type-title)",
             fontWeight: 700,
             letterSpacing: "-0.025em",
             color: year.netPosition === null || year.netPosition >= 0 ? "var(--lime-ink)" : "var(--bar-over)",

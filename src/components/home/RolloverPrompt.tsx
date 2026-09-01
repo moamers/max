@@ -51,12 +51,12 @@ export function RolloverPrompt({
   return (
     <div style={{ padding: 18, border: "1px solid var(--hairline-3)", borderRadius: "var(--radius-card-sm)", background: "var(--surface)", display: "flex", flexDirection: "column", gap: 14 }}>
       <div>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--lime-ink)" }}>{eyebrow}</span>
-        <p style={{ margin: "7px 0 0", fontSize: 16, fontWeight: 700 }}>{displayDate(proposal.startDate)} – {displayDate(endDate)}</p>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--lime-ink)" }}>{eyebrow}</span>
+        <p style={{ margin: "7px 0 0", fontSize: "var(--type-body)", fontWeight: 700 }}>{displayDate(proposal.startDate)} – {displayDate(endDate)}</p>
       </div>
-      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "var(--text-secondary)" }}>I lined this up as whole Monday-to-Sunday weeks. Change the length if the end date is different.</p>
+      <p style={{ margin: 0, fontSize: "var(--type-caption)", lineHeight: 1.45, color: "var(--text-secondary)" }}>I lined this up as whole Monday-to-Sunday weeks. Change the length if the end date is different.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {([4, 5] as const).map((count) => <button key={count} type="button" onClick={() => setWeeks(count)} style={{ height: 40, borderRadius: 99, border: `1px solid ${weeks === count ? "var(--lime-ink)" : "var(--hairline-4)"}`, background: weeks === count ? "var(--control-active)" : "transparent", color: "var(--text-primary)", fontFamily: "var(--font-jetbrains-mono)", cursor: "pointer" }}>{count} weeks</button>)}
+        {([4, 5] as const).map((count) => <button key={count} type="button" onClick={() => setWeeks(count)} style={{ height: 40, borderRadius: 99, border: `1px solid ${weeks === count ? "var(--lime-ink)" : "var(--hairline-4)"}`, background: weeks === count ? "var(--control-active)" : "transparent", color: "var(--text-primary)", fontVariantNumeric: "tabular-nums", cursor: "pointer" }}>{count} weeks</button>)}
       </div>
       {proposal.canCopyRecurring && (
         <Checkbox
@@ -66,7 +66,7 @@ export function RolloverPrompt({
           hint={COPY_RECURRING_HINT}
         />
       )}
-      {error && <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>{error}</span>}
+      {error && <span role="alert" style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>{error}</span>}
       <Button disabled={pending} onClick={() => { setError(null); startTransition(async () => { try { const result = await acceptRollover(proposal.startDate, endDate, proposal.canCopyRecurring && copyRecurring); router.replace(result.next); } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn't start this period."); } }); }}>{pending ? "Starting…" : cta}</Button>
     </div>
   );

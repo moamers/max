@@ -15,7 +15,7 @@ export default async function LoginPage() {
       <div className="mb-8">
         <Wordmark size={34} idSuffix="login" />
       </div>
-      <h1 className="text-2xl font-semibold mb-6">Sign in</h1>
+      <h1 className="font-semibold mb-6" style={{ fontSize: "var(--type-heading)" }}>Sign in</h1>
 
       {user ? (
         <div className="flex flex-col gap-4">

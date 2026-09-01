@@ -76,7 +76,7 @@ export function AmountEditor({
         <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
           <span
             style={{
-              fontSize: 34,
+              fontSize: "var(--type-display)",
               fontWeight: 800,
               letterSpacing: "-0.03em",
               color: needsAttention ? "var(--status-review-ink)" : pending ? "var(--status-pending-ink)" : "var(--text-primary)",
@@ -103,7 +103,7 @@ export function AmountEditor({
               border: "none",
               outline: "none",
               fontFamily: "var(--font-grotesk)",
-              fontSize: 34,
+              fontSize: "var(--type-display)",
               fontWeight: 800,
               letterSpacing: "-0.03em",
               color: needsAttention ? "var(--status-review-ink)" : pending ? "var(--status-pending-ink)" : "var(--text-primary)",

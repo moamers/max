@@ -80,8 +80,8 @@ export default async function StartMonthPage({ searchParams }: { searchParams: P
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <span
           style={{
-            fontFamily: "var(--font-jetbrains-mono)",
-            fontSize: 11,
+            fontVariantNumeric: "tabular-nums",
+            fontSize: "var(--type-caption)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: "var(--text-tertiary)",
@@ -89,10 +89,10 @@ export default async function StartMonthPage({ searchParams }: { searchParams: P
         >
           {month.year}
         </span>
-        <h1 style={{ margin: 0, fontSize: 34, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+        <h1 style={{ margin: 0, fontSize: "var(--type-display)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
           {monthName}
         </h1>
-        <p style={{ margin: 0, fontSize: 15, color: "var(--text-secondary)", textWrap: "pretty" }}>
+        <p style={{ margin: 0, fontSize: "var(--type-body)", color: "var(--text-secondary)", textWrap: "pretty" }}>
           {offer
             ? "This month hasn't been started yet. Here is what it would cover."
             : "This month hasn't been started, and it has already finished — so there is nothing here to open."}
@@ -113,7 +113,7 @@ export default async function StartMonthPage({ searchParams }: { searchParams: P
         />
       )}
 
-      <Link href="/" style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+      <Link href="/" style={{ fontSize: "var(--type-label)", color: "var(--text-secondary)" }}>
         Back to your month
       </Link>
     </div>

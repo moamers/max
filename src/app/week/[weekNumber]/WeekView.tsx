@@ -93,8 +93,8 @@ export function WeekView({
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span
               style={{
-                fontFamily: "var(--font-jetbrains-mono)",
-                fontSize: 11,
+                fontVariantNumeric: "tabular-nums",
+                fontSize: "var(--type-caption)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 color: "var(--text-tertiary)",
@@ -102,17 +102,17 @@ export function WeekView({
             >
               {monthName} · Week {weekNumber}
             </span>
-            <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.035em", margin: 0, textWrap: "balance" }}>
+            <h1 style={{ fontSize: "var(--type-display)", fontWeight: 800, letterSpacing: "-0.035em", margin: 0, textWrap: "balance" }}>
               {rangeLabel ?? `Week ${weekNumber}`}
             </h1>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.035em", color: headline.color }}>
+              <span style={{ fontSize: "var(--type-display)", fontWeight: 800, letterSpacing: "-0.035em", color: headline.color }}>
                 {headline.text}
               </span>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                 {meta}
               </span>
             </div>
@@ -168,11 +168,11 @@ function CategoryCard({
       header={
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 600 }}>{category.title}</span>
+            <span style={{ fontSize: "var(--type-body)", fontWeight: 600 }}>{category.title}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 600, color: headline.color }}>{headline.text}</span>
+              <span style={{ fontSize: "var(--type-label)", fontWeight: 600, color: headline.color }}>{headline.text}</span>
               {category.goal !== null && (
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                   of {gbp(category.goal)}
                 </span>
               )}
@@ -185,7 +185,7 @@ function CategoryCard({
     >
       {transactions.length === 0 ? (
         <Row>
-          <span style={{ fontSize: 14, color: "var(--text-secondary)" }}>Nothing filed here yet.</span>
+          <span style={{ fontSize: "var(--type-label)", color: "var(--text-secondary)" }}>Nothing filed here yet.</span>
         </Row>
       ) : (
         transactions.map((item, i) => (
@@ -193,11 +193,11 @@ function CategoryCard({
           <Link href={`/transaction/${item.id}`} style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider={i > 0}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: 15, fontWeight: 500 }}>{item.merchant?.trim() || "Untitled"}</span>
+                <span style={{ fontSize: "var(--type-label)", fontWeight: 500 }}>{item.merchant?.trim() || "Untitled"}</span>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span
                     style={{
-                      fontSize: 15,
+                      fontSize: "var(--type-label)",
                       fontWeight: 600,
                       color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
                     }}
@@ -217,7 +217,7 @@ function CategoryCard({
                 </span>
               </div>
               {item.note && (
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                   {item.note}
                 </span>
               )}

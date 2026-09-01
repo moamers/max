@@ -34,6 +34,31 @@
   --radius-sheet-top: 30px;
   --radius-pill: 99px;
 
+  /*
+    ---- type scale ----
+    Eight steps and nothing between them. The app had 28 distinct hardcoded
+    sizes across 285 usages — 9.5, 10, 10.5, 11, 12, 13, 13.5, 14, 15, 16, 17,
+    19, 20, 21, 22, 24, 25, 26, 27, 28, 30, 32, 34, 36, 40, 44, 46, 52 — which
+    is not a scale, it is a record of what each component happened to need on
+    the day it was written. Half-pixel differences cannot be seen; they can only
+    be inherited.
+
+    Sizes are the only thing this scale fixes. Where two old sizes were doing
+    different jobs, the difference now lives in weight, colour or spacing —
+    which is where it should have been.
+
+    A guard test (no-hardcoded-type.test.ts) fails on any numeric fontSize in a
+    component, so the scale cannot quietly grow a 29th step.
+  */
+  --type-micro: 10px;    /* dense metadata, uppercase eyebrows */
+  --type-caption: 12px;  /* captions, timestamps, secondary labels */
+  --type-label: 14px;    /* controls, chips, navigation labels */
+  --type-body: 16px;     /* body copy, inputs, primary supporting text */
+  --type-title: 20px;    /* card and subsection titles */
+  --type-heading: 26px;  /* screen title */
+  --type-display: 34px;  /* major screen heading */
+  --type-figure: 44px;   /* the one large figure per screen */
+
   /* ---- spacing scale (px) ---- */
   --space-2: 2px;
   --space-4: 4px;
@@ -112,8 +137,8 @@
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-grotesk);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-sans: var(--font-franklin);
+  --font-figure: var(--font-newsreader);
 }
 
 
@@ -124,7 +149,9 @@
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-grotesk), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans), "Libre Franklin", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* The aligning a terminal face used to do, without a terminal face. */
+  font-variant-numeric: tabular-nums;
 }
 
 ::-webkit-scrollbar {

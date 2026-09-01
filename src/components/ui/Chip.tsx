@@ -32,8 +32,8 @@ export function Chip({ tone = "quiet", selected = false, className, style, ...re
       type="button"
       className={cn(tone === "quiet" && "max-chip--quiet", className)}
       style={{
-        fontFamily: "var(--font-jetbrains-mono)",
-        fontSize: 11,
+        fontVariantNumeric: "tabular-nums",
+        fontSize: "var(--type-caption)",
         color: selected ? "var(--lime-ink)" : toneStyle.color,
         background: toneStyle.background,
         // A one-pixel line is ink, not a fill, so it uses --lime-ink (checked
@@ -77,8 +77,8 @@ export function Pill({ tone = "neutral", uppercase = false, className, style, ..
     <span
       className={cn(className)}
       style={{
-        fontFamily: "var(--font-jetbrains-mono)",
-        fontSize: 10,
+        fontVariantNumeric: "tabular-nums",
+        fontSize: "var(--type-micro)",
         letterSpacing: "0.06em",
         textTransform: uppercase ? "uppercase" : "none",
         color: toneStyle.color,

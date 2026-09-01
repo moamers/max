@@ -27,7 +27,7 @@ function formatPercent(value: number | null): string {
 function SectionTitle({ children }: { children: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
+      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
         {children}
       </span>
       <span style={{ height: 1, flex: 1, background: "var(--hairline-1)" }} />
@@ -66,15 +66,15 @@ function MonthRow({ month }: { month: YearMonth }) {
         style={{ width: "100%", border: 0, background: "transparent", color: "inherit", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", cursor: expandable ? "pointer" : "default", font: "inherit" }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", minWidth: 34 }}>{monthAbbr(month.monthIndex)}</span>
+          <span style={{ fontSize: "var(--type-label)", fontWeight: 600, letterSpacing: "-0.01em", minWidth: 34 }}>{monthAbbr(month.monthIndex)}</span>
           {month.periodLabels.length > 1 && (
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-tertiary)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>
               {month.periodLabels.length} periods
             </span>
           )}
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color: tone }}>
+          <span style={{ fontSize: "var(--type-label)", fontWeight: 700, letterSpacing: "-0.02em", color: tone }}>
             {month.position === null ? "—" : formatSignedGBP(month.position)}
           </span>
           {expandable ? <Caret open={open} /> : <span style={{ width: 16 }} />}
@@ -84,7 +84,7 @@ function MonthRow({ month }: { month: YearMonth }) {
         <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 9 }}>
           <div style={{ alignSelf: "flex-end", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
             {month.periodIds.map((periodId, index) => (
-              <Link key={periodId} href={`/?period=${periodId}`} style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, textDecoration: "none" }}>
+              <Link key={periodId} href={`/?period=${periodId}`} style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", textDecoration: "none" }}>
                 {month.periodIds.length === 1 ? `open ${monthAbbr(month.monthIndex)}` : `open ${month.periodLabels[index]}`} ›
               </Link>
             ))}
@@ -96,8 +96,8 @@ function MonthRow({ month }: { month: YearMonth }) {
             ["income", month.income, true],
           ] as const).map(([label, amount, income]) => (
             <div key={label} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, paddingTop: 9, borderTop: "1px solid var(--hairline-1)" }}>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-secondary-2)" }}>{label}</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: income ? "var(--lime-ink)" : "var(--text-primary)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-secondary-2)" }}>{label}</span>
+              <span style={{ fontSize: "var(--type-label)", fontWeight: 600, color: income ? "var(--lime-ink)" : "var(--text-primary)" }}>
                 {amount === null ? "—" : formatGBP(amount)}
               </span>
             </div>
@@ -113,8 +113,8 @@ function RunningPosition({ data }: { data: YearOverview }) {
   return (
     <div style={{ background: "var(--surface)", borderRadius: "var(--radius-card-sm)", padding: "20px 18px 16px", display: "flex", flexDirection: "column", gap: 12, marginTop: 6 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Running position</span>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: moneyColor(data.kpis.lowPoint?.amount) }}>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Running position</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: moneyColor(data.kpis.lowPoint?.amount) }}>
           {data.kpis.lowPoint ? `low ${formatSignedGBP(data.kpis.lowPoint.amount)}` : "—"}
         </span>
       </div>
@@ -127,7 +127,7 @@ function RunningPosition({ data }: { data: YearOverview }) {
       </svg>
       <div style={{ display: "grid", gridTemplateColumns: `repeat(${chart.points.length}, minmax(0, 1fr))` }}>
         {chart.points.map((point) => (
-          <span key={point.monthIndex} style={{ textAlign: "center", fontFamily: "var(--font-jetbrains-mono)", fontSize: 9.5, color: "var(--text-tertiary)" }}>
+          <span key={point.monthIndex} style={{ textAlign: "center", fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>
             {monthAbbr(point.monthIndex)}
           </span>
         ))}
@@ -148,10 +148,10 @@ function Kpis({ data }: { data: YearOverview }) {
     <div style={{ display: "flex", flexDirection: "column", padding: "0 2px" }}>
       {rows.map(([label, month, amount, color], index) => (
         <div key={label} style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, padding: "13px 0", borderBottom: index < rows.length - 1 ? "1px solid var(--hairline-1)" : undefined }}>
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>{label}</span>
+          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>{label}</span>
           <span style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
-            {month && <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-secondary-2)" }}>{month}</span>}
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em", color }}>
+            {month && <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-secondary-2)" }}>{month}</span>}
+            <span style={{ fontSize: "var(--type-label)", fontWeight: 700, letterSpacing: "-0.02em", color }}>
               {amount === null ? "—" : formatSignedGBP(amount)}
             </span>
           </span>
@@ -174,11 +174,11 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
         <button type="button" onClick={() => router.back()} aria-label="Back" style={{ width: 38, height: 38, borderRadius: "var(--radius-pill)", border: 0, background: "var(--surface)", color: "var(--text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <BackArrowIcon />
         </button>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Year round-up</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Year round-up</span>
         <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: "auto" }}>
-          {previous === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${previous}`} aria-label={`View ${previous}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: 22 }}>‹</Link>}
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 12, fontWeight: 500, minWidth: 44, textAlign: "center" }}>{data.year}</span>
-          {next === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${next}`} aria-label={`View ${next}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: 22 }}>›</Link>}
+          {previous === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${previous}`} aria-label={`View ${previous}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>‹</Link>}
+          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", fontWeight: 500, minWidth: 44, textAlign: "center" }}>{data.year}</span>
+          {next === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${next}`} aria-label={`View ${next}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>›</Link>}
         </div>
       </header>
 
@@ -186,19 +186,19 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
         {data.periodCount === 0 ? (
           <div style={{ minHeight: "55vh", display: "grid", placeItems: "center", textAlign: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800 }}>{YEAR_EMPTY_COPY.title}</h1>
-              <p style={{ margin: 0, maxWidth: 300, fontSize: 15, lineHeight: 1.5, color: "var(--text-secondary)" }}>{data.periodCount === 0 ? YEAR_EMPTY_COPY.none : YEAR_EMPTY_COPY.one}</p>
+              <h1 style={{ margin: 0, fontSize: "var(--type-heading)", fontWeight: 800 }}>{YEAR_EMPTY_COPY.title}</h1>
+              <p style={{ margin: 0, maxWidth: 300, fontSize: "var(--type-body)", lineHeight: 1.5, color: "var(--text-secondary)" }}>{data.periodCount === 0 ? YEAR_EMPTY_COPY.none : YEAR_EMPTY_COPY.one}</p>
               <Link href="/import" style={{ marginTop: 4, textDecoration: "none", fontWeight: 700 }}>{YEAR_EMPTY_COPY.action}</Link>
             </div>
           </div>
         ) : (
           <>
             <section style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Net position</span>
-              <h1 style={{ margin: 0, fontSize: 46, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: netColor }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Net position</span>
+              <h1 style={{ margin: 0, fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: netColor }}>
                 {data.netPosition === null ? "—" : formatSignedGBP(data.netPosition)}
               </h1>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 12, color: "var(--text-secondary-2)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-secondary-2)" }}>
                 {data.income === null || data.netPosition === null
                   ? YEAR_UNKNOWN_INCOME_COPY
                   : yearNetSentence(data.netPosition, formatPercent(data.keptPercent), formatGBP(data.income))}
@@ -213,10 +213,10 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
                   const keptNegative = share.key === "kept" && share.amount !== null && share.amount < 0;
                   return (
                     <div key={share.key} style={{ minWidth: 0, border: share.key === "kept" ? `1px solid ${keptNegative ? "var(--tile-negative-border)" : "var(--tile-positive-border)"}` : "1px solid var(--hairline-1)", borderRadius: "var(--radius-row)", padding: "15px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-                      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)" }}>{share.label}</span>
-                      <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em", color: keptNegative ? "var(--bar-over)" : undefined }}>{share.amount === null ? "—" : share.key === "kept" ? formatSignedGBP(share.amount) : formatGBP(share.amount)}</span>
-                      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-secondary-2)" }}>{formatPercent(share.incomePercent)}</span>
-                      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-secondary-2)", lineHeight: 1.45 }}>{share.monthlyAverage === null ? "—" : `~${formatGBP(Math.abs(share.monthlyAverage))} / ${formatPercent(share.incomePercent)} per month`}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>{share.label}</span>
+                      <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.03em", color: keptNegative ? "var(--bar-over)" : undefined }}>{share.amount === null ? "—" : share.key === "kept" ? formatSignedGBP(share.amount) : formatGBP(share.amount)}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-secondary-2)" }}>{formatPercent(share.incomePercent)}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-secondary-2)", lineHeight: 1.45 }}>{share.monthlyAverage === null ? "—" : `~${formatGBP(Math.abs(share.monthlyAverage))} / ${formatPercent(share.incomePercent)} per month`}</span>
                     </div>
                   );
                 })}
@@ -226,7 +226,7 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
             <section style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <SectionTitle>Month by month</SectionTitle>
               {data.income === null ? (
-                <div style={{ background: "var(--surface)", borderRadius: "var(--radius-card-sm)", padding: 20, fontSize: 14, lineHeight: 1.5, color: "var(--text-secondary)", textAlign: "center" }}>
+                <div style={{ background: "var(--surface)", borderRadius: "var(--radius-card-sm)", padding: 20, fontSize: "var(--type-label)", lineHeight: 1.5, color: "var(--text-secondary)", textAlign: "center" }}>
                   {YEAR_UNKNOWN_RUNNING_COPY}
                 </div>
               ) : (

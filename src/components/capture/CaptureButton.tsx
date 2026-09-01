@@ -185,10 +185,10 @@ export function CaptureButton({ onDraft }: CaptureButtonProps) {
         </div>
       )}
 
-      <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: "var(--text-secondary)", textWrap: "pretty" }}>
+      <p style={{ margin: 0, fontSize: "var(--type-caption)", lineHeight: 1.5, color: "var(--text-secondary)", textWrap: "pretty" }}>
         Ravel sends this image to OpenAI to read it. Nothing is saved until you check the form and tap Add it or Save.
       </p>
-      <p style={{ margin: 0, fontSize: 11, color: "var(--text-tertiary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
         PNG, JPEG, WebP, HEIC or HEIF · up to {CAPTURE_IMAGE_LIMITS.maxBytes / 1024 / 1024} MB
       </p>
 
@@ -196,7 +196,7 @@ export function CaptureButton({ onDraft }: CaptureButtonProps) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <p
             role={stage === "error" ? "alert" : "status"}
-            style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: stage === "error" ? "var(--bar-over)" : "var(--text-secondary)" }}
+            style={{ margin: 0, fontSize: "var(--type-caption)", lineHeight: 1.45, color: stage === "error" ? "var(--bar-over)" : "var(--text-secondary)" }}
           >
             {message}
           </p>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Bar } from "@/components/ui/Bar";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FAB } from "@/components/ui/FAB";
@@ -22,9 +24,9 @@ function Section({ title, note, children }: { title: string; note?: string; chil
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <h2 style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>{title}</h2>
+        <h2 style={{ fontSize: "var(--type-title)", fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>{title}</h2>
         {note && (
-          <p style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", margin: 0 }}>
+          <p style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)", margin: 0 }}>
             {note}
           </p>
         )}
@@ -48,8 +50,8 @@ function Swatch({ name, varName }: { name: string; varName: string }) {
         }}
       />
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>{name}</span>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)" }}>{varName}</span>
+        <span style={{ fontSize: "var(--type-caption)", fontWeight: 600 }}>{name}</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>{varName}</span>
       </div>
     </div>
   );
@@ -59,6 +61,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
   const [hero, setHero] = useState<"today" | "forecast">("forecast");
   const [txnState, setTxnState] = useState<"final" | "pending">("final");
   const [weeksOpen, setWeeksOpen] = useState(true);
+  const [checkboxOn, setCheckboxOn] = useState(true);
   const [catOpen, setCatOpen] = useState<string | null>("everyday");
   const [amount, setAmount] = useState<number | null>(190);
   const [scrimVisible, setScrimVisible] = useState(false);
@@ -75,10 +78,10 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 120px", display: "flex", flexDirection: "column", gap: 44 }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.035em", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
+          <h1 style={{ fontSize: "var(--type-display)", fontWeight: 800, letterSpacing: "-0.035em", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <Wordmark size={30} idSuffix="styleguide" /> <span style={{ fontWeight: 400, color: "var(--text-tertiary)" }}>styleguide</span>
           </h1>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0, maxWidth: 520 }}>
+          <p style={{ fontSize: "var(--type-body)", color: "var(--text-secondary)", margin: 0, maxWidth: 520 }}>
             Every primitive from src/components/ui, in every documented state. Development surface only — not a
             product screen.
           </p>
@@ -106,41 +109,81 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
       </Section>
 
       {/* ------------------------------------------------------ Typography */}
-      <Section title="Typography" note="Manrope (UI) + JetBrains Mono (numeric / meta)">
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <span style={{ fontSize: 52, fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 0.98 }}>£703</span>
-          <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.035em" }}>£62 over</span>
-          <span style={{ fontSize: 25, fontWeight: 800, letterSpacing: "-0.035em" }}>£1,397 spent</span>
-          <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em" }}>August</span>
-          <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Weekend</span>
-          <span style={{ fontSize: 15, fontWeight: 500 }}>Body row text, 15px/500.</span>
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>
-            Mono meta · uppercase
-          </span>
+      <Section
+        title="Typography"
+        note="Newsreader (the one large figure per screen) + Libre Franklin (everything else). No monospace — tabular-nums aligns."
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {(
+            [
+              ["figure", "44", "£703", { fontFamily: "var(--font-figure), Georgia, serif", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1 }],
+              ["display", "34", "£62 over", { fontWeight: 700, letterSpacing: "-0.035em" }],
+              ["heading", "26", "£1,397 spent", { fontWeight: 700, letterSpacing: "-0.03em" }],
+              ["title", "20", "August", { fontWeight: 700, letterSpacing: "-0.02em" }],
+              ["body", "16", "Body copy, inputs, the text a sentence is set in.", { fontWeight: 400 }],
+              ["label", "14", "Controls, chips, navigation", { fontWeight: 600 }],
+              ["caption", "12", "Captions and secondary labels", { fontWeight: 400, color: "var(--text-secondary)" }],
+              ["micro", "10", "DENSE METADATA", { fontWeight: 600, letterSpacing: "0.12em", color: "var(--text-tertiary)" }],
+            ] as const
+          ).map(([name, px, sample, style]) => (
+            <div key={name} style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
+              <span
+                style={{
+                  fontSize: "var(--type-micro)",
+                  fontWeight: 600,
+                  color: "var(--text-tertiary)",
+                  width: 78,
+                  flexShrink: 0,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {name} · {px}
+              </span>
+              <span style={{ fontSize: `var(--type-${name})`, ...style }}>{sample}</span>
+            </div>
+          ))}
         </div>
+      </Section>
+
+      {/* ------------------------------------------------------- Statuses */}
+      <Section
+        title="Status — settled · pending · review · over"
+        note="mapped by meaning, not by neighbouring hues. The dot and the leading rule carry the ordering structurally, so it holds where a hue is visually softer."
+      >
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <StatusPill status="settled">4 bills settled</StatusPill>
+          <StatusPill status="pending">2 pending</StatusPill>
+          <StatusPill status="review">1 needs a look</StatusPill>
+          <StatusPill status="over">Over target</StatusPill>
+        </div>
+      </Section>
+
+      {/* ------------------------------------------------------- Checkbox */}
+      <Section title="Checkbox" note="used by the create-a-month copy control">
+        <Checkbox checked={checkboxOn} onChange={setCheckboxOn} label="Copy recurring from last month" />
       </Section>
 
       {/* ----------------------------------------------------------- Bar */}
       <Section title="Bar — the one chart grammar" note="track = budget · fill = spend (grey) · over = whole fill red at 100% width">
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Under budget · size=&quot;week&quot; (3px) · £140 of £190</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>Under budget · size=&quot;week&quot; (3px) · £140 of £190</span>
             <Bar spend={140} budget={190} size="week" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>At budget · size=&quot;category&quot; (8px) · £190 of £190</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>At budget · size=&quot;category&quot; (8px) · £190 of £190</span>
             <Bar spend={190} budget={190} size="category" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Over budget · size=&quot;total&quot; (12px) · £252 of £190 (£62 over)</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>Over budget · size=&quot;total&quot; (12px) · £252 of £190 (£62 over)</span>
             <Bar spend={252} budget={190} size="total" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Zero spend · empty track</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>Zero spend · empty track</span>
             <Bar spend={0} budget={190} size="category" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Strong over variant (strong)</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>Strong over variant (strong)</span>
             <Bar spend={340} budget={190} size="category" strong />
           </div>
         </div>
@@ -150,18 +193,18 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
       <Section title="Card" note="sm (20px) / lg (22px) / hero (26px) radius">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
           <Card size="sm">
-            <span style={{ fontSize: 15, fontWeight: 600 }}>Nested card</span>
-            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>radius 20px</span>
+            <span style={{ fontSize: "var(--type-label)", fontWeight: 600 }}>Nested card</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>radius 20px</span>
           </Card>
           <Card size="lg" interactive>
-            <span style={{ fontSize: 15, fontWeight: 600 }}>Interactive card</span>
-            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>hover lifts a surface step</span>
+            <span style={{ fontSize: "var(--type-label)", fontWeight: 600 }}>Interactive card</span>
+            <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>hover lifts a surface step</span>
           </Card>
           <Card size="hero" style={{ background: "var(--hero-gradient)", color: "var(--hero-ink-1)" }}>
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--hero-ink-3)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--hero-ink-3)" }}>
               Forecast · spare on 31 Aug
             </span>
-            <span style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.04em" }}>£307</span>
+            <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.04em" }}>£307</span>
           </Card>
         </div>
       </Section>
@@ -185,7 +228,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
       <Section title="SegmentedControl">
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 13, width: 140 }}>Today | End of month</span>
+            <span style={{ fontSize: "var(--type-caption)", width: 140 }}>Today | End of month</span>
             <SegmentedControl
               value={hero}
               onChange={setHero}
@@ -196,7 +239,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 13, width: 140 }}>Final | Pending</span>
+            <span style={{ fontSize: "var(--type-caption)", width: 140 }}>Final | Pending</span>
             <SegmentedControl
               value={txnState}
               onChange={setTxnState}
@@ -207,7 +250,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
             />
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <span style={{ fontSize: 13, width: 140 }}>Theme &amp; appearance</span>
+            <span style={{ fontSize: "var(--type-caption)", width: 140 }}>Theme &amp; appearance</span>
             <ThemeControls theme={brand.theme} mode={brand.mode} />
           </div>
         </div>
@@ -244,10 +287,10 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
       <Section title="NumericField" note="£ prefix, right-aligned, digits only, clamped 0–99,999">
         <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 300 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "var(--surface)", borderRadius: 16, padding: "14px 16px" }}>
-            <span style={{ fontSize: 16, fontWeight: 600 }}>Everyday</span>
+            <span style={{ fontSize: "var(--type-body)", fontWeight: 600 }}>Everyday</span>
             <NumericField value={amount} onChange={setAmount} label="Everyday weekly budget" />
           </div>
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
             value = {amount} (try typing letters or a number over 99,999 — it clamps)
           </span>
         </div>
@@ -262,15 +305,15 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
               onClick={() => setWeeksOpen((v) => !v)}
               style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 600 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--type-body)", fontWeight: 600 }}>
                 <Caret open={weeksOpen} /> Weeks
               </span>
-              <span style={{ fontSize: 14, color: "var(--lime-ink)", fontWeight: 700 }}>£703 left</span>
+              <span style={{ fontSize: "var(--type-label)", color: "var(--lime-ink)", fontWeight: 700 }}>£703 left</span>
             </Row>
             {weeksOpen && (
               <Row divider>
-                <span style={{ fontSize: 15, fontWeight: 500 }}>4 – 10 Aug</span>
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                <span style={{ fontSize: "var(--type-label)", fontWeight: 500 }}>4 – 10 Aug</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                   of £420 · £396 spent
                 </span>
               </Row>
@@ -285,9 +328,9 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
                 onToggle={() => setCatOpen((cur) => (cur === c.key ? null : c.key))}
                 header={
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>{c.name}</span>
+                    <span style={{ fontSize: "var(--type-body)", fontWeight: 600 }}>{c.name}</span>
                     <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: c.spend > c.budget ? "var(--bar-over)" : "var(--lime-ink)" }}>
+                      <span style={{ fontSize: "var(--type-label)", fontWeight: 700, color: c.spend > c.budget ? "var(--bar-over)" : "var(--lime-ink)" }}>
                         {c.spend > c.budget ? `£${c.spend - c.budget} over` : `£${c.budget - c.spend} left`}
                       </span>
                       <Caret open={catOpen === c.key} />
@@ -296,7 +339,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
                 }
               >
                 <Bar spend={c.spend} budget={c.budget} size="category" />
-                <div style={{ paddingTop: 12, fontSize: 14, color: "var(--text-secondary)" }}>
+                <div style={{ paddingTop: 12, fontSize: "var(--type-label)", color: "var(--text-secondary)" }}>
                   Transactions for {c.name.toLowerCase()} would list here.
                 </div>
               </Accordion>
@@ -329,8 +372,8 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
           <div style={{ position: "relative", height: 320, borderRadius: 20, overflow: "hidden", background: "var(--surface-inset)" }}>
             <Sheet variant="full" onBack={() => setSheetOpen(false)}>
               <div style={{ padding: "8px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-                <h3 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Full sheet</h3>
-                <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0 }}>
+                <h3 style={{ fontSize: "var(--type-title)", fontWeight: 800, margin: 0 }}>Full sheet</h3>
+                <p style={{ fontSize: "var(--type-body)", color: "var(--text-secondary)", margin: 0 }}>
                   Covers the whole frame below the 46px status bar, with a circular back button.
                 </p>
               </div>
@@ -341,8 +384,8 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
         {bottomSheetOpen && (
           <div style={{ position: "relative", height: 320, borderRadius: 20, overflow: "hidden", background: "var(--surface-inset)" }}>
             <Sheet variant="bottom" onDismiss={() => setBottomSheetOpen(false)}>
-              <h3 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Bottom sheet</h3>
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0 }}>
+              <h3 style={{ fontSize: "var(--type-title)", fontWeight: 800, margin: 0 }}>Bottom sheet</h3>
+              <p style={{ fontSize: "var(--type-body)", color: "var(--text-secondary)", margin: 0 }}>
                 Rounded top corners only, anchored to the bottom, scrim behind it.
               </p>
               <Button variant="primary" onClick={() => setBottomSheetOpen(false)}>

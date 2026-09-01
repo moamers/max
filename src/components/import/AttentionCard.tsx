@@ -26,12 +26,12 @@ export function AttentionCard({ row }: { row: ImportedAttention }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 12, borderBottom: "1px solid var(--hairline-1)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
-        <span style={{ fontSize: 15, fontWeight: 600 }}>{row.merchant ?? "Imported row"}</span>
-        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.02em" }}>{formatGBP(row.amount)}</span>
+        <span style={{ fontSize: "var(--type-label)", fontWeight: 600 }}>{row.merchant ?? "Imported row"}</span>
+        <span style={{ fontSize: "var(--type-label)", fontWeight: 700, letterSpacing: "-0.02em" }}>{formatGBP(row.amount)}</span>
       </div>
-      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{row.attentionReason}</span>
+      <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>{row.attentionReason}</span>
       {answer ? (
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--lime-ink)" }}>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--lime-ink)" }}>
           placed as {answer === "one_off" ? "one-off" : answer}
         </span>
       ) : (
@@ -41,7 +41,7 @@ export function AttentionCard({ row }: { row: ImportedAttention }) {
           <Chip disabled={pending} onClick={() => choose("one_off")}>one-off</Chip>
         </div>
       )}
-      {error && <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>{error}</span>}
+      {error && <span role="alert" style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>{error}</span>}
     </div>
   );
 }

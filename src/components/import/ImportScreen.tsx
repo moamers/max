@@ -74,7 +74,7 @@ function ReadingRows({ preview }: { preview: ImportPreview | null }) {
           <span style={{ color: preview && index === rows.length - 1 && preview.attentionCount > 0 ? "var(--attention-ink)" : "var(--lime-ink)" }}>
             {preview && index === rows.length - 1 && preview.attentionCount > 0 ? "?" : "✓"}
           </span>
-          <span style={{ fontSize: 14 }}>{row}</span>
+          <span style={{ fontSize: "var(--type-label)" }}>{row}</span>
         </div>
       ))}
     </div>
@@ -142,8 +142,8 @@ export function ImportScreen() {
       <main style={frame}>
         <Counterbalance size={34} idSuffix="import" />
         <div style={{ marginTop: 34, display: "flex", flexDirection: "column", gap: 12 }}>
-          <h1 style={{ margin: 0, fontSize: 32, lineHeight: 1.06, letterSpacing: "-0.035em", fontWeight: 800 }}>Send me<br />the spreadsheet.</h1>
-          <p style={{ margin: 0, fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.55 }}>Sheets, screenshots, statements — I&apos;ll do the tidying.</p>
+          <h1 style={{ margin: 0, fontSize: "var(--type-display)", lineHeight: 1.06, letterSpacing: "-0.035em", fontWeight: 800 }}>Send me<br />the spreadsheet.</h1>
+          <p style={{ margin: 0, fontSize: "var(--type-body)", color: "var(--text-secondary)", lineHeight: 1.55 }}>Sheets, screenshots, statements — I&apos;ll do the tidying.</p>
         </div>
         <div
           onDragOver={(event) => event.preventDefault()}
@@ -155,15 +155,15 @@ export function ImportScreen() {
           style={{ flex: 1, minHeight: 300, margin: "28px 0", border: "1px dashed var(--hairline-4)", borderRadius: 22, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: "var(--text-secondary)" }}
         >
           <UploadGlyph />
-          <span style={{ fontSize: 15, fontWeight: 600 }}>drop a file, or paste</span>
+          <span style={{ fontSize: "var(--type-label)", fontWeight: 600 }}>drop a file, or paste</span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 7, justifyContent: "center" }}>
             {['spreadsheet', 'screenshot', 'statement', 'pdf'].map((label) => <Chip key={label} tabIndex={-1}>{label}</Chip>)}
           </div>
         </div>
-        {error && <p role="alert" style={{ color: "var(--bar-over)", fontSize: 13 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--bar-over)", fontSize: "var(--type-caption)" }}>{error}</p>}
         <input ref={inputRef} type="file" accept=".xlsx" hidden onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void inspect(selected); }} />
         <Button onClick={() => inputRef.current?.click()}>Choose a file</Button>
-        <Link href="/" style={{ marginTop: 14, textAlign: "center", fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", textDecoration: "none" }}>skip — start from scratch</Link>
+        <Link href="/" style={{ marginTop: 14, textAlign: "center", fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)", textDecoration: "none" }}>skip — start from scratch</Link>
       </main>
     );
   }
@@ -171,13 +171,13 @@ export function ImportScreen() {
   if (phase === "reading" || phase === "saving") {
     return (
       <main style={frame}>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>{phase === "reading" ? "Reading" : "Bringing it in"}</span>
-        <h1 style={{ margin: "12px 0 8px", fontSize: 28, letterSpacing: "-0.035em", fontWeight: 800, overflowWrap: "anywhere" }}>{file?.name}</h1>
-        <p style={{ margin: "0 0 30px", color: "var(--text-secondary)", fontSize: 14 }}>{preview ? `${preview.sheetCount} sheets · ${preview.rowCount.toLocaleString("en-GB")} rows · ${preview.periodCount} periods` : "Reading what is actually in the file."}</p>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>{phase === "reading" ? "Reading" : "Bringing it in"}</span>
+        <h1 style={{ margin: "12px 0 8px", fontSize: "var(--type-heading)", letterSpacing: "-0.035em", fontWeight: 800, overflowWrap: "anywhere" }}>{file?.name}</h1>
+        <p style={{ margin: "0 0 30px", color: "var(--text-secondary)", fontSize: "var(--type-body)" }}>{preview ? `${preview.sheetCount} sheets · ${preview.rowCount.toLocaleString("en-GB")} rows · ${preview.periodCount} periods` : "Reading what is actually in the file."}</p>
         <ReadingRows preview={preview} />
         <div style={{ marginTop: "auto", paddingTop: 32 }}>
           <div style={{ height: 4, borderRadius: 99, background: "var(--surface-inset)", overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, background: "var(--lime-ink)", transition: "width .15s linear" }} /></div>
-          <span style={{ display: "block", marginTop: 8, textAlign: "right", fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+          <span style={{ display: "block", marginTop: 8, textAlign: "right", fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
             {uploadComplete ? "Reading your file…" : `${progress}% uploaded`}
           </span>
         </div>
@@ -188,21 +188,21 @@ export function ImportScreen() {
   if (phase === "dates" && preview) {
     return (
       <main style={frame}>
-        <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>One check</span>
-        <h1 style={{ margin: "12px 0", fontSize: 28, letterSpacing: "-0.035em", fontWeight: 800 }}>I found these period dates.</h1>
-        <p style={{ margin: "0 0 24px", fontSize: 15, lineHeight: 1.55, color: "var(--text-secondary)" }}>The spreadsheet doesn&apos;t carry a year I can trust, so I&apos;ve filled in my best guess. Change it here if it&apos;s not right.</p>
+        <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>One check</span>
+        <h1 style={{ margin: "12px 0", fontSize: "var(--type-heading)", letterSpacing: "-0.035em", fontWeight: 800 }}>I found these period dates.</h1>
+        <p style={{ margin: "0 0 24px", fontSize: "var(--type-body)", lineHeight: 1.55, color: "var(--text-secondary)" }}>The spreadsheet doesn&apos;t carry a year I can trust, so I&apos;ve filled in my best guess. Change it here if it&apos;s not right.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {dates.map((date, index) => (
             <div key={date.sheetOrder} style={{ padding: 16, border: "1px solid var(--hairline-3)", borderRadius: "var(--radius-row)", display: "flex", flexDirection: "column", gap: 10 }}>
-              <span style={{ fontSize: 15, fontWeight: 700 }}>{date.label}</span>
+              <span style={{ fontSize: "var(--type-label)", fontWeight: 700 }}>{date.label}</span>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <label style={{ display: "flex", flexDirection: "column", gap: 5, fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)" }}>START<input aria-label={`${date.label} start`} type="date" value={date.startDate} onChange={(event) => setDates((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, startDate: event.target.value } : item))} style={{ minWidth: 0, padding: 10, borderRadius: 10, border: "1px solid var(--hairline-4)", background: "var(--surface-inset)", color: "var(--text-primary)" }} /></label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 5, fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)" }}>END<input aria-label={`${date.label} end`} type="date" value={date.endDate} onChange={(event) => setDates((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, endDate: event.target.value } : item))} style={{ minWidth: 0, padding: 10, borderRadius: 10, border: "1px solid var(--hairline-4)", background: "var(--surface-inset)", color: "var(--text-primary)" }} /></label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 5, fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>START<input aria-label={`${date.label} start`} type="date" value={date.startDate} onChange={(event) => setDates((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, startDate: event.target.value } : item))} style={{ minWidth: 0, padding: 10, borderRadius: 10, border: "1px solid var(--hairline-4)", background: "var(--surface-inset)", color: "var(--text-primary)" }} /></label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 5, fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>END<input aria-label={`${date.label} end`} type="date" value={date.endDate} onChange={(event) => setDates((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, endDate: event.target.value } : item))} style={{ minWidth: 0, padding: 10, borderRadius: 10, border: "1px solid var(--hairline-4)", background: "var(--surface-inset)", color: "var(--text-primary)" }} /></label>
               </div>
             </div>
           ))}
         </div>
-        {error && <p role="alert" style={{ color: "var(--bar-over)", fontSize: 13 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: "var(--bar-over)", fontSize: "var(--type-caption)" }}>{error}</p>}
         <div style={{ marginTop: "auto", paddingTop: 24 }}><Button onClick={() => void save()}>Use these dates</Button></div>
       </main>
     );
@@ -221,15 +221,15 @@ export function ImportScreen() {
 
   return (
     <main style={frame}>
-      <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>Done</span>
-      <h1 style={{ margin: "12px 0 24px", fontSize: 32, lineHeight: 1.06, letterSpacing: "-0.035em", fontWeight: 800 }}>{done.lineItemCount.toLocaleString("en-GB")} lines. Nothing thrown away.</h1>
+      <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lime-ink)" }}>Done</span>
+      <h1 style={{ margin: "12px 0 24px", fontSize: "var(--type-display)", lineHeight: 1.06, letterSpacing: "-0.035em", fontWeight: 800 }}>{done.lineItemCount.toLocaleString("en-GB")} lines. Nothing thrown away.</h1>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {stats.map(([label, value]) => <div key={label} style={{ background: "var(--surface)", borderRadius: 16, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)", textTransform: "uppercase" }}>{label}</span><strong style={{ fontSize: 20 }}>{label === "Labels kept" ? value : formatGBP(value)}</strong></div>)}
+        {stats.map(([label, value]) => <div key={label} style={{ background: "var(--surface)", borderRadius: 16, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 6 }}><span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)", textTransform: "uppercase" }}>{label}</span><strong style={{ fontSize: "var(--type-title)" }}>{label === "Labels kept" ? value : formatGBP(value)}</strong></div>)}
       </div>
-      {done.labels.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Your words, not mine</span><div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>{done.labels.slice(0, 8).map((label) => <Pill key={label} tone="cyan">{label}</Pill>)}{done.labels.length > 8 && <Pill tone="cyan">+ {done.labels.length - 8} names</Pill>}</div></div>}
-      {showInline && <div style={{ border: "1px solid var(--hairline-4)", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14, marginTop: 20 }}><span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--attention-ink)" }}>{attention.length} I placed by guessing</span>{attention.map((row) => <AttentionCard key={row.id} row={row} />)}<span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", lineHeight: 1.5 }}>everything else I filed myself — correct me later if I got one wrong</span></div>}
-      {attention.length >= 6 && <p style={{ margin: "20px 0 0", fontSize: 14, color: "var(--text-secondary)" }}>{attention.length} I placed by guessing. <Link href="/review" style={{ color: "var(--text-secondary)" }}>Review them</Link></p>}
-      <Link href={continueHref} style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", border: "var(--fill-outline)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700 }}>Continue</span></Link>
+      {done.labels.length > 0 && <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 20 }}><span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Your words, not mine</span><div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>{done.labels.slice(0, 8).map((label) => <Pill key={label} tone="cyan">{label}</Pill>)}{done.labels.length > 8 && <Pill tone="cyan">+ {done.labels.length - 8} names</Pill>}</div></div>}
+      {showInline && <div style={{ border: "1px solid var(--hairline-4)", borderRadius: 18, padding: 18, display: "flex", flexDirection: "column", gap: 14, marginTop: 20 }}><span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--attention-ink)" }}>{attention.length} I placed by guessing</span>{attention.map((row) => <AttentionCard key={row.id} row={row} />)}<span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)", lineHeight: 1.5 }}>everything else I filed myself — correct me later if I got one wrong</span></div>}
+      {attention.length >= 6 && <p style={{ margin: "20px 0 0", fontSize: "var(--type-body)", color: "var(--text-secondary)" }}>{attention.length} I placed by guessing. <Link href="/review" style={{ color: "var(--text-secondary)" }}>Review them</Link></p>}
+      <Link href={continueHref} style={{ marginTop: "auto", paddingTop: 24, textDecoration: "none" }}><span style={{ height: 56, borderRadius: 99, background: "var(--lime-fill)", border: "var(--fill-outline)", color: "var(--lime-ink-on-fill)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--type-body)", fontWeight: 700 }}>Continue</span></Link>
     </main>
   );
 }

@@ -75,8 +75,8 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 30px", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <span style={eyebrowStyle}>Income · {year}</span>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08 }}>Income, month by month</h1>
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, lineHeight: 1.6, color: "var(--text-secondary-2)" }}>
+            <h1 style={{ margin: 0, fontSize: "var(--type-heading)", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08 }}>Income, month by month</h1>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", lineHeight: 1.6, color: "var(--text-secondary-2)" }}>
               months you haven&apos;t touched use {defaultIncome === null ? "no figure yet" : formatGBP(defaultIncome)}
             </span>
           </div>
@@ -101,10 +101,10 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
                 >
                   <div style={{ display: "flex", minWidth: 0, flexDirection: "column", gap: 4 }}>
                     <div style={{ display: "flex", alignItems: "baseline", gap: 9, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", color: current ? "var(--lime-ink)" : "var(--text-primary)" }}>{month.name}</span>
+                      <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em", color: current ? "var(--lime-ink)" : "var(--text-primary)" }}>{month.name}</span>
                       {source.source === "month" && source.setByUser && <span style={userTagStyle}>set by you</span>}
                     </div>
-                    <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: "var(--text-tertiary)" }}>
+                    <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-tertiary)" }}>
                       {month.unavailableReason ?? incomeSourceText(source.source, source.setByUser)}
                     </span>
                   </div>
@@ -124,7 +124,7 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
         </div>
         <div style={{ padding: "0 20px 22px", flexShrink: 0 }}>
           {error && (
-            <p role="alert" style={{ margin: 0, fontSize: 14, color: "var(--bar-over)" }}>
+            <p role="alert" style={{ margin: 0, fontSize: "var(--type-label)", color: "var(--bar-over)" }}>
               {error}
             </p>
           )}
@@ -138,16 +138,16 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
 }
 
 const eyebrowStyle = {
-  fontFamily: "var(--font-jetbrains-mono)",
-  fontSize: 11,
+  fontVariantNumeric: "tabular-nums",
+  fontSize: "var(--type-caption)",
   letterSpacing: "0.12em",
   textTransform: "uppercase" as const,
   color: "var(--text-tertiary)",
 };
 
 const userTagStyle = {
-  fontFamily: "var(--font-jetbrains-mono)",
-  fontSize: 10,
+  fontVariantNumeric: "tabular-nums",
+  fontSize: "var(--type-micro)",
   letterSpacing: "0.06em",
   textTransform: "uppercase" as const,
   color: "var(--cyan-ink)",

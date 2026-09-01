@@ -70,8 +70,8 @@ export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <Link href="/goals" style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider padding="16px 0" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Manage budget goals</span>
-              <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+              <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" }}>Manage budget goals</span>
+              <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)" }} aria-hidden>
                 &rsaquo;
               </span>
             </Row>
@@ -83,8 +83,8 @@ export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
 
           <Link href="/import" style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider padding="16px 0" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Import a file</span>
-              <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+              <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" }}>Import a file</span>
+              <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)" }} aria-hidden>
                 &rsaquo;
               </span>
             </Row>
@@ -97,8 +97,8 @@ export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
           */}
           <Link href="/api/export" style={{ color: "inherit", textDecoration: "none" }}>
             <Row interactive divider padding="16px 0" style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Export your data</span>
-              <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+              <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" }}>Export your data</span>
+              <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)" }} aria-hidden>
                 &rsaquo;
               </span>
             </Row>
@@ -122,8 +122,8 @@ export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
                   cursor: "pointer",
                 }}
               >
-                <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--bar-over)" }}>Clear data</span>
-                <span style={{ fontSize: 17, color: "var(--text-disabled)" }} aria-hidden>
+                <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em", color: "var(--bar-over)" }}>Clear data</span>
+                <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)" }} aria-hidden>
                   &rsaquo;
                 </span>
               </Row>
@@ -141,13 +141,13 @@ export function Menu({ periodCount, brand, onDismiss }: MenuProps) {
               }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "var(--bar-over)" }}>Clear data?</span>
-                <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--text-secondary)" }}>
+                <span style={{ fontSize: "var(--type-body)", fontWeight: 700, color: "var(--bar-over)" }}>Clear data?</span>
+                <span style={{ fontSize: "var(--type-caption)", lineHeight: 1.5, color: "var(--text-secondary)" }}>
                   This removes {periodCount} {periodCount === 1 ? "period" : "periods"} and every transaction in {periodCount === 1 ? "it" : "them"}. Your account, goals and default income stay.
                 </span>
               </div>
               {clearError && (
-                <span role="alert" style={{ fontSize: 12, lineHeight: 1.45, color: "var(--bar-over)" }}>
+                <span role="alert" style={{ fontSize: "var(--type-caption)", lineHeight: 1.45, color: "var(--bar-over)" }}>
                   {clearError}
                 </span>
               )}

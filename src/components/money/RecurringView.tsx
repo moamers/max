@@ -72,8 +72,8 @@ export function RecurringView({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 11,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-caption)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: "var(--text-tertiary)",
@@ -81,7 +81,7 @@ export function RecurringView({
           >
             {monthLabel} · recurring
           </span>
-          <h1 style={{ margin: 0, fontSize: 44, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>
+          <h1 style={{ margin: 0, fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>
             {formatMoney(recurring.total)}
           </h1>
         </div>
@@ -100,9 +100,9 @@ export function RecurringView({
                 header={
                   <>
                     <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                      <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>{group.title}</span>
+                      <span style={{ fontSize: "var(--type-body)", fontWeight: 600, letterSpacing: "-0.015em" }}>{group.title}</span>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                        <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.025em" }}>
+                        <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.025em" }}>
                           {formatMoney(group.total)}
                         </span>
                         <Caret open={open} />
@@ -122,8 +122,8 @@ export function RecurringView({
                     style={{
                       padding: "13px 0",
                       borderTop: "1px solid var(--hairline-2)",
-                      fontFamily: "var(--font-jetbrains-mono)",
-                      fontSize: 11,
+                      fontVariantNumeric: "tabular-nums",
+                      fontSize: "var(--type-caption)",
                       color: "var(--text-tertiary)",
                     }}
                   >
@@ -139,14 +139,14 @@ export function RecurringView({
                       <Row interactive divider padding="13px 0">
                         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                            <span style={{ fontSize: 15, fontWeight: 500 }}>{item.merchant ?? "—"}</span>
+                            <span style={{ fontSize: "var(--type-label)", fontWeight: 500 }}>{item.merchant ?? "—"}</span>
                             {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
                             {item.needsAttention && <StatusPill status="review">needs a look</StatusPill>}
                           </div>
                           <span
                             style={{
                               flexShrink: 0,
-                              fontSize: 15,
+                              fontSize: "var(--type-label)",
                               fontWeight: 600,
                               letterSpacing: "-0.02em",
                               color: item.needsAttention ? "var(--status-review-ink)" : item.pending ? "var(--status-pending-ink)" : "var(--text-primary)",
@@ -156,7 +156,7 @@ export function RecurringView({
                           </span>
                         </div>
                         {item.note && (
-                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                             {item.note}
                           </span>
                         )}
@@ -199,17 +199,17 @@ function EmptyRecurring({ periodId, sourceLabel }: { periodId: number; sourceLab
         background: "var(--surface)",
       }}
     >
-      <p style={{ margin: 0, fontSize: 16, fontWeight: 700, letterSpacing: "-0.02em" }}>
+      <p style={{ margin: 0, fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>
         Nothing recurring in this month yet
       </p>
-      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "var(--text-secondary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--type-caption)", lineHeight: 1.45, color: "var(--text-secondary)" }}>
         {sourceLabel
           ? `Bring last month's across and amend what has changed. They arrive marked pending, so you confirm each one when it goes out.`
           : `Add the first one with the + button, and next month can start from a copy of this one.`}
       </p>
       {sourceLabel && (
         <>
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
             from {sourceLabel}
           </span>
           <Button
@@ -232,7 +232,7 @@ function EmptyRecurring({ periodId, sourceLabel }: { periodId: number; sourceLab
         </>
       )}
       {error && (
-        <span role="alert" style={{ fontSize: 12, color: "var(--bar-over)" }}>
+        <span role="alert" style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>
           {error}
         </span>
       )}

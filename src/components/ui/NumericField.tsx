@@ -109,7 +109,7 @@ export function NumericField({
           {label}
         </label>
       )}
-      <span style={{ fontSize: 17, fontWeight: 600, color: "var(--text-disabled-2)" }}>£</span>
+      <span style={{ fontSize: "var(--type-body)", fontWeight: 600, color: "var(--text-disabled-2)" }}>£</span>
       <input
         id={inputId}
         className="max-money-input"

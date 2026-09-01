@@ -61,8 +61,8 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
 
       <span
         style={{
-          fontFamily: "var(--font-jetbrains-mono)",
-          fontSize: 10,
+          fontVariantNumeric: "tabular-nums",
+          fontSize: "var(--type-micro)",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: ink3,
@@ -71,11 +71,11 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
         {eyebrow}
       </span>
 
-      <span style={{ fontSize: 52, fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 0.94, color: ink1 }}>
+      <span style={{ fontFamily: "var(--font-figure), Georgia, serif", fontSize: "var(--type-figure)", fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 0.94, color: ink1 }}>
         {spare === null ? "£—" : formatGBP(spare)}
       </span>
 
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: ink2 }}>
+      <p style={{ margin: 0, fontSize: "var(--type-body)", lineHeight: 1.5, color: ink2 }}>
         {spare === null ? "Add an income figure and this fills in." : sentence}
       </p>
 
@@ -92,23 +92,23 @@ export function HeroCard({ hero, mode, onModeChange }: HeroCardProps) {
       >
         {spend !== null && hero.income !== null ? (
           <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", color: ink1 }}>
+            <span style={{ fontSize: "var(--type-body)", fontWeight: 800, letterSpacing: "-0.03em", color: ink1 }}>
               {formatGBP(spend)}
             </span>
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: ink3 }}>of</span>
-            <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.03em", color: ink1 }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: ink3 }}>of</span>
+            <span style={{ fontSize: "var(--type-body)", fontWeight: 800, letterSpacing: "-0.03em", color: ink1 }}>
               {formatGBP(hero.income)}
             </span>
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: ink3 }}>income</span>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: ink3 }}>income</span>
           </div>
         ) : (
-          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10, color: ink3 }}>income not set</span>
+          <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: ink3 }}>income not set</span>
         )}
         <Link
           href="/income"
           style={{
-            fontFamily: "var(--font-jetbrains-mono)",
-            fontSize: 10,
+            fontVariantNumeric: "tabular-nums",
+            fontSize: "var(--type-micro)",
             letterSpacing: "0.06em",
             textTransform: "uppercase",
             color: ink1,

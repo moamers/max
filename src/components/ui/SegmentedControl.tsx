@@ -59,8 +59,8 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(option.value)}
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 11,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-caption)",
               letterSpacing: "0.04em",
               padding: "6px 12px",
               borderRadius: "var(--radius-pill)",

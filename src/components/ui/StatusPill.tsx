@@ -45,7 +45,7 @@ export function StatusPill({ status, children, style, ...rest }: StatusPillProps
         color: "var(--text-primary)",
         // The rule is the structural half of the ordering: 0, 1, 1, 2px.
         borderLeft: `var(--status-${status}-rule) solid var(--status-${status}-graphic)`,
-        fontSize: 11,
+        fontSize: "var(--type-caption)",
         fontWeight: 600,
         lineHeight: 1.2,
         whiteSpace: "nowrap",

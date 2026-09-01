@@ -57,12 +57,12 @@ export function Checkbox({
         }}
       />
       <span style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.01em" }}>{label}</span>
+        <span style={{ fontSize: "var(--type-label)", fontWeight: 600, letterSpacing: "-0.01em" }}>{label}</span>
         {hint && (
           <span
             style={{
-              fontFamily: "var(--font-jetbrains-mono)",
-              fontSize: 11,
+              fontVariantNumeric: "tabular-nums",
+              fontSize: "var(--type-caption)",
               lineHeight: 1.5,
               color: "var(--text-tertiary)",
             }}

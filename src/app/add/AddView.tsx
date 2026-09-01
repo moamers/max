@@ -39,8 +39,8 @@ function fieldLabel(text: string) {
   return (
     <span
       style={{
-        fontFamily: "var(--font-jetbrains-mono)",
-        fontSize: 10,
+        fontVariantNumeric: "tabular-nums",
+        fontSize: "var(--type-micro)",
         letterSpacing: "0.1em",
         textTransform: "uppercase",
         color: "var(--text-tertiary)",
@@ -165,7 +165,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
                 autoFocus={focusAmountOnMount}
               />
               {touched && validation.errors.amount && (
-                <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.amount}</span>
+                <span style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>{validation.errors.amount}</span>
               )}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -177,7 +177,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
                   placeholder="shop, café, name…"
                 />
                 {touched && validation.errors.where && (
-                  <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.where}</span>
+                  <span style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>{validation.errors.where}</span>
                 )}
               </div>
 
@@ -192,7 +192,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <CategoryChips kind={kind} value={category} onChange={setCategory} />
                   {touched && validation.errors.category && (
-                    <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.category}</span>
+                    <span style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)" }}>{validation.errors.category}</span>
                   )}
                 </div>
               )}
@@ -207,7 +207,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
               </div>
 
               {needsAttention && attentionReason && (
-                <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: 13, lineHeight: 1.45 }}>
+                <div style={{ padding: 14, borderRadius: 12, background: "var(--attention-tint-bg)", color: "var(--attention-ink)", fontSize: "var(--type-caption)", lineHeight: 1.45 }}>
                   {attentionReason}
                 </div>
               )}
@@ -215,14 +215,14 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
               {rawImport && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {fieldLabel("As read from the image")}
-                  <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)", wordBreak: "break-word" }}>
+                  <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)", wordBreak: "break-word" }}>
                     {rawImport}
                   </span>
                 </div>
               )}
 
               {error && (
-                <p style={{ fontSize: 13, color: "var(--bar-over)", margin: 0 }} role="alert">
+                <p style={{ fontSize: "var(--type-caption)", color: "var(--bar-over)", margin: 0 }} role="alert">
                   {error}
                 </p>
               )}
@@ -263,8 +263,8 @@ function UploadTab({
         textAlign: "center",
       }}
     >
-      <span style={{ fontSize: 15, fontWeight: 600 }}>Read a transaction image</span>
-      <span style={{ fontSize: 13, color: "var(--text-secondary)", maxWidth: 260, textWrap: "pretty" }}>
+      <span style={{ fontSize: "var(--type-label)", fontWeight: 600 }}>Read a transaction image</span>
+      <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)", maxWidth: 260, textWrap: "pretty" }}>
         {captureEnabled
           ? "Choose a screenshot or photo. You will check every field before anything is saved."
           : "Reading images isn't switched on yet. Add this one by hand on the Type it tab."}

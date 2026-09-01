@@ -31,10 +31,10 @@ export function EmptyState() {
         textAlign: "center",
       }}
     >
-      <p style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>
+      <p style={{ fontSize: "var(--type-title)", fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>
         Nothing imported yet
       </p>
-      <p style={{ fontSize: 15, color: "var(--text-secondary)", margin: 0, maxWidth: 320 }}>
+      <p style={{ fontSize: "var(--type-body)", color: "var(--text-secondary)", margin: 0, maxWidth: 320 }}>
         Bring in a spreadsheet or statement and Ravel will build your first month here.
       </p>
       <Button

@@ -47,7 +47,7 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
       >
         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <Caret open={open} />
-          <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>Weeks</span>
+          <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>Weeks</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5 }}>
           {summary.left !== null ? (
@@ -55,7 +55,7 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
               <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
                 <span
                   style={{
-                    fontSize: 25,
+                    fontSize: "var(--type-heading)",
                     fontWeight: 800,
                     letterSpacing: "-0.035em",
                     color: summary.left < 0 ? "var(--bar-over)" : "var(--lime-ink)",
@@ -63,16 +63,16 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
                 >
                   {formatGBP(summary.left < 0 ? -summary.left : summary.left)}
                 </span>
-                <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                   {summary.left < 0 ? "over" : "left"}
                 </span>
               </div>
-              <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-disabled-2)" }}>
+              <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-disabled-2)" }}>
                 {formatGBP(summary.spent)} spent of {formatGBP(summary.budget ?? 0)} this month
               </span>
             </>
           ) : (
-            <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 10.5, color: "var(--text-disabled-2)" }}>
+            <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-disabled-2)" }}>
               {formatGBP(summary.spent)} spent this month
             </span>
           )}
@@ -88,10 +88,10 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
         <Link href="/goals" style={{ color: "inherit", textDecoration: "none" }}>
           <Row interactive padding="14px 4px 15px">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <span style={{ fontSize: 13.5, color: "var(--text-secondary)" }}>
+              <span style={{ fontSize: "var(--type-caption)", color: "var(--text-secondary)" }}>
                 {NO_WEEKLY_TARGETS_PROMPT}
               </span>
-              <span style={{ fontSize: 16, color: "var(--text-disabled)", lineHeight: 1 }} aria-hidden>
+              <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)", lineHeight: 1 }} aria-hidden>
                 &rsaquo;
               </span>
             </div>
@@ -106,21 +106,21 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 14 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                    <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text-secondary)" }}>
+                    <span style={{ fontSize: "var(--type-label)", fontWeight: 500, letterSpacing: "-0.01em", color: "var(--text-secondary)" }}>
                       {week.range}
                     </span>
                     {week.isLive && <Pill tone="lime" uppercase>now</Pill>}
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                    <span style={{ fontSize: 27, fontWeight: 800, letterSpacing: "-0.035em", color: moneyToneColor(week.state.tone) }}>
+                    <span style={{ fontSize: "var(--type-heading)", fontWeight: 800, letterSpacing: "-0.035em", color: moneyToneColor(week.state.tone) }}>
                       {formatGBP(week.state.amount)}
                     </span>
-                    <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
+                    <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", color: "var(--text-tertiary)" }}>
                       {week.state.word}
                     </span>
                   </div>
                 </div>
-                <span style={{ fontSize: 16, color: "var(--text-disabled)", lineHeight: 1 }} aria-hidden>
+                <span style={{ fontSize: "var(--type-body)", color: "var(--text-disabled)", lineHeight: 1 }} aria-hidden>
                   &rsaquo;
                 </span>
               </div>
@@ -132,8 +132,8 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
                   <div key={c.category} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     <span
                       style={{
-                        fontFamily: "var(--font-jetbrains-mono)",
-                        fontSize: 10,
+                        fontVariantNumeric: "tabular-nums",
+                        fontSize: "var(--type-micro)",
                         letterSpacing: "0.06em",
                         color: "var(--text-disabled-2)",
                         textTransform: "lowercase",
@@ -141,10 +141,10 @@ export function WeeksCard({ weeks, periodId, summary, open, onToggle }: WeeksCar
                     >
                       {c.title}
                     </span>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: moneyToneColor(c.state.tone) }}>
+                    <span style={{ fontSize: "var(--type-body)", fontWeight: 700, color: moneyToneColor(c.state.tone) }}>
                       {formatGBP(c.state.amount)}
                     </span>
-                    <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 9.5, color: "var(--text-disabled)" }}>
+                    <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-micro)", color: "var(--text-disabled)" }}>
                       {c.footer}
                     </span>
                   </div>
