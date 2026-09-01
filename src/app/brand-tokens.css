@@ -526,4 +526,22 @@
   --shadow-card: 0 10px 24px color-mix(in oklab, var(--tone-dark) 26%, transparent);
   --scrim: color-mix(in oklab, var(--tone-dark) 55%, transparent);
 
+  /*
+    The floating navigation pill's glass.
+
+    A token rather than an inline rgba() for the same reason
+    --segment-on-gradient is one: a translucent control still decides a colour,
+    and a colour decided inside a component is a colour the contrast suite
+    cannot see. That is exactly how the hero's "End of month" segment shipped
+    white-on-white.
+
+    82% of the surface, so the labels' contrast is dominated by the surface
+    rather than by whatever scrolls beneath — worst case is the hero gradient
+    passing under it, and at 18% admixture --text-primary still clears 4.5:1 in
+    every theme and mode. The remaining 18% is what makes it glass rather than
+    a band; the blur that goes with it lives in globals.css, which is also
+    where the fallback for browsers that cannot blur is defined.
+  */
+  --nav-glass: color-mix(in oklab, var(--surface) 82%, transparent);
+
 }

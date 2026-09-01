@@ -16,6 +16,7 @@ import { Scrim } from "@/components/ui/Scrim";
 import { Sheet } from "@/components/ui/Sheet";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { BackArrowIcon, ChevronDownIcon, HamburgerIcon } from "@/components/ui/icons";
+import { BottomNav, navClearance, type NavDestination } from "@/components/nav/BottomNav";
 import { ThemeControls } from "@/components/theme/ThemeControls";
 import { Wordmark } from "@/components/brand/Counterbalance";
 import type { ModeChoice, ThemeId } from "@/lib/brand";
@@ -67,6 +68,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
   const [scrimVisible, setScrimVisible] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [navActive, setNavActive] = useState<NavDestination>("month");
 
   const categories = [
     { key: "everyday", name: "Everyday", spend: 176, budget: 190 },
@@ -75,7 +77,10 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
   ];
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 120px", display: "flex", flexDirection: "column", gap: 44 }}>
+    // Unlike the product screens this page is an ordinary document scroll, so
+    // its clearance is page padding rather than a scroller's. Was a flat
+    // 120px, which the pill plus a home indicator would have eaten.
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: `40px 24px ${navClearance(40)}`, display: "flex", flexDirection: "column", gap: 44 }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <h1 style={{ fontSize: "var(--type-display)", fontWeight: 800, letterSpacing: "-0.035em", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
@@ -222,6 +227,33 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
           <IconButton size="lg" outline icon={<BackArrowIcon />} aria-label="Back" />
           <FAB aria-label="Add" />
         </div>
+      </Section>
+
+      {/* --------------------------------------------------- Bottom nav */}
+      <Section
+        title="Bottom navigation"
+        note="a shortcut pill, not a tab bar — fixed to the bottom of this page so the glass has something to blur"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 420 }}>
+          <p style={{ fontSize: "var(--type-label)", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
+            The current item is a filled capsule at the heavier weight, and carries aria-current=&quot;page&quot;.
+            Switch it here to see both states; the links are real, so following one leaves the styleguide.
+          </p>
+          <SegmentedControl
+            value={navActive}
+            onChange={setNavActive}
+            options={[
+              { value: "week", label: "Week" },
+              { value: "month", label: "Month" },
+              { value: "year", label: "Year" },
+              { value: "settings", label: "Settings" },
+            ]}
+          />
+        </div>
+        {/* The real component, in the position it actually occupies. A
+            non-fixed replica would be a parallel version of the thing it is
+            documenting, and would show the glass over nothing. */}
+        <BottomNav active={navActive} periodId={1} weekNumber={1} />
       </Section>
 
       {/* --------------------------------------------------- Segmented */}

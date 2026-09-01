@@ -1,4 +1,15 @@
 /**
+ * Every destination in the app, and the one rule they all obey: a link into a
+ * screen says which period it means.
+ *
+ * The module started as "where a transaction lives" and now also answers where
+ * the bottom nav's four items go, because those are the same question asked
+ * twice. Building a URL by hand is how the period gets dropped; asking here is
+ * how it doesn't. `period-travels-with-the-link.test.ts` enforces both ends —
+ * screens must come here, and what comes back must name the period.
+ *
+ * ---
+ *
  * Where a transaction lives.
  *
  * Adding, editing and deleting all used to end at `/` with no period, so a
@@ -12,10 +23,76 @@
  * screen (weekly), Recurring and One-offs — the same three screens this
  * function returns.
  */
+import type { PeriodWindow } from "./queries/period-window";
 import type { TransactionKind } from "./transactions";
 
-export function periodHome(periodId: number): string {
-  return `/?period=${periodId}`;
+/**
+ * The month view. Home *is* the month, so this is also the bottom nav's
+ * "Month" destination.
+ *
+ * `null` is the empty account: no period exists to name. That is a different
+ * fact from forgetting to name one, and it is the only case in which a
+ * period-scoped link may leave the param off.
+ */
+export function periodHome(periodId: number | null): string {
+  return periodId === null ? "/" : `/?period=${periodId}`;
+}
+
+/**
+ * One week of one period. "Week 2" is week 2 of *something*, and the something
+ * is never recoverable from the path alone — see the header of
+ * `period-travels-with-the-link.test.ts` for what that cost.
+ */
+export function weekHome(weekNumber: number, periodId: number | null): string {
+  return periodId === null ? `/week/${weekNumber}` : `/week/${weekNumber}?period=${periodId}`;
+}
+
+/**
+ * The year round-up. It shows no single period's figures, so the period rides
+ * along only as a return address: without it, the nav's Week and Month items
+ * on that screen lead back to whichever month is current rather than the one
+ * the user came from. That is #49 with a longer fuse — nothing looks wrong
+ * until you navigate back.
+ */
+export function yearHome(periodId: number | null, year?: number): string {
+  const params = [
+    ...(year === undefined ? [] : [`year=${year}`]),
+    ...(periodId === null ? [] : [`period=${periodId}`]),
+  ];
+  return params.length === 0 ? "/year" : `/year?${params.join("&")}`;
+}
+
+/**
+ * Settings — the menu, now that it is a screen rather than a drawer over home.
+ *
+ * It carries `?period=` for the same single reason `/year` does: it renders
+ * nothing that belongs to a period, but it is reached *from* a month and the
+ * nav it carries offers Week and Month, so a trip through Settings would
+ * otherwise re-pick the current month on the way out. The value is validated
+ * against the user's own periods server-side, so a stale id falls back instead
+ * of propagating.
+ */
+export function settingsHome(periodId: number | null): string {
+  return periodId === null ? "/settings" : `/settings?period=${periodId}`;
+}
+
+/**
+ * Which week of a period today falls in — the nav's "Week" target.
+ *
+ * "This week" is the current week of the *selected* period, never today's
+ * calendar week: with July selected in September no week is live, and the
+ * honest answer is that period's first week rather than a number borrowed from
+ * the calendar. So week 1 is returned for a period that has ended, one that
+ * has not started, and one whose dates could not be established at all.
+ *
+ * Agrees by construction with `buildWeekViews`' `isLive` flag while a period
+ * is running: weeks are seven-day blocks measured from `window.start`, so the
+ * live one is `ceil(daysElapsed / 7)`.
+ */
+export function currentWeekOf(window: PeriodWindow | null): number {
+  if (!window) return 1;
+  if (window.complete || window.daysElapsed <= 0) return 1;
+  return Math.max(1, Math.ceil(window.daysElapsed / 7));
 }
 
 /**
@@ -36,7 +113,7 @@ export function transactionHome(
   // A weekly row with no week number has no week screen to go back to — the
   // month is still the right place to land, and it is still *their* month.
   if (weekNumber === null) return `${periodHome(periodId)}${mark}`;
-  return `/week/${weekNumber}?period=${periodId}${mark}`;
+  return `${weekHome(weekNumber, periodId)}${mark}`;
 }
 
 /** Reads `?highlight=` back, ignoring anything that isn't a real row id. */

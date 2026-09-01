@@ -235,6 +235,72 @@ a {
 }
 
 /*
+  The floating navigation pill — iOS glass.
+
+  Inline styles can express neither @supports nor :hover / :focus-visible, so
+  the parts of the bar that need a real selector live here, beside the tokens
+  they read. Geometry stays in the component; nothing below decides a colour.
+
+  The blur is the whole effect: the bar is translucent and what passes under it
+  is blurred and slightly over-saturated, which is what makes it read as glass
+  hovering over the page rather than a band painted on it. Both spellings are
+  needed — Safari has only ever shipped the prefixed property.
+*/
+.max-nav__bar {
+  background: var(--nav-glass);
+  border: 1px solid var(--hairline-3);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/*
+  Where the browser cannot blur, the bar becomes a solid surface rather than a
+  translucent hole. A navigation bar you can read the page through is not a
+  degraded bar, it is an unreadable one.
+
+  The query asks about BOTH spellings on purpose. `@supports not
+  (backdrop-filter: blur(1px))` alone is true in every Safari that supports
+  only the -webkit- property — which is to say, in the exact browser the effect
+  was built for — so that form would hand the fallback to the one browser that
+  doesn't need it.
+*/
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .max-nav__bar {
+    background: var(--surface);
+  }
+}
+
+/*
+  Press feedback only: transform and background, never a layout property, and
+  never anything a tap has to wait for. Durations come from the scale, so
+  reduced motion is already clamped.
+*/
+.max-nav__item {
+  transition:
+    transform var(--motion-instant) var(--ease-standard),
+    background-color var(--motion-quick) var(--ease-standard),
+    color var(--motion-quick) var(--ease-standard);
+}
+
+.max-nav__item:active {
+  transform: scale(0.96);
+}
+
+.max-nav__item:focus-visible {
+  outline: 2px solid var(--lime-ink);
+  outline-offset: 2px;
+}
+
+/* Guarded like every other hover rule here: on a touch screen :hover latches
+   after a tap, which would leave the item you just left looking selected. */
+@media (hover: hover) {
+  .max-nav__item:hover {
+    background: var(--surface-hover);
+  }
+}
+
+/*
   A placeholder is not a value.
 
   Every money field used to render an unset amount as a literal `0` you had to

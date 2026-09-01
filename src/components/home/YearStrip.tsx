@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { yearHome } from "@/lib/routes";
 import { formatSignedGBP } from "./format";
 import type { YearView } from "./types";
 
@@ -25,10 +26,15 @@ function Sparkline({ values }: { values: number[] }) {
   );
 }
 
-export function YearStrip({ year }: { year: YearView }) {
+/**
+ * `periodId` is not shown here and the year screen does not filter by it. It
+ * travels so the bottom nav on `/year` can lead back to the month this link
+ * was pressed from, instead of re-picking whichever month is current.
+ */
+export function YearStrip({ year, periodId }: { year: YearView; periodId: number | null }) {
   return (
     <Link
-      href="/year"
+      href={yearHome(periodId)}
       style={{
         color: "inherit",
         textDecoration: "none",
