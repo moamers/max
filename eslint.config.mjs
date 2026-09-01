@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // A subagent works in an isolated checkout under `.claude/worktrees/` — a
+    // full copy of this repo, inside this repo. ESLint discovers by glob and
+    // does not read .gitignore, so without this a gate run also lints the
+    // agents' in-progress branches and fails on their half-finished code.
+    // Same reason vitest.config.ts excludes it from test discovery.
+    ".claude/**",
     // Separate workspaces with their own lint setup — not web/Next.js code.
     "mobile/**",
     "packages/**",
