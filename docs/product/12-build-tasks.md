@@ -10,7 +10,67 @@ is a separate, unlanded workstream — see the note at the end of Task A.
 
 ---
 
-# Task A — floating bottom navigation · READY FOR CODEX
+## The sequence
+
+*Written 2026-09-01, after the founder stopped a Codex run mid-flight to get the
+order straight first. Nothing was lost — `codex/bottom-nav-pill` never reached
+the remote.*
+
+Six tasks were accumulating in parallel and three of them touch the same files.
+This is the order they should be done in, and the reason each step blocks the
+next. **Every step here is a real dependency, not a preference** — doing them
+out of order means writing something twice.
+
+### The spine
+
+| # | Task | Who | Why it is here and not elsewhere |
+|---|------|-----|----------------------------------|
+| 1 | **Type scale** (Codex's Q2 answer) | Claude | Touches **33 files**. Everything built after it inherits the scale; anything built before it gets rewritten in the pass. It is the floor, so it goes first. |
+| 2 | **Task D — month view** | Claude | Restructures `HomeScreen`. After the scale so it is written in it; before the nav and the motion because both of those land on whatever structure this leaves behind. |
+| 3 | **Tasks A + F — nav pill and `/settings`** | **Codex** | Bounded, fully specified, and the natural place to bring Codex back in. Lands on D's final structure, so its clearance padding is measured against the real thing. |
+| 4 | **Task E — motion** | Claude | Animates the finished structure. Last of the UI work by necessity: animating something that is about to be restructured is work thrown away. |
+
+**A and F are now one task, not two.** A leaves a hamburger in `HomeScreen` and
+F removes it; shipped separately there is a window where home has two routes to
+the same place. They were only split because Codex was mid-run.
+
+### The parallel track
+
+These touch `src/lib/` and nothing else, so they can run at any point without
+colliding with the spine:
+
+- **`G-3`** — the parser checks its own arithmetic against the totals the sheet
+  states for itself. This is the one that would have caught `F-3` on day one,
+  and it turns "are the numbers still right?" into something the app answers
+  rather than something the founder checks against a spreadsheet.
+- **`G-1`** — ingest carries no year, so cross-year comparison is impossible.
+- **#42** — delete the `probe@example.com` account from production.
+
+### Folded in, no longer separate items
+
+Each of these lives in a file some step above already opens. Tracking them
+separately is how a to-do list grows without the work growing:
+
+- **Legacy colour aliases** (`--cyan-ink`, `--amber-ink`, `--attention-ink`,
+  `--bar-over`) → into step 1, which is already editing all 33 of those files.
+- **The two hardcoded durations** (`CaptureButton`'s 160ms, `ImportScreen`'s
+  fade) → into step 4.
+- **`Checkbox` and `StatusPill` missing from `/styleguide`** → into step 1.
+
+### Waiting on the founder
+
+Not blocking the spine, but each blocks something:
+
+| Item | Blocks |
+|---|---|
+| **`C-2`** — rotate the Supabase password and Expo token, both exposed in a chat transcript | Nothing technical. It is a live credential exposure and the oldest open item on the register. |
+| **`G-5`** — is "change this bill and every month after" wanted? | Whether Task B's forward half is ever built. Cheapest to answer before a third month of copies exists. |
+| **A real workbook with yellow highlighting** | Calibrating the import thresholds against actual data instead of an agent's judgement. |
+| **`A-7`** — "Overspent": the design says it, the tone gate bans it | A documented exception, or the gate wins permanently. Current behaviour follows the gate. |
+
+---
+
+# Task A — floating bottom navigation · SPECCED · step 3, with Task F
 
 ## The brief, in the founder's words
 
@@ -433,7 +493,7 @@ creating a month is what replicates the bills into it.
 
 ---
 
-# Task D — the month view opens into one thing at a time · SPECCED
+# Task D — the month view opens into one thing at a time · SPECCED · step 2
 
 ## The brief, in the founder's words
 
@@ -502,7 +562,7 @@ gone. A card that is tappable should look tappable; a row does not need to ask.
 
 ---
 
-# Task E — motion, in the build rather than a prototype · SPECCED
+# Task E — motion, in the build rather than a prototype · SPECCED · step 4
 
 ## The correction
 
@@ -559,7 +619,7 @@ double-painting, and any jank stretches it.
 
 ---
 
-# Task F — the menu becomes a screen · SPECCED
+# Task F — the menu becomes a screen · SPECCED · step 3, with Task A
 
 Split out of Task A because it is an IA change rather than a control. The
 hamburger goes; `Settings` becomes a nav destination.
