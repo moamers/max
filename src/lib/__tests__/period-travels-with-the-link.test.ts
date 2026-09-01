@@ -15,6 +15,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
+import type { PeriodWindow } from "../queries/period-window";
+import { currentWeekOf, periodHome, settingsHome, weekHome, yearHome } from "../routes";
 
 const ROOT = path.join(process.cwd(), "src");
 
@@ -25,8 +27,18 @@ const ROOT = path.join(process.cwd(), "src");
  */
 const RULE_MODULE = path.join(ROOT, "lib", "routes.ts");
 
-/** Routes whose content is one period's, and which therefore need telling. */
-const PERIOD_SCOPED = ["/week/", "/recurring", "/one-offs", "/add"];
+/**
+ * Routes that must be told which period they are for.
+ *
+ * The first four show one period's data and cannot tell which from the path.
+ * `/year` and `/settings` show none — the year is the whole account's, and
+ * Settings is preferences — but they were added when the bottom nav arrived,
+ * because both are now places you pass *through*: each carries the nav, the
+ * nav offers Week and Month, and a route that arrived without a period hands
+ * those items whichever month happens to be current. That is #49 again, one
+ * hop further along, and it is invisible until you navigate back.
+ */
+const PERIOD_SCOPED = ["/week/", "/recurring", "/one-offs", "/add", "/year", "/settings"];
 
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -203,9 +215,14 @@ describe("a write leaves you in the month you made it in", () => {
  * history depth.
  *
  * `/goals`, `/income` and `/year` deliberately keep `router.back()`: nothing
- * replaces-forward on them, so no duplicate accumulates, and they are opened
- * without a period — going "back" to a bare `/` would drop the month the user
- * was looking at, which is the very thing this file exists to prevent.
+ * replaces-forward on them, so no duplicate accumulates, and browser back is
+ * the only thing that returns you to the screen you actually came from.
+ *
+ * `/year` now receives a `?period=` it could route back to instead — the
+ * bottom nav needs one — but it is still only a return address: it names the
+ * month whose home screen you would land on, not necessarily the screen you
+ * opened the year from. Back is the more truthful answer, and the nav's own
+ * "Month" item is there for anyone who wants the month explicitly.
  */
 const PERIOD_SHEETS = [
   path.join(ROOT, "components", "money", "MoneySheet.tsx"),
@@ -227,5 +244,103 @@ describe("a sheet dismisses to its parent, not into history", () => {
 
   it("every one of those files still exists", () => {
     for (const file of PERIOD_SHEETS) expect(fs.existsSync(file)).toBe(true);
+  });
+});
+
+/**
+ * The bottom navigation pill, which is the highest-leverage place in the app
+ * to drop a period.
+ *
+ * Every other link sits on one screen. This one is on four, is the control
+ * most likely to be pressed, and its "Month" item lands on the screen whose
+ * whole job is to say which month you are looking at — so a period dropped
+ * here sends the user somewhere else *and* relabels the destination to match.
+ * Nothing on screen would disagree with anything else.
+ *
+ * The scan above cannot catch this by itself: the nav builds no URL by hand,
+ * so there is no `"/week/` literal in it to match. The rule is therefore
+ * checked from both ends — the component must go through the helpers, and the
+ * helpers must name the period.
+ */
+const NAV_MODULE = path.join(ROOT, "components", "nav", "BottomNav.tsx");
+
+describe("the bottom navigation carries the period", () => {
+  it("is where this test thinks it is", () => {
+    expect(fs.existsSync(NAV_MODULE)).toBe(true);
+  });
+
+  it("builds no URL by hand", () => {
+    const hrefs = fs
+      .readFileSync(NAV_MODULE, "utf8")
+      .split("\n")
+      .map((line, i) => ({ line: line.trim(), number: i + 1 }))
+      .filter(({ line }) => !line.startsWith("*") && !line.startsWith("//"))
+      .filter(({ line }) => /href[:=]/.test(line));
+
+    // A scan that matches nothing is worse than no scan: four items, four hrefs.
+    expect(hrefs.length).toBeGreaterThanOrEqual(4);
+
+    // A path literal on an href line is a URL assembled in the component
+    // rather than asked for from routes.ts — which is exactly where a param
+    // goes missing with nothing failing.
+    const offenders = hrefs
+      .filter(({ line }) => /href[:=]\s*\{?\s*["'`]\//.test(line))
+      .map(({ line, number }) => `${number}: ${line}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it("names the period on all four destinations", () => {
+    for (const href of [weekHome(3, 7), periodHome(7), yearHome(7), settingsHome(7)]) {
+      expect(href).toContain("period=7");
+    }
+  });
+
+  it("keeps the period while the year is being stepped", () => {
+    // The year screen's own ‹ › controls are navigation too, and they dropped
+    // the month on every press until the nav gave the year screen one to keep.
+    expect(yearHome(7, 2024)).toBe("/year?year=2024&period=7");
+  });
+
+  it("says nothing rather than something false on an account with no period", () => {
+    // Not a dropped period — there is no period. The distinction matters:
+    // `?period=null` would be read back as an unrecognised id.
+    expect(weekHome(1, null)).toBe("/week/1");
+    expect(periodHome(null)).toBe("/");
+    expect(yearHome(null)).toBe("/year");
+    expect(settingsHome(null)).toBe("/settings");
+  });
+});
+
+/**
+ * "Week" has to mean a week of the month on screen. Every screen now asks the
+ * same function, so they cannot answer it differently.
+ */
+describe("the week the nav points at belongs to the selected period", () => {
+  const runningFor = (over: Partial<PeriodWindow>): PeriodWindow => ({
+    start: new Date(Date.UTC(2026, 5, 30)),
+    end: new Date(Date.UTC(2026, 7, 3)),
+    totalDays: 35,
+    daysElapsed: 1,
+    daysRemaining: 34,
+    complete: false,
+    ...over,
+  });
+
+  it("is the live week while the period is running", () => {
+    expect(currentWeekOf(runningFor({ daysElapsed: 1 }))).toBe(1);
+    expect(currentWeekOf(runningFor({ daysElapsed: 7 }))).toBe(1);
+    expect(currentWeekOf(runningFor({ daysElapsed: 8 }))).toBe(2);
+    expect(currentWeekOf(runningFor({ daysElapsed: 35 }))).toBe(5);
+  });
+
+  it("is week 1 when today falls outside the period", () => {
+    // A month already ended, and one not yet started. Neither has a live week,
+    // and borrowing today's calendar week would name a week of another month.
+    expect(currentWeekOf(runningFor({ daysElapsed: 35, daysRemaining: 0, complete: true }))).toBe(1);
+    expect(currentWeekOf(runningFor({ daysElapsed: 0, daysRemaining: 35 }))).toBe(1);
+  });
+
+  it("is week 1 when the period's dates could not be established at all", () => {
+    expect(currentWeekOf(null)).toBe(1);
   });
 });

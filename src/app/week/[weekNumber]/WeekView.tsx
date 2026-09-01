@@ -9,6 +9,7 @@ import { Accordion, Caret } from "@/components/ui/Accordion";
 import { Row } from "@/components/ui/Row";
 import { Pill } from "@/components/ui/Chip";
 import { FAB } from "@/components/ui/FAB";
+import { BottomNav, navClearance } from "@/components/nav/BottomNav";
 import type { WeekTotals, WeeklyCategoryTotal } from "@/lib/queries";
 import { WEEKLY_CATEGORIES, type WeeklyCategory } from "@/lib/transactions";
 import { formatGBP as gbp } from "@/lib/money";
@@ -84,7 +85,11 @@ export function WeekView({
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "8px 20px 108px",
+            // Was a flat 108px: 20px inset + the 52px FAB + 36px of breathing
+            // room. The FAB now sits on top of the nav pill, so the same three
+            // parts are measured from the pill's footprint instead of from the
+            // bottom of the screen.
+            padding: `8px 20px ${navClearance(52 + 36)}`,
             display: "flex",
             flexDirection: "column",
             gap: 22,
@@ -135,13 +140,44 @@ export function WeekView({
           </div>
         </div>
 
-        <div style={{ position: "fixed", right: 20, bottom: 20, zIndex: 7 }}>
+        {/*
+          The FAB is lifted above the pill rather than folded into it.
+
+          Folding "add" into the nav was the other option and is the wrong one:
+          the pill's four items are fixed by the brief, and more importantly
+          this button is not a global one. It carries the week and the period
+          it was pressed on — "add a transaction to *this* week" — and a nav
+          item that appears identically on four screens cannot carry that
+          without lying about where it takes you on three of them. The
+          handoff also pins the FAB (screen 03: "lime 52px circle, bottom
+          right, over a bottom fade"), so removing it would drop a specified
+          control to make room for chrome.
+
+          `bottom` is the pill's own footprint, so the two cannot overlap: the
+          FAB's lower edge lands at the top of that footprint, which is 14px
+          clear of the bar itself.
+        */}
+        <div style={{ position: "fixed", right: 20, bottom: navClearance(), zIndex: 7 }}>
           <FAB
             aria-label="Add a transaction to this week"
             onClick={() => router.push(`/add?week=${weekNumber}&period=${periodId}&kind=weekly`)}
           />
         </div>
       </Sheet>
+
+      {/*
+        Outside the Sheet on purpose. `.max-sheet--full` animates a transform
+        and keeps it (`animation-fill-mode: both`), and an ancestor with a
+        transform is the containing block for `position: fixed` descendants —
+        so a pill rendered inside it would be positioned against the sheet
+        rather than the viewport.
+
+        The Week item points at the week on screen, not at the period's live
+        week: on this screen "Week" is where you already are, and an active
+        item marked aria-current="page" that navigates somewhere else is a
+        lie a screen reader reads out.
+      */}
+      <BottomNav active="week" periodId={periodId} weekNumber={weekNumber} />
     </div>
   );
 }

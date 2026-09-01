@@ -6,6 +6,8 @@ import { useState } from "react";
 import { formatGBP, formatSignedGBP, moneyColor, monthAbbr } from "@/components/home/format";
 import { Caret } from "@/components/ui/Accordion";
 import { BackArrowIcon } from "@/components/ui/icons";
+import { BottomNav, navClearance } from "@/components/nav/BottomNav";
+import { yearHome } from "@/lib/routes";
 import type { YearMonth, YearOverview } from "@/lib/queries/year";
 import { buildCumulativeChart } from "./chart";
 import { YEAR_EMPTY_COPY, YEAR_UNKNOWN_INCOME_COPY, YEAR_UNKNOWN_RUNNING_COPY, yearNetSentence } from "./copy";
@@ -161,7 +163,22 @@ function Kpis({ data }: { data: YearOverview }) {
   );
 }
 
-export function YearView({ data, availableYears }: { data: YearOverview; availableYears: number[] }) {
+export interface YearViewProps {
+  data: YearOverview;
+  availableYears: number[];
+  /**
+   * The month the visitor came from. Nothing on this screen is scoped to it —
+   * the year is the whole account's — but the nav offers Week and Month, and
+   * without it those lead to whichever month is current rather than back to
+   * the one that was on screen a tap ago. It rides along the year-stepper
+   * links for the same reason.
+   */
+  periodId: number | null;
+  /** The live week of that period — see `currentWeekOf`. */
+  weekNumber: number;
+}
+
+export function YearView({ data, availableYears, periodId, weekNumber }: YearViewProps) {
   const router = useRouter();
   const yearIndex = availableYears.indexOf(data.year);
   const previous = yearIndex > 0 ? availableYears[yearIndex - 1] : null;
@@ -176,13 +193,15 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
         </button>
         <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-tertiary)" }}>Year round-up</span>
         <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: "auto" }}>
-          {previous === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${previous}`} aria-label={`View ${previous}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>‹</Link>}
+          {previous === null ? <span style={{ width: 34 }} /> : <Link href={yearHome(periodId, previous)} aria-label={`View ${previous}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>‹</Link>}
           <span style={{ fontVariantNumeric: "tabular-nums", fontSize: "var(--type-caption)", fontWeight: 500, minWidth: 44, textAlign: "center" }}>{data.year}</span>
-          {next === null ? <span style={{ width: 34 }} /> : <Link href={`/year?year=${next}`} aria-label={`View ${next}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>›</Link>}
+          {next === null ? <span style={{ width: 34 }} /> : <Link href={yearHome(periodId, next)} aria-label={`View ${next}`} style={{ width: 34, height: 34, display: "grid", placeItems: "center", textDecoration: "none", fontSize: "var(--type-title)" }}>›</Link>}
         </div>
       </header>
 
-      <main style={{ flex: 1, overflowY: "auto", padding: "18px 20px 40px", display: "flex", flexDirection: "column", gap: 30 }}>
+      {/* Clearance goes on this scroller, not on the page: the frame around it
+          is fixed, so page padding would sit outside what actually scrolls. */}
+      <main style={{ flex: 1, overflowY: "auto", padding: `18px 20px ${navClearance(40)}`, display: "flex", flexDirection: "column", gap: 30 }}>
         {data.periodCount === 0 ? (
           <div style={{ minHeight: "55vh", display: "grid", placeItems: "center", textAlign: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
@@ -240,6 +259,8 @@ export function YearView({ data, availableYears }: { data: YearOverview; availab
           </>
         )}
       </main>
+
+      <BottomNav active="year" periodId={periodId} weekNumber={weekNumber} />
     </div>
   );
 }
