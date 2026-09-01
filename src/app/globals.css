@@ -297,6 +297,23 @@ a {
   animation: justChangedFade var(--motion-dwell) var(--ease-exit) 1 forwards;
 }
 
+/*
+  ...and it waits, if something is on its way here.
+
+  THE LANDING flies a ghost of the amount from the add form to this row. The
+  row is marked the moment the destination screen renders, which is before the
+  chip arrives — so without this the two seconds would be half gone by the time
+  the user's eye had anywhere to go. `flyAmountToItsRow` sets the attribute
+  when it locks on and clears it on touchdown, so the mark starts from full
+  when the amount actually gets here.
+
+  Pausing rather than delaying: the delay is however long the flight took, and
+  that is not a number CSS can know.
+*/
+.just-changed[data-landing="incoming"] {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* No fade, but the row is still marked — the point is finding it. */
   .just-changed {

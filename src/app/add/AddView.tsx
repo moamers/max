@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Sheet } from "@/components/ui/Sheet";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +13,8 @@ import { CaptureButton } from "@/components/capture/CaptureButton";
 import { validateAddDraft, categoryStillValidForKind } from "@/components/capture/validation";
 import { KIND_TITLES, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
 import { transactionHome } from "@/lib/routes";
+import { formatGBP } from "@/lib/money";
+import { flyAmountToItsRow } from "@/lib/motion";
 import { createTransaction } from "./actions";
 import { shouldFocusAmount } from "./prefill";
 import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-transaction";
@@ -54,6 +56,8 @@ function fieldLabel(text: string) {
 export function AddView({ periodId, captureEnabled = false, initialKind, initialCategory, initialWeekNumber, initialWhere, initialLabel, initialAmount }: AddViewProps) {
   const router = useRouter();
   const [tab, setTab] = useState<"type" | "upload">("type");
+  /** The form, so the Landing can find the amount it is about to lift out of it. */
+  const form = useRef<HTMLDivElement>(null);
 
   const [amount, setAmount] = useState(initialAmount);
   const [pending, setPending] = useState(false);
@@ -101,10 +105,31 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
 
   const validation = validateAddDraft({ amount, where, kind, category });
 
+  /**
+   * THE LANDING starts here, on the release of Add it.
+   *
+   * `t = 0` is this line. The amount lifts out of the form before the write is
+   * dispatched, not after it resolves — the flight is the answer to "where did
+   * that go", and a flight that waits for a server is a flight that starts
+   * after the user has stopped wondering.
+   *
+   * It is not a second write and it is not a second navigation. It reads the
+   * amount block's position, puts a copy of the glyphs on `document.body`
+   * outside React so it survives this screen unmounting, and hands the rest to
+   * `flyAmountToItsRow`. `pointer-events: none` throughout: nothing about it
+   * can gate the tap that follows it.
+   *
+   * WRITES: exactly one, in `createTransaction`, once per press of Add it —
+   * unchanged by any of this. Nothing here writes, and nothing here fires on a
+   * keystroke (AGENTS.md 8).
+   */
   function handleAddIt() {
     setTouched(true);
     setError(null);
     if (!validation.valid) return;
+
+    const chip = form.current?.querySelector("[data-motion-amount]");
+    const flight = chip ? flyAmountToItsRow({ from: chip, text: formatGBP(amount) }) : null;
 
     startSave(async () => {
       try {
@@ -125,6 +150,9 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
         });
         router.replace(transactionHome(kind, periodId, weekNumber, id));
       } catch (e) {
+        // Nothing landed, so nothing may still be flying toward a row that was
+        // never written. The chip goes on the same frame as the message.
+        flight?.cancel();
         setError(e instanceof Error ? e.message : "Couldn't save. Try again.");
       }
     });
@@ -134,6 +162,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
     <div style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
       <Sheet variant="full" onBack={() => router.replace(transactionHome(initialKind, periodId, initialWeekNumber))}>
         <div
+          ref={form}
           style={{
             flex: 1,
             overflowY: "auto",

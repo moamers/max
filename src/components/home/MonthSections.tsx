@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Bar } from "@/components/ui/Bar";
 import { Row } from "@/components/ui/Row";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { Tape } from "@/components/ui/Tape";
 import { formatGBP } from "@/lib/money";
+import { weekTape } from "./evidence";
 import { moneyToneColor, NO_WEEKLY_TARGETS_PROMPT } from "./format";
 import type { OneOffs, RecurringBreakdown, TransactionRow } from "@/lib/queries";
 import type { WeekView } from "./types";
@@ -325,31 +327,59 @@ function Weeks({
         </Link>
       )}
       {weeks.map((week, i) => (
-        <Link
-          key={week.weekNumber}
-          href={`/week/${week.weekNumber}?period=${periodId}`}
-          style={{ color: "inherit", textDecoration: "none" }}
-        >
-          <Row interactive divider={i > 0} padding="16px 4px 18px" style={{ gap: 12 }} data-motion-row>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <span style={{ fontSize: "var(--type-label)", fontWeight: 500, color: "var(--text-secondary)" }}>
-                {week.range}
-              </span>
-              <span
+        <Row key={week.weekNumber} divider={i > 0} padding="16px 4px 18px" style={{ gap: 12 }} data-motion-row>
+          {/*
+            THE TAPE, and the rule that comes with it: **a figure means
+            evidence, a row means navigate.** One meaning per target.
+
+            The whole row used to be one link, so the figure and the row said
+            the same thing and there was nowhere left to put "show me what this
+            is made of". Now the date range is the link into the week, and the
+            figure opens the three categories it is the sum of, underneath,
+            without moving. They are siblings — a button inside a link is
+            invalid HTML and fires two things.
+          */}
+          <Tape
+            block={weekTape(week)}
+            label={`Show how ${formatGBP(week.state.amount)} for ${week.range} is worked out`}
+            before={
+              <Link
+                href={`/week/${week.weekNumber}?period=${periodId}`}
+                className="max-row--interactive"
                 style={{
-                  fontSize: "var(--type-title)",
-                  fontWeight: 700,
-                  letterSpacing: "-0.03em",
-                  fontVariantNumeric: "tabular-nums",
-                  color: moneyToneColor(week.state.tone),
+                  flex: 1,
+                  minWidth: 0,
+                  color: "var(--text-secondary)",
+                  textDecoration: "none",
+                  fontSize: "var(--type-label)",
+                  fontWeight: 500,
+                  // The row used to be the whole link, so splitting it in two
+                  // shrank this target to the height of one line. The padding
+                  // is the tap area; the equal negative margin hands it back to
+                  // the layout, so the row is the height it always was.
+                  padding: "10px 0",
+                  margin: "-10px 0",
                 }}
               >
-                {formatGBP(week.state.amount)}
-              </span>
-            </div>
-            <Bar spend={week.spent} budget={week.goal ?? 0} size="week" />
-          </Row>
-        </Link>
+                {week.range}
+              </Link>
+            }
+          >
+            <span
+              style={{
+                display: "block",
+                fontSize: "var(--type-title)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                fontVariantNumeric: "tabular-nums",
+                color: moneyToneColor(week.state.tone),
+              }}
+            >
+              {formatGBP(week.state.amount)}
+            </span>
+          </Tape>
+          <Bar spend={week.spent} budget={week.goal ?? 0} size="week" />
+        </Row>
       ))}
     </>
   );

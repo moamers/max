@@ -131,6 +131,11 @@ export default async function HomePage(props: PageProps<"/">) {
       today: { spare: overview.leftToday, spend: overview.spent.total },
       forecast: { spare: overview.projectedLeft, spend: overview.forecast },
       income: overview.income.amount,
+      spentByKind: {
+        weekly: overview.spent.weekly,
+        recurring: overview.spent.recurring,
+        oneOff: overview.spent.oneOff,
+      },
     },
     weeks,
     weeksSummary: {
