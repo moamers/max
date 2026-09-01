@@ -53,10 +53,75 @@ export function contrast(a: Rgb, b: Rgb): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-/** `color-mix(in srgb, A p%, B)` interpolates the gamma-encoded sRGB coords. */
-function mix(a: Rgb, b: Rgb, p: number): Rgb {
+/** `color-mix(in srgb, ...)` interpolates the gamma-encoded sRGB coords. */
+function mixSrgb(a: Rgb, b: Rgb, p: number): Rgb {
   return a.map((v, i) => v * p + b[i] * (1 - p)) as unknown as Rgb;
 }
+
+// --- OKLab, per the CSS Color 4 conversion the browser performs -------------
+const LMS = [
+  [0.4122214708, 0.5363325363, 0.0514459929],
+  [0.2119034982, 0.6806995451, 0.1073969566],
+  [0.0883024619, 0.2817188376, 0.6299787005],
+] as const;
+const LAB = [
+  [0.2104542553, 0.793617785, -0.0040720468],
+  [1.9779984951, -2.428592205, 0.4505937099],
+  [0.0259040371, 0.7827717662, -0.808675766],
+] as const;
+
+function apply(m: ReadonlyArray<ReadonlyArray<number>>, v: readonly number[]): [number, number, number] {
+  return [0, 1, 2].map((i) => m[i][0] * v[0] + m[i][1] * v[1] + m[i][2] * v[2]) as [number, number, number];
+}
+
+/** Gauss-Jordan on a 3x3 — small enough to be obvious, and avoids hardcoding
+ *  inverse matrices whose digits nobody could check. */
+function invert(m: ReadonlyArray<ReadonlyArray<number>>): number[][] {
+  const a = m.map((row, i) => [...row, ...[0, 1, 2].map((j) => (i === j ? 1 : 0))]);
+  for (let col = 0; col < 3; col++) {
+    let pivot = col;
+    for (let r = col + 1; r < 3; r++) if (Math.abs(a[r][col]) > Math.abs(a[pivot][col])) pivot = r;
+    [a[col], a[pivot]] = [a[pivot], a[col]];
+    const d = a[col][col];
+    for (let j = 0; j < 6; j++) a[col][j] /= d;
+    for (let r = 0; r < 3; r++) {
+      if (r === col) continue;
+      const f = a[r][col];
+      for (let j = 0; j < 6; j++) a[r][j] -= f * a[col][j];
+    }
+  }
+  return a.map((row) => row.slice(3));
+}
+
+const LMS_INV = invert(LMS);
+const LAB_INV = invert(LAB);
+
+function fromLinear(v: number): number {
+  return v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055;
+}
+
+function toOklab(c: Rgb): [number, number, number] {
+  const cone = apply(LMS, c.map(toLinear));
+  return apply(LAB, cone.map(Math.cbrt));
+}
+
+function fromOklab(lab: readonly number[]): Rgb {
+  const cone = apply(LAB_INV, lab).map((v) => v ** 3);
+  return apply(LMS_INV, cone).map((v) => Math.min(1, Math.max(0, fromLinear(v)))) as unknown as Rgb;
+}
+
+/**
+ * `color-mix(in oklab, A p%, B)` — the space every derivation in
+ * brand-tokens.css uses. Perceptually uniform, so "78% ink" removes 78% of the
+ * perceived distance rather than 78% of three gamma-encoded numbers.
+ */
+function mixOklab(a: Rgb, b: Rgb, p: number): Rgb {
+  const [la, lb] = [toOklab(a), toOklab(b)];
+  return fromOklab([0, 1, 2].map((i) => la[i] * p + lb[i] * (1 - p)));
+}
+
+const MIXERS = { srgb: mixSrgb, oklab: mixOklab } as const;
+type Space = keyof typeof MIXERS;
 
 // --------------------------------------------------------------- css resolving
 
@@ -111,16 +176,17 @@ function resolve(value: string, vars: Map<string, string>, seen = new Set<string
     return resolve(next, vars, new Set([...seen, name]));
   }
 
-  const mixMatch = /^color-mix\(\s*in srgb\s*,([\s\S]*)\)$/.exec(v);
+  const mixMatch = /^color-mix\(\s*in (srgb|oklab)\s*,([\s\S]*)\)$/.exec(v);
   if (mixMatch) {
-    const [first, second] = splitTop(mixMatch[1]);
+    const space = mixMatch[1] as Space;
+    const [first, second] = splitTop(mixMatch[2]);
     const pct = /(\S+)\s*$/.exec(first)![1];
     const colourA = first.slice(0, first.length - pct.length).trim();
     const percent = pct.endsWith("%")
       ? Number(pct.slice(0, -1)) / 100
       : Number(/^var\((--[a-z0-9-]+)\)$/.test(pct) ? resolvePercent(pct, vars) : NaN);
     if (!Number.isFinite(percent)) throw new Error(`bad percentage in ${v}`);
-    return mix(resolve(colourA, vars, seen), resolve(second.trim(), vars, seen), percent);
+    return MIXERS[space](resolve(colourA, vars, seen), resolve(second.trim(), vars, seen), percent);
   }
 
   throw new Error(`cannot resolve ${v}`);
@@ -189,12 +255,30 @@ const PAIRINGS: ReadonlyArray<readonly [string, string, string, number]> = [
   ["label ink on label tint", "--cyan-ink", "--cyan-tint-bg", 4.5],
   ["pending ink on pending tint", "--amber-ink", "--amber-tint-bg", 4.5],
   ["attention ink on its tint", "--attention-ink", "--attention-tint-bg", 4.5],
-  ["over-budget ink on surface", "--bar-over", "--surface", 4.5],
-  ["over-budget fill on track", "--bar-over", "--bar-track", 3],
-  ["ramp start on track", "--cyan-ink", "--bar-track", 3],
-  ["ramp middle on track", "--amber-ink", "--bar-track", 3],
-  ["ramp warm step on track", "--attention-ink", "--bar-track", 3],
-  ["neutral bar fill on track", "--bar-fill", "--bar-track", 3],
+  ["over-target ink on surface", "--bar-over", "--surface", 4.5],
+
+  // The ink channel: text, so WCAG 1.4.3's 4.5:1.
+  ["health ink on surface", "--signal-health-ink", "--surface", 4.5],
+  ["money ink on surface", "--signal-money-ink", "--surface", 4.5],
+  ["attention ink on surface", "--signal-attention-ink", "--surface", 4.5],
+  ["spark ink on surface", "--signal-spark-ink", "--surface", 4.5],
+
+  // The graphic channel: meaningful non-text, so 1.4.11's 3:1 — and the whole
+  // point of the split is that MORE of the hue survives here, so these must be
+  // checked against both grounds a graphic actually sits on.
+  ["health graphic on track", "--signal-health-graphic", "--bar-track", 3],
+  ["health graphic on surface", "--signal-health-graphic", "--surface", 3],
+  ["money graphic on track", "--signal-money-graphic", "--bar-track", 3],
+  ["money graphic on surface", "--signal-money-graphic", "--surface", 3],
+  ["attention graphic on track", "--signal-attention-graphic", "--bar-track", 3],
+  ["attention graphic on surface", "--signal-attention-graphic", "--surface", 3],
+  ["spark graphic on track", "--signal-spark-graphic", "--bar-track", 3],
+  ["spark graphic on surface", "--signal-spark-graphic", "--surface", 3],
+
+  // The one bar.
+  ["bar fill on track", "--bar-fill", "--bar-track", 3],
+  ["over-target fill on track", "--bar-fill-over", "--bar-track", 3],
+  ["strong over-target fill on track", "--bar-fill-over-strong", "--bar-track", 3],
 ];
 
 describe("brand tokens keep their contrast floor", () => {
@@ -229,6 +313,35 @@ describe("brand tokens keep their contrast floor", () => {
     expect(vars.get("--outline-width")).toBe("1.5px");
     const outline = contrast(resolve("var(--color-outline)", vars), resolve("var(--bg)", vars));
     expect(outline).toBeGreaterThanOrEqual(3);
+  });
+
+  it("the graphic channel keeps more of the hue than the ink channel", () => {
+    // If a graphic knob is ever set at or below its ink knob, the split has
+    // silently stopped doing anything and the palette goes flat again — which
+    // is exactly the bug this architecture exists to fix, and it would not
+    // fail any contrast assertion above.
+    for (const [theme, mode] of COMBOS) {
+      const vars = tokensFor(theme, mode);
+      const ink = Number(vars.get("--k-signal-ink")!.replace("%", ""));
+      for (const channel of ["health", "money", "spark", "attention"] as const) {
+        const graphic = Number(vars.get(`--k-${channel}-graphic`)!.replace("%", ""));
+        expect(graphic, `${channel} in ${theme} ${mode}`).toBeGreaterThanOrEqual(ink);
+      }
+    }
+  });
+
+  it("light mode is where the split actually pays, so prove it there", () => {
+    // In dark mode every knob is already 100% and the split is a no-op. The
+    // regression to guard is light mode collapsing back to the text floor.
+    for (const theme of ["quiet-voltage", "butter-static"] as const) {
+      const vars = tokensFor(theme, "light");
+      const ink = Number(vars.get("--k-signal-ink")!.replace("%", ""));
+      const spark = Number(vars.get("--k-spark-graphic")!.replace("%", ""));
+      expect(spark).toBeGreaterThan(ink);
+    }
+    // quiet-voltage light needs no compromise on spark at all: the brand pink
+    // clears 3:1 on both grounds untouched.
+    expect(tokensFor("quiet-voltage", "light").get("--k-spark-graphic")).toBe("100%");
   });
 
   it("the two dark declarations of each theme stay identical", () => {

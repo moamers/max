@@ -36,7 +36,7 @@
      because that is the position it occupies in the ramp. So where the kit
      does not supply it, it is the midpoint of the two tokens it sits between:
 
-         --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+         --color-money: color-mix(in oklab, var(--color-health) 50%, var(--color-spark));
 
      In butter-static that is lime + pink -> a warm sand (#d5cb8a light,
      #e1cb94 dark), which reads as amber's role without borrowing either
@@ -100,6 +100,14 @@
   /* How much of an accent survives when it is used as INK rather than a fill. */
   --k-primary-ink: 100%; /* #6757e5 on #ffffff = 5.16:1, on canvas 4.69:1 */
   --k-signal-ink: 55%; /* health/money/spark are too light at full strength here */
+
+  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+     not the 4.5:1 text needs — so far more of the hue survives here. */
+  --k-health-graphic: 85%;
+  --k-money-graphic: 75%;
+  --k-spark-graphic: 100%;
+  --k-attention-graphic: 80%;
 }
 
 /* ---------- quiet-voltage · dark (OS preference, no explicit choice) ---------- */
@@ -119,6 +127,13 @@
     --ink-on-primary: var(--color-canvas); /* #121426 on #8f7cff = 5.63:1 */
     --k-primary-ink: 100%; /* #8f7cff on #20233d = 4.74:1 */
     --k-signal-ink: 100%; /* already bright enough against a dark ground */
+    /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+       bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+       not the 4.5:1 text needs — so far more of the hue survives here. */
+    --k-health-graphic: 100%;
+    --k-money-graphic: 100%;
+    --k-spark-graphic: 100%;
+    --k-attention-graphic: 100%;
   }
 }
 
@@ -138,6 +153,13 @@
   --ink-on-primary: var(--color-canvas);
   --k-primary-ink: 100%;
   --k-signal-ink: 100%;
+  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+     not the 4.5:1 text needs — so far more of the hue survives here. */
+  --k-health-graphic: 100%;
+  --k-money-graphic: 100%;
+  --k-spark-graphic: 100%;
+  --k-attention-graphic: 100%;
 }
 
 /* ---------- butter-static · light ---------- */
@@ -150,7 +172,7 @@
   --color-spark: #f2a3b8;
   --color-outline: #17151c;
   /* fallback: no money hue in this theme — the midpoint of the ramp it sits in */
-  --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+  --color-money: color-mix(in oklab, var(--color-health) 50%, var(--color-spark));
 
   --tone-dark: var(--color-text);
   --tone-light: var(--color-surface);
@@ -161,6 +183,13 @@
   --ink-on-primary: var(--color-outline);
   --k-primary-ink: 60%; /* raw lilac as text is 2.28:1; at 60% it is 4.92:1 */
   --k-signal-ink: 45%;
+  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+     not the 4.5:1 text needs — so far more of the hue survives here. */
+  --k-health-graphic: 55%;
+  --k-money-graphic: 60%;
+  --k-spark-graphic: 70%;
+  --k-attention-graphic: 65%;
 }
 
 /* ---------- butter-static · dark (OS preference) ---------- */
@@ -173,13 +202,20 @@
     --color-health: #c2f970;
     --color-spark: #ff9db8;
     --color-outline: #f7efc5;
-    --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+    --color-money: color-mix(in oklab, var(--color-health) 50%, var(--color-spark));
 
     --tone-dark: var(--color-canvas);
     --tone-light: var(--color-text);
     --ink-on-primary: var(--color-canvas); /* #17131f on #b8a9ff = 8.84:1 */
     --k-primary-ink: 100%;
     --k-signal-ink: 100%;
+    /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+       bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+       not the 4.5:1 text needs — so far more of the hue survives here. */
+    --k-health-graphic: 100%;
+    --k-money-graphic: 100%;
+    --k-spark-graphic: 100%;
+    --k-attention-graphic: 100%;
   }
 }
 
@@ -192,13 +228,20 @@
   --color-health: #c2f970;
   --color-spark: #ff9db8;
   --color-outline: #f7efc5;
-  --color-money: color-mix(in srgb, var(--color-health) 50%, var(--color-spark));
+  --color-money: color-mix(in oklab, var(--color-health) 50%, var(--color-spark));
 
   --tone-dark: var(--color-canvas);
   --tone-light: var(--color-text);
   --ink-on-primary: var(--color-canvas);
   --k-primary-ink: 100%;
   --k-signal-ink: 100%;
+  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
+     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
+     not the 4.5:1 text needs — so far more of the hue survives here. */
+  --k-health-graphic: 100%;
+  --k-money-graphic: 100%;
+  --k-spark-graphic: 100%;
+  --k-attention-graphic: 100%;
 }
 
 /*
@@ -226,17 +269,17 @@
   /* ---- surfaces: the page, then successively more ink mixed into it ---- */
   --bg: var(--color-canvas);
   --surface: var(--color-surface);
-  --surface-raised: color-mix(in srgb, var(--color-surface) 96%, var(--color-text));
-  --surface-hover: color-mix(in srgb, var(--color-surface) 94.5%, var(--color-text));
-  --surface-inset: color-mix(in srgb, var(--color-surface) 93%, var(--color-text));
-  --surface-inset-deep: color-mix(in srgb, var(--color-canvas) 95.5%, var(--color-text));
-  --control-active: color-mix(in srgb, var(--color-surface) 88%, var(--color-text));
+  --surface-raised: color-mix(in oklab, var(--color-surface) 96%, var(--color-text));
+  --surface-hover: color-mix(in oklab, var(--color-surface) 94.5%, var(--color-text));
+  --surface-inset: color-mix(in oklab, var(--color-surface) 93%, var(--color-text));
+  --surface-inset-deep: color-mix(in oklab, var(--color-canvas) 95.5%, var(--color-text));
+  --control-active: color-mix(in oklab, var(--color-surface) 88%, var(--color-text));
 
   /* ---- hairlines: the same mix, four weights (subtlest -> most visible) ---- */
-  --hairline-1: color-mix(in srgb, var(--color-surface) 93%, var(--color-text));
-  --hairline-2: color-mix(in srgb, var(--color-surface) 88%, var(--color-text));
-  --hairline-3: color-mix(in srgb, var(--color-surface) 83%, var(--color-text));
-  --hairline-4: color-mix(in srgb, var(--color-surface) 78%, var(--color-text));
+  --hairline-1: color-mix(in oklab, var(--color-surface) 93%, var(--color-text));
+  --hairline-2: color-mix(in oklab, var(--color-surface) 88%, var(--color-text));
+  --hairline-3: color-mix(in oklab, var(--color-surface) 83%, var(--color-text));
+  --hairline-4: color-mix(in oklab, var(--color-surface) 78%, var(--color-text));
 
   /*
     ---- text: the kit's ink, faded toward the canvas ----
@@ -245,12 +288,12 @@
     --text-tertiary on butter-static light canvas, 5.94:1.
   */
   --text-primary: var(--color-text);
-  --text-secondary: color-mix(in srgb, var(--color-text) 78%, var(--color-canvas));
-  --text-secondary-2: color-mix(in srgb, var(--color-text) 73%, var(--color-canvas));
-  --text-tertiary: color-mix(in srgb, var(--color-text) 68%, var(--color-canvas));
+  --text-secondary: color-mix(in oklab, var(--color-text) 78%, var(--color-canvas));
+  --text-secondary-2: color-mix(in oklab, var(--color-text) 73%, var(--color-canvas));
+  --text-tertiary: color-mix(in oklab, var(--color-text) 68%, var(--color-canvas));
   /* Disabled is exempt from 1.4.3, but still clears 3:1 everywhere (worst 3.06:1). */
-  --text-disabled: color-mix(in srgb, var(--color-text) 50%, var(--color-canvas));
-  --text-disabled-2: color-mix(in srgb, var(--color-text) 56%, var(--color-canvas));
+  --text-disabled: color-mix(in oklab, var(--color-text) 50%, var(--color-canvas));
+  --text-disabled-2: color-mix(in oklab, var(--color-text) 56%, var(--color-canvas));
 
   /*
     ---- the accent ----
@@ -261,53 +304,98 @@
     in butter-static light, where raw lilac on butter is 2.28:1.
   */
   --lime-fill: var(--color-primary);
-  --lime-fill-hover: color-mix(in srgb, var(--color-primary) 86%, var(--color-text));
-  --lime-ink: color-mix(in srgb, var(--color-primary) var(--k-primary-ink), var(--color-text));
+  --lime-fill-hover: color-mix(in oklab, var(--color-primary) 86%, var(--color-text));
+  --lime-ink: color-mix(in oklab, var(--color-primary) var(--k-primary-ink), var(--color-text));
   --lime-ink-on-fill: var(--ink-on-primary);
 
   /* The outlined style, for components that carry their shape in a border. */
   --fill-outline: var(--outline-width) solid var(--color-outline);
 
-  /* ---- label / tag channel (was cyan) -> health ---- */
-  --cyan-ink: color-mix(in srgb, var(--color-health) var(--k-signal-ink), var(--color-text));
-  --cyan-tint-bg: color-mix(in srgb, var(--color-health) 9%, var(--color-surface));
+  /*
+    ---- the four signal channels ----
+    Each hue is published four ways, because the contrast floor a colour must
+    clear depends on what it is DOING, not on the colour:
 
-  /* ---- pending flag (was amber) -> money ---- */
-  --amber-ink: color-mix(in srgb, var(--color-money) var(--k-signal-ink), var(--color-text));
-  --amber-tint-bg: color-mix(in srgb, var(--color-money) 9%, var(--color-surface));
+      -source   the kit hue, untouched. Derivation input, and decoration that
+                sits beside its own explicit label.
+      -ink      text. WCAG 1.4.3 asks 4.5:1, which on a pale ground costs most
+                of the chroma — hence --k-signal-ink.
+      -graphic  a fill, stroke, icon or state indicator that CARRIES meaning.
+                WCAG 1.4.11 asks 3:1, a lower bar, so far more of the hue
+                survives. In quiet-voltage light spark needs no compromise at
+                all and stays the brand pink.
+      -tint     a background wash with no independent meaning, always paired
+                with a readable ink on top of it.
+
+    Applying the text floor to graphics is what flattened this palette: in
+    butter-static light it left only 24-42% of each hue's chroma, so the pink
+    rendered as a brown. Every knob below is the largest 5% step that still
+    clears its floor against BOTH the bar track and the surface, computed per
+    theme, per mode and per channel — the headroom is not the same for a green
+    on butter as it is for a pink on lilac.
+  */
+  --signal-health-source: var(--color-health);
+  --signal-health-ink: color-mix(in oklab, var(--color-health) var(--k-signal-ink), var(--color-text));
+  --signal-health-graphic: color-mix(in oklab, var(--color-health) var(--k-health-graphic), var(--color-text));
+  --signal-health-tint: color-mix(in oklab, var(--color-health) 9%, var(--color-surface));
+
+  --signal-money-source: var(--color-money);
+  --signal-money-ink: color-mix(in oklab, var(--color-money) var(--k-signal-ink), var(--color-text));
+  --signal-money-graphic: color-mix(in oklab, var(--color-money) var(--k-money-graphic), var(--color-text));
+  --signal-money-tint: color-mix(in oklab, var(--color-money) 9%, var(--color-surface));
 
   /*
-    ---- "needs a look" — unresolved, never a warning ----
-    Sits between money and spark so it is distinguishable from BOTH the pending
-    flag and the over-budget red; leaning 70/30 toward money keeps it warm
-    rather than alarming.
+    "Needs a look" — unresolved, never a warning. Sits between money and spark
+    so it is distinguishable from BOTH the pending flag and the over-budget
+    red; leaning 70/30 toward money keeps it warm rather than alarming.
   */
-  --attention-base: color-mix(in srgb, var(--color-money) 70%, var(--color-spark));
-  --attention-ink: color-mix(in srgb, var(--attention-base) var(--k-signal-ink), var(--color-text));
-  --attention-tint-bg: color-mix(in srgb, var(--attention-base) 9%, var(--color-surface));
+  --signal-attention-source: color-mix(in oklab, var(--color-money) 70%, var(--color-spark));
+  --signal-attention-ink: color-mix(in oklab, var(--signal-attention-source) var(--k-signal-ink), var(--color-text));
+  --signal-attention-graphic: color-mix(in oklab, var(--signal-attention-source) var(--k-attention-graphic), var(--color-text));
+  --signal-attention-tint: color-mix(in oklab, var(--signal-attention-source) 9%, var(--color-surface));
 
-  /* ---- chart grammar: the one bar (see src/components/ui/bar-grammar.ts) ---- */
+  --signal-spark-source: var(--color-spark);
+  --signal-spark-ink: color-mix(in oklab, var(--color-spark) var(--k-signal-ink), var(--color-text));
+  --signal-spark-graphic: color-mix(in oklab, var(--color-spark) var(--k-spark-graphic), var(--color-text));
+  --signal-spark-tint: color-mix(in oklab, var(--color-spark) 9%, var(--color-surface));
+
+  /*
+    ---- legacy names, kept as aliases ----
+    These are read by about seventy call sites. They are aliases rather than
+    definitions so there is exactly one place a signal colour is decided, and
+    so the rename can happen file by file instead of in one unreviewable diff.
+
+    --bar-over is the clearest case of a name that stopped being true: of its
+    thirty-one uses, twenty-nine are TEXT (error messages, negative amounts,
+    the "Clear data" label) and two are graphics. So it aliases the ink, and
+    the bar's own fill reaches for the graphic channel directly.
+  */
+  --cyan-ink: var(--signal-health-ink);
+  --cyan-tint-bg: var(--signal-health-tint);
+  --amber-ink: var(--signal-money-ink);
+  --amber-tint-bg: var(--signal-money-tint);
+  --attention-base: var(--signal-attention-source);
+  --attention-ink: var(--signal-attention-ink);
+  --attention-tint-bg: var(--signal-attention-tint);
+  --bar-over: var(--signal-spark-ink);
+  --bar-over-strong: color-mix(in oklab, var(--signal-spark-ink) 80%, var(--color-text));
+
+  /*
+    ---- chart grammar: the one bar (see src/components/ui/bar-grammar.ts) ----
+    One solid fill. The four-stop ramp it replaces could not carry four stages
+    at 6-8px tall at arm's length: it read as decoration, and it put magnitude
+    into colour, which is the one thing the bar grammar says never to do. The
+    fill changes colour only at a real state change — passing the target — and
+    that state is carried by the number and the words as well.
+  */
   --bar-track: var(--surface-inset);
-  --bar-fill: color-mix(in srgb, var(--color-text) 55%, var(--color-surface));
-  --bar-over: color-mix(in srgb, var(--color-spark) var(--k-signal-ink), var(--color-text));
-  --bar-over-strong: color-mix(in srgb, var(--bar-over) 80%, var(--color-text));
-  /*
-    Stops sit late on purpose — see the note in globals.css. The four colours
-    are the four signal channels at ink strength; every stop clears 3:1 against
-    the track in all four combinations (worst measured 4.01:1).
-  */
-  --bar-ramp: linear-gradient(
-    90deg,
-    var(--cyan-ink) 0%,
-    var(--cyan-ink) 62%,
-    var(--amber-ink) 82%,
-    var(--attention-ink) 94%,
-    var(--bar-over) 100%
-  );
+  --bar-fill: var(--color-text);
+  --bar-fill-over: var(--signal-spark-graphic);
+  --bar-fill-over-strong: color-mix(in oklab, var(--signal-spark-graphic) 80%, var(--color-text));
 
   /* ---- stat-tile borders ---- */
-  --tile-positive-border: color-mix(in srgb, var(--color-health) 35%, var(--color-surface));
-  --tile-negative-border: color-mix(in srgb, var(--color-spark) 35%, var(--color-surface));
+  --tile-positive-border: color-mix(in oklab, var(--color-health) 35%, var(--color-surface));
+  --tile-negative-border: color-mix(in oklab, var(--color-spark) 35%, var(--color-surface));
 
   /*
     ---- hero gradient ----
@@ -319,21 +407,21 @@
   */
   --hero-gradient: linear-gradient(
     140deg,
-    color-mix(in srgb, var(--color-health) 45%, var(--tone-light)),
-    color-mix(in srgb, var(--color-primary) 45%, var(--tone-light))
+    color-mix(in oklab, var(--color-health) 45%, var(--tone-light)),
+    color-mix(in oklab, var(--color-primary) 45%, var(--tone-light))
   );
   /* The warm end of the same construction, for a forecast that lands below zero. */
   --hero-gradient-over: linear-gradient(
     140deg,
-    color-mix(in srgb, var(--color-money) 45%, var(--tone-light)),
-    color-mix(in srgb, var(--color-spark) 45%, var(--tone-light))
+    color-mix(in oklab, var(--color-money) 45%, var(--tone-light)),
+    color-mix(in oklab, var(--color-spark) 45%, var(--tone-light))
   );
   --hero-ink-1: var(--tone-dark);
   --hero-ink-2: var(--tone-dark);
   --hero-ink-3: var(--tone-dark);
 
   /* ---- chrome ---- */
-  --shadow-card: 0 10px 24px color-mix(in srgb, var(--tone-dark) 26%, transparent);
-  --scrim: color-mix(in srgb, var(--tone-dark) 55%, transparent);
+  --shadow-card: 0 10px 24px color-mix(in oklab, var(--tone-dark) 26%, transparent);
+  --scrim: color-mix(in oklab, var(--tone-dark) 55%, transparent);
 
 }
