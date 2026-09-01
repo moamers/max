@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Slider } from "./Slider";
 import { formatAmount, sanitizeAmountInput, SLIDER_MAX, SLIDER_STEP } from "./validation";
@@ -19,6 +19,12 @@ export interface AmountEditorProps {
   onNeedsAttentionChange?: (needsAttention: boolean) => void;
   /** The add sheet shows the drag slider; the transaction editor doesn't (README screens 04 vs 08). */
   showSlider?: boolean;
+  /**
+   * Put the cursor here on mount. The amount is the first field on both the add
+   * sheet and the transaction editor, and both screens exist to fill this form
+   * in — which is the one case where taking focus is help rather than theft.
+   */
+  autoFocus?: boolean;
 }
 
 /**
@@ -37,6 +43,7 @@ export function AmountEditor({
   needsAttention = false,
   onNeedsAttentionChange,
   showSlider = false,
+  autoFocus = false,
 }: AmountEditorProps) {
   // `draft` is non-null only while the field is focused. Outside that, the text
   // *is* the amount rather than a copy of it kept in step by an effect — so the
@@ -44,6 +51,20 @@ export function AmountEditor({
   // synchronous setState during render to cascade.
   const [draft, setDraft] = useState<string | null>(null);
   const text = draft ?? formatAmount(amount);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focused through a ref rather than the `autoFocus` attribute so the scroll
+  // can be suppressed: this input sits inside a sheet that scrolls, and the
+  // browser's default focus scroll pulls the header off the top of a phone
+  // screen before the user has read it. Selecting the existing text means the
+  // editor's first keystroke replaces the amount instead of appending to it.
+  useEffect(() => {
+    if (!autoFocus) return;
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    input.select();
+  }, [autoFocus]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -60,6 +81,7 @@ export function AmountEditor({
             £
           </span>
           <input
+            ref={inputRef}
             inputMode="decimal"
             value={text}
             aria-label="Amount"

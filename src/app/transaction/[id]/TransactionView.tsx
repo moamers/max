@@ -139,6 +139,8 @@ export function TransactionView({ detail, captureEnabled = false }: TransactionV
 
           {captureEnabled && <CaptureButton onDraft={handleCapturedDraft} />}
 
+          {/* The editor exists to change this row, so the cursor starts in its
+              first field with the amount selected — one keystroke replaces it. */}
           <AmountEditor
             amount={amount}
             onAmountChange={setAmount}
@@ -146,6 +148,7 @@ export function TransactionView({ detail, captureEnabled = false }: TransactionV
             onPendingChange={setPending}
             needsAttention={needsAttention}
             onNeedsAttentionChange={setNeedsAttention}
+            autoFocus
           />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

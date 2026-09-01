@@ -14,6 +14,7 @@ import { validateAddDraft, categoryStillValidForKind } from "@/components/captur
 import { KIND_TITLES, type TransactionCategory, type TransactionKind } from "@/lib/transactions";
 import { transactionHome } from "@/lib/routes";
 import { createTransaction } from "./actions";
+import { shouldFocusAmount } from "./prefill";
 import type { TransactionExtractionDraft } from "@/lib/llm/capabilities/extract-transaction";
 
 export interface AddViewProps {
@@ -67,6 +68,11 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
   const [attentionReason, setAttentionReason] = useState<string | null>(null);
   const [rawImport, setRawImport] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  // The rule itself is `shouldFocusAmount`, kept pure so it can be read and
+  // tested without a DOM.
+  const [focusAmountOnMount, setFocusAmountOnMount] = useState(() =>
+    shouldFocusAmount({ amount: initialAmount, where: initialWhere, label: initialLabel })
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
 
@@ -87,6 +93,9 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
     if (draft.needsAttention) setPending(false);
     setAttentionReason(draft.attentionReason);
     setRawImport(draft.rawImport);
+    // Coming back from the Upload tab remounts the amount field. The draft it
+    // carries is already filled in, so leave the cursor where the user put it.
+    setFocusAmountOnMount(false);
     setTab("type");
   }
 
@@ -153,6 +162,7 @@ export function AddView({ periodId, captureEnabled = false, initialKind, initial
                 needsAttention={needsAttention}
                 onNeedsAttentionChange={setNeedsAttention}
                 showSlider
+                autoFocus={focusAmountOnMount}
               />
               {touched && validation.errors.amount && (
                 <span style={{ fontSize: 12, color: "var(--bar-over)" }}>{validation.errors.amount}</span>
