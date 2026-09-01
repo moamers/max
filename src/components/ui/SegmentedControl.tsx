@@ -73,7 +73,7 @@ export function SegmentedControl<T extends string>({
               background: active ? activeBg : "transparent",
               color: active ? activeColor : inactiveColor,
               fontWeight: active ? 700 : 500,
-              transition: "background-color 0.15s ease, color 0.15s ease",
+              transition: "background-color var(--motion-quick) var(--ease-standard), color var(--motion-quick) var(--ease-standard)",
             }}
           >
             {option.label}

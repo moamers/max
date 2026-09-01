@@ -38,7 +38,7 @@ export function Card({
         flexDirection: "column",
         gap: 13,
         cursor: interactive ? "pointer" : undefined,
-        transition: "background-color 0.15s ease",
+        transition: "background-color var(--motion-quick) var(--ease-standard)",
         ...style,
       }}
       {...rest}

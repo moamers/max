@@ -20,7 +20,7 @@ export function Row({ interactive = false, divider = false, padding = "13px 0", 
         padding,
         borderTop: divider ? "1px solid var(--hairline-2)" : undefined,
         cursor: interactive ? "pointer" : undefined,
-        transition: "opacity 0.15s ease",
+        transition: "opacity var(--motion-quick) var(--ease-standard)",
         ...style,
       }}
       {...rest}
