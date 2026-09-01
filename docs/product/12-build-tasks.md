@@ -38,73 +38,117 @@ removed, nothing else has to be rebuilt.
 
 ## Prompt for Codex
 
-> **Branch:** create and push `codex/bottom-nav-pill`. Push the branch to the
-> remote and confirm it exists there before you consider the task done. If you
-> cannot determine which branch to base on, **ask rather than guess** — do not
-> push to `claude/budget-app-spending-insights-i5fnch`, which auto-deploys.
+*Refreshed 2026-09-01. The previous version predated the Ravel rename, the
+two-theme brand kit, the motion scale and three of the routes; every fact below
+was re-checked against the tree at that date.*
+
+> **Branch:** create and push `codex/bottom-nav-pill`. Push it to the remote and
+> confirm it exists there before you consider the task done. If you cannot
+> determine which branch to base on, **ask rather than guess** — do not push to
+> `claude/budget-app-spending-insights-i5fnch`, which auto-deploys.
 >
-> **Task.** Add a floating bottom navigation pill to the Max web app, styled
-> like iOS's translucent glass bars (see Instagram's iOS tab bar). It hovers
+> Read `AGENTS.md` and `docs/product/08-contributor-guide.md` first. The tone
+> constraints and doctrines there are the product, not style advice.
+>
+> **Task.** Add a floating bottom navigation pill to Ravel, a personal-finance
+> web app for people who avoid looking at money. Style it like iOS's translucent
+> glass bars (Instagram's iOS tab bar is the founder's reference): it hovers
 > above the content rather than sitting in a fixed chrome band.
 >
 > **Items, left to right:**
 > 1. **Home** → `/?period=<selectedPeriodId>`
 > 2. **This week** → `/week/<currentWeekNumber>?period=<selectedPeriodId>`
-> 3. **Calendar** → `/year?period=<selectedPeriodId>` (the year screen already
->    lists every month and each row already links back to `/?period=N`)
+> 3. **Calendar** → `/year?period=<selectedPeriodId>`
 >
-> Do not add further items without saying so in your report and justifying each.
+> Do not add further items without justifying each in your report.
 >
-> **Non-negotiable — the period must travel.** Every link must carry
-> `?period=`. A navigation that drops it silently sends the user to a different
-> month, which was a real bug (#49) and is guarded by
+> **It is a shortcut pill, not a tab bar.** Every item navigates to a route and
+> nothing maintains its own history stack. The app's model is hub-and-spoke —
+> home is the only place, everything else is a layer over it — and a tab bar
+> would make the opposite claim. Build it so that removing it later breaks
+> nothing else.
+>
+> **Non-negotiable — the period must travel.** Every link carries `?period=`. A
+> navigation that drops it silently sends the user to a different month; that
+> was a real bug (#49) and is guarded by
 > `src/lib/__tests__/period-travels-with-the-link.test.ts`. Use the helpers in
-> `src/lib/routes.ts` — `periodHome()`, `transactionHome()` — rather than
-> building URLs by hand. Extend that guard test to cover the nav.
+> `src/lib/routes.ts` (`periodHome()`, `transactionHome()`, `sheetParent()`)
+> rather than building URLs by hand, and extend that guard to cover the nav.
 >
 > **"This week" means the current week of the *selected* period**, not today's
-> calendar week. If the selected period is a past or future month, it is that
+> calendar week. If the selected period is a past or future month it is that
 > period's live week, or week 1 when today falls outside it. Get this wrong and
-> the control lies.
+> the control lies about where it is taking you.
 >
-> **The FAB collides with you.** `src/app/week/[weekNumber]/WeekView.tsx` renders
-> a FAB at `position: fixed; right: 20; bottom: 20`. Resolve it deliberately —
-> either lift the FAB above the pill or fold "add" into the pill — and say which
-> you chose and why. Do not let them overlap.
+> **The FAB collides with you.** `src/app/week/[weekNumber]/WeekView.tsx:138`
+> renders one at `position: fixed; right: 20; bottom: 20; zIndex: 7`. Resolve it
+> deliberately — lift it above the pill, or fold "add" into the pill — and say
+> which you chose and why. They must not overlap.
 >
-> **Clearance.** Screens that scroll need bottom padding so the pill never
-> covers the last row. `WeekView` already uses `padding: "8px 20px 108px"` for
-> FAB clearance; audit every scrolling screen rather than assuming.
+> **Clearance, and it is not page padding.** These screens are
+> `position: fixed; inset: 0` flex columns with an inner scrolling region, so
+> bottom clearance belongs on the *scroller*, not the page:
+> `src/components/home/HomeScreen.tsx:44`, `src/components/year/YearView.tsx:185`
+> (currently `padding: "18px 20px 40px"`), and
+> `src/app/week/[weekNumber]/WeekView.tsx:85` (already `8px 20px 108px` for FAB
+> clearance). Audit every scrolling screen rather than assuming those three:
+> the full route list is `/`, `/add`, `/goals`, `/import`, `/income`,
+> `/one-offs`, `/recurring`, `/review`, `/start-month`, `/transaction/[id]`,
+> `/week/[weekNumber]`, `/year` (plus `/login`, `/signup`, `/styleguide`).
+>
+> **Colour: read the tokens, never a literal.** The palette lives in
+> `src/app/brand-tokens.css`, which is the only place a colour is decided.
+> There are **two themes** (`quiet-voltage`, `butter-static`), each with light
+> and dark, driven by `data-theme` and `data-mode` on `<html>` (see
+> `src/app/layout.tsx`). `data-mode` has **three** states, not two: an explicit
+> choice wins, and when the attribute is absent the OS preference decides in CSS
+> alone. Your pill must be correct in all four theme/mode combinations and in the
+> un-stamped state. Use `--surface`, `--hairline-*`, `--text-*`, `--lime-fill`
+> and friends; `--radius-pill` is the shape token.
+>
+> **Motion: use the scale, do not invent durations.** `src/app/globals.css`
+> defines five steps — `--motion-instant` (90ms), `--motion-quick` (140ms),
+> `--motion-standard` (220ms), `--motion-deliberate` (320ms), `--motion-scene`
+> (480ms) — plus `--motion-stagger` and `--ease-standard` / `--ease-enter` /
+> `--ease-exit`. Reduced motion is clamped at the token level, so if you use the
+> tokens it is already handled; if you hardcode a duration you have broken it.
 >
 > **iOS glass, done properly:**
 > - `backdrop-filter: blur(20px) saturate(180%)` **with** the `-webkit-` prefix.
-> - A solid fallback via `@supports not (backdrop-filter: blur(1px))` — the bar
->   must stay legible where blur is unsupported, never become transparent.
+> - A solid fallback under `@supports not (backdrop-filter: blur(1px))`, built
+>   from the theme tokens — the bar must stay legible where blur is
+>   unsupported, never become transparent.
 > - `padding-bottom: env(safe-area-inset-bottom)` so it clears the home
->   indicator. Test on a real iPhone, not just a simulator width.
-> - It must work in **both themes** — this app is dark by default and light
->   follows `prefers-color-scheme`. Use the existing CSS custom properties in
->   `src/app/globals.css`; do not introduce literal colours.
+>   indicator. Say how you verified this; a simulator width is not a check.
 >
-> **Accessibility:** real `<a>` elements (not divs with handlers), visible focus
-> states, `aria-current="page"` on the active item, and a hit target of at least
-> 44×44px. It must be fully operable by keyboard.
+> **Accessibility:** real `<a>` elements, not divs with handlers. Visible focus
+> states, `aria-current="page"` on the active item, hit targets of at least
+> 44x44px, fully operable by keyboard. Labels are words, not icons alone.
 >
-> **Constraints from `AGENTS.md` that apply here:**
+> **Constraints from `AGENTS.md` that bite here:**
 > - No new dependencies.
-> - This is navigation only. **It must not write to the database.**
-> - Use the existing primitives in `src/components/ui/`; extend one rather than
->   building a parallel version.
-> - Read `node_modules/next/dist/docs/` before writing App Router code — this
->   is Next.js 16 and `proxy.ts` replaces `middleware.ts`.
+> - This is navigation only. **It must not write to the database** — not on
+>   render, not on press. A source scan already asserts no screen writes on
+>   render; do not be the first.
+> - Use the primitives in `src/components/ui/` and extend one rather than
+>   building a parallel version. `Bar.tsx` owns the one chart grammar; never
+>   compute a bar's width or colour anywhere else.
+> - Any user-facing string must pass the tone gate in `src/lib/tone.ts`. Run it
+>   over your copy.
+> - Read `node_modules/next/dist/docs/` before writing App Router code. This is
+>   Next.js 16 and `proxy.ts` replaces `middleware.ts`; it differs from your
+>   training data.
 >
 > **The four gates must all be clean:** `npx tsc --noEmit`, `npm run lint`,
-> `npx vitest run`, `npm run build`.
+> `npx vitest run`, `npm run build`. There are currently 1072 passing tests; do
+> not reduce that number.
 >
-> **Report:** what you built, anything you deviated from and why, any file
-> outside your task's ownership you touched, and anything you are not confident
-> is correct. Say explicitly how you resolved the FAB collision and how you
-> verified the safe-area inset.
+> **Report:** what you built, what you deviated from and why, any file outside
+> your task's ownership you touched, and — most importantly — anything you are
+> not confident is correct. An overstated report is worse than a gap. Say
+> explicitly how you resolved the FAB collision, which screens you added
+> clearance to, and how you checked the safe-area inset.
+
 
 ---
 
