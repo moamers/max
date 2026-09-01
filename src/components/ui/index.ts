@@ -14,3 +14,4 @@ export * from "./NumericField";
 export * from "./Row";
 export * from "./Accordion";
 export * from "./icons";
+export { StatusPill, type Status, type StatusPillProps } from "./StatusPill";

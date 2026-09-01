@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Accordion, Caret } from "@/components/ui/Accordion";
 import { JustChanged } from "@/components/ui/JustChanged";
 import { Pill } from "@/components/ui/Chip";
+import { StatusPill } from "@/components/ui/StatusPill";
 import { Row } from "@/components/ui/Row";
 import type { RecurringBreakdown } from "@/lib/queries";
 import type { RecurringCategory } from "@/lib/transactions";
@@ -140,7 +141,7 @@ export function RecurringView({
                           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                             <span style={{ fontSize: 15, fontWeight: 500 }}>{item.merchant ?? "—"}</span>
                             {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
-                            {item.needsAttention && <Pill uppercase style={{ color: "var(--attention-ink)", background: "var(--attention-tint-bg)" }}>needs a look</Pill>}
+                            {item.needsAttention && <StatusPill status="review">needs a look</StatusPill>}
                           </div>
                           <span
                             style={{
@@ -148,7 +149,7 @@ export function RecurringView({
                               fontSize: 15,
                               fontWeight: 600,
                               letterSpacing: "-0.02em",
-                              color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
+                              color: item.needsAttention ? "var(--status-review-ink)" : item.pending ? "var(--status-pending-ink)" : "var(--text-primary)",
                             }}
                           >
                             {formatMoney(item.amount)}

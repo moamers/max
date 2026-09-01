@@ -100,14 +100,25 @@
   /* How much of an accent survives when it is used as INK rather than a fill. */
   --k-primary-ink: 100%; /* #6757e5 on #ffffff = 5.16:1, on canvas 4.69:1 */
   --k-signal-ink: 55%; /* health/money/spark are too light at full strength here */
+  /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+     clears its floor against every ground it sits on; hue and chroma are
+     never touched, so the colour still looks like the kit's. Solved per
+     theme, per mode and per status — the headroom on a butter ground is
+     nothing like the headroom on lilac. */
+  
+  --l-settled-ink: 53.0%;
+  --l-settled-graphic: 61.5%;
+  --l-settled-tint: 94.6%;
+  --l-pending-ink: 26.5%;
+  --l-pending-graphic: 26.5%;
+  --l-pending-tint: 92.4%;
+  --l-review-ink: 55.5%;
+  --l-review-graphic: 55.5%;
+  --l-review-tint: 90.2%;
+  --l-over-ink: 57.0%;
+  --l-over-graphic: 63.2%;
+  --l-over-tint: 88.0%;
 
-  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-     not the 4.5:1 text needs — so far more of the hue survives here. */
-  --k-health-graphic: 85%;
-  --k-money-graphic: 75%;
-  --k-spark-graphic: 100%;
-  --k-attention-graphic: 80%;
 }
 
 /* ---------- quiet-voltage · dark (OS preference, no explicit choice) ---------- */
@@ -127,13 +138,24 @@
     --ink-on-primary: var(--color-canvas); /* #121426 on #8f7cff = 5.63:1 */
     --k-primary-ink: 100%; /* #8f7cff on #20233d = 4.74:1 */
     --k-signal-ink: 100%; /* already bright enough against a dark ground */
-    /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-       bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-       not the 4.5:1 text needs — so far more of the hue survives here. */
-    --k-health-graphic: 100%;
-    --k-money-graphic: 100%;
-    --k-spark-graphic: 100%;
-    --k-attention-graphic: 100%;
+    /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+       clears its floor against every ground it sits on; hue and chroma are
+       never touched, so the colour still looks like the kit's. Solved per
+       theme, per mode and per status — the headroom on a butter ground is
+       nothing like the headroom on lilac. */
+    
+    --l-settled-ink: 81.5%;
+    --l-settled-graphic: 81.5%;
+    --l-settled-tint: 22.9%;
+    --l-pending-ink: 98.8%;
+    --l-pending-graphic: 98.8%;
+    --l-pending-tint: 25.9%;
+    --l-review-ink: 66.5%;
+    --l-review-graphic: 66.5%;
+    --l-review-tint: 28.9%;
+    --l-over-ink: 69.8%;
+    --l-over-graphic: 69.8%;
+    --l-over-tint: 31.9%;
   }
 }
 
@@ -153,13 +175,24 @@
   --ink-on-primary: var(--color-canvas);
   --k-primary-ink: 100%;
   --k-signal-ink: 100%;
-  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-     not the 4.5:1 text needs — so far more of the hue survives here. */
-  --k-health-graphic: 100%;
-  --k-money-graphic: 100%;
-  --k-spark-graphic: 100%;
-  --k-attention-graphic: 100%;
+  /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+     clears its floor against every ground it sits on; hue and chroma are
+     never touched, so the colour still looks like the kit's. Solved per
+     theme, per mode and per status — the headroom on a butter ground is
+     nothing like the headroom on lilac. */
+  
+  --l-settled-ink: 81.5%;
+  --l-settled-graphic: 81.5%;
+  --l-settled-tint: 22.9%;
+  --l-pending-ink: 98.8%;
+  --l-pending-graphic: 98.8%;
+  --l-pending-tint: 25.9%;
+  --l-review-ink: 66.5%;
+  --l-review-graphic: 66.5%;
+  --l-review-tint: 28.9%;
+  --l-over-ink: 69.8%;
+  --l-over-graphic: 69.8%;
+  --l-over-tint: 31.9%;
 }
 
 /* ---------- butter-static · light ---------- */
@@ -183,13 +216,24 @@
   --ink-on-primary: var(--color-outline);
   --k-primary-ink: 60%; /* raw lilac as text is 2.28:1; at 60% it is 4.92:1 */
   --k-signal-ink: 45%;
-  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-     not the 4.5:1 text needs — so far more of the hue survives here. */
-  --k-health-graphic: 55%;
-  --k-money-graphic: 60%;
-  --k-spark-graphic: 70%;
-  --k-attention-graphic: 65%;
+  /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+     clears its floor against every ground it sits on; hue and chroma are
+     never touched, so the colour still looks like the kit's. Solved per
+     theme, per mode and per status — the headroom on a butter ground is
+     nothing like the headroom on lilac. */
+  
+  --l-settled-ink: 52.8%;
+  --l-settled-graphic: 60.0%;
+  --l-settled-tint: 93.4%;
+  --l-pending-ink: 20.2%;
+  --l-pending-graphic: 20.2%;
+  --l-pending-tint: 91.2%;
+  --l-review-ink: 54.8%;
+  --l-review-graphic: 62.3%;
+  --l-review-tint: 89.0%;
+  --l-over-ink: 55.0%;
+  --l-over-graphic: 62.5%;
+  --l-over-tint: 86.8%;
 }
 
 /* ---------- butter-static · dark (OS preference) ---------- */
@@ -209,13 +253,24 @@
     --ink-on-primary: var(--color-canvas); /* #17131f on #b8a9ff = 8.84:1 */
     --k-primary-ink: 100%;
     --k-signal-ink: 100%;
-    /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-       bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-       not the 4.5:1 text needs — so far more of the hue survives here. */
-    --k-health-graphic: 100%;
-    --k-money-graphic: 100%;
-    --k-spark-graphic: 100%;
-    --k-attention-graphic: 100%;
+    /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+       clears its floor against every ground it sits on; hue and chroma are
+       never touched, so the colour still looks like the kit's. Solved per
+       theme, per mode and per status — the headroom on a butter ground is
+       nothing like the headroom on lilac. */
+    
+    --l-settled-ink: 91.8%;
+    --l-settled-graphic: 91.8%;
+    --l-settled-tint: 22.8%;
+    --l-pending-ink: 96.8%;
+    --l-pending-graphic: 96.8%;
+    --l-pending-tint: 25.8%;
+    --l-review-ink: 78.0%;
+    --l-review-graphic: 78.0%;
+    --l-review-tint: 28.8%;
+    --l-over-ink: 80.2%;
+    --l-over-graphic: 80.2%;
+    --l-over-tint: 31.8%;
   }
 }
 
@@ -235,13 +290,24 @@
   --ink-on-primary: var(--color-canvas);
   --k-primary-ink: 100%;
   --k-signal-ink: 100%;
-  /* Graphic strength: the largest 5% step that still clears 3:1 on BOTH the
-     bar track and the surface. A meaningful graphic needs 3:1 (WCAG 1.4.11),
-     not the 4.5:1 text needs — so far more of the hue survives here. */
-  --k-health-graphic: 100%;
-  --k-money-graphic: 100%;
-  --k-spark-graphic: 100%;
-  --k-attention-graphic: 100%;
+  /* Hue-preserving lightness. Each value is the SMALLEST move in L that
+     clears its floor against every ground it sits on; hue and chroma are
+     never touched, so the colour still looks like the kit's. Solved per
+     theme, per mode and per status — the headroom on a butter ground is
+     nothing like the headroom on lilac. */
+  
+  --l-settled-ink: 91.8%;
+  --l-settled-graphic: 91.8%;
+  --l-settled-tint: 22.8%;
+  --l-pending-ink: 96.8%;
+  --l-pending-graphic: 96.8%;
+  --l-pending-tint: 25.8%;
+  --l-review-ink: 78.0%;
+  --l-review-graphic: 78.0%;
+  --l-review-tint: 28.8%;
+  --l-over-ink: 80.2%;
+  --l-over-graphic: 80.2%;
+  --l-over-tint: 31.8%;
 }
 
 /*
@@ -312,86 +378,115 @@
   --fill-outline: var(--outline-width) solid var(--color-outline);
 
   /*
-    ---- the four signal channels ----
-    Each hue is published four ways, because the contrast floor a colour must
-    clear depends on what it is DOING, not on the colour:
+    ---- the four statuses ----
 
-      -source   the kit hue, untouched. Derivation input, and decoration that
-                sits beside its own explicit label.
-      -ink      text. WCAG 1.4.3 asks 4.5:1, which on a pale ground costs most
-                of the chroma — hence --k-signal-ink.
-      -graphic  a fill, stroke, icon or state indicator that CARRIES meaning.
-                WCAG 1.4.11 asks 3:1, a lower bar, so far more of the hue
-                survives. In quiet-voltage light spark needs no compromise at
-                all and stays the brand pink.
-      -tint     a background wash with no independent meaning, always paired
-                with a readable ink on top of it.
+    A status is not a hue. The old architecture assigned four NEIGHBOURING warm
+    hues to four states — health, money, money-mixed-with-spark, spark — and it
+    was structurally broken in two ways. It depended on --color-money, which
+    butter-static does not have. And on a butter canvas every warm signal had
+    to separate from a warm ground, so after being pulled toward the ink for
+    contrast all four arrived as the same olive-brown: "needs a look" read as
+    disabled, and "over target" was the calmest chip on the screen.
 
-    Applying the text floor to graphics is what flattened this palette: in
-    butter-static light it left only 24-42% of each hue's chroma, so the pink
-    rendered as a brown. Every knob below is the largest 5% step that still
-    clears its floor against BOTH the bar track and the surface, computed per
-    theme, per mode and per channel — the headroom is not the same for a green
-    on butter as it is for a pink on lilac.
+    The states are now mapped by MEANING, and the sources are spread across the
+    colour wheel rather than clustered:
+
+      settled   -> health    resolved
+      pending   -> the ink   in progress, no judgement, deliberately neutral
+      review    -> primary   there is something here for you to place
+      over      -> spark     the most attention, but never an alarm
+
+    money goes back to being a finance-domain colour rather than a status one.
+
+    Naming: "review", not "attention". The state means "I could not place
+    this", not "you did something wrong", and the token name is where that
+    distinction starts.
   */
-  --signal-health-source: var(--color-health);
-  --signal-health-ink: color-mix(in oklab, var(--color-health) var(--k-signal-ink), var(--color-text));
-  --signal-health-graphic: color-mix(in oklab, var(--color-health) var(--k-health-graphic), var(--color-text));
-  --signal-health-tint: color-mix(in oklab, var(--color-health) 9%, var(--color-surface));
-
-  --signal-money-source: var(--color-money);
-  --signal-money-ink: color-mix(in oklab, var(--color-money) var(--k-signal-ink), var(--color-text));
-  --signal-money-graphic: color-mix(in oklab, var(--color-money) var(--k-money-graphic), var(--color-text));
-  --signal-money-tint: color-mix(in oklab, var(--color-money) 9%, var(--color-surface));
+  --status-settled-source: var(--color-health);
+  --status-pending-source: var(--color-text);
+  --status-review-source: var(--color-primary);
+  --status-over-source: var(--color-spark);
 
   /*
-    "Needs a look" — unresolved, never a warning. Sits between money and spark
-    so it is distinguishable from BOTH the pending flag and the over-budget
-    red; leaning 70/30 toward money keeps it warm rather than alarming.
-  */
-  --signal-attention-source: color-mix(in oklab, var(--color-money) 70%, var(--color-spark));
-  --signal-attention-ink: color-mix(in oklab, var(--signal-attention-source) var(--k-signal-ink), var(--color-text));
-  --signal-attention-graphic: color-mix(in oklab, var(--signal-attention-source) var(--k-attention-graphic), var(--color-text));
-  --signal-attention-tint: color-mix(in oklab, var(--signal-attention-source) 9%, var(--color-surface));
+    Contrast by LIGHTNESS, not by mixing toward the ink.
 
-  --signal-spark-source: var(--color-spark);
-  --signal-spark-ink: color-mix(in oklab, var(--color-spark) var(--k-signal-ink), var(--color-text));
-  --signal-spark-graphic: color-mix(in oklab, var(--color-spark) var(--k-spark-graphic), var(--color-text));
-  --signal-spark-tint: color-mix(in oklab, var(--color-spark) 9%, var(--color-surface));
+    `color-mix(… , var(--color-text))` clears any ratio you like and destroys
+    the hue getting there: a pale pink mixed toward near-black becomes a dull
+    burgundy, a yellow becomes olive. The kit's #F2A3B8 never once reached the
+    screen in butter-static light — the closest the app drew was #A97485, an
+    OKLab ΔE of 0.18 away.
+
+    `oklch(from <source> <L> c h)` keeps chroma and hue exactly as they are and
+    moves only lightness, so the result is the same colour, lighter or darker.
+    The L values are solved per theme and mode above.
+  */
+  --status-settled-ink: oklch(from var(--status-settled-source) var(--l-settled-ink) c h);
+  --status-settled-graphic: oklch(from var(--status-settled-source) var(--l-settled-graphic) c h);
+  --status-settled-tint: oklch(from var(--status-settled-source) var(--l-settled-tint) c h);
+
+  --status-pending-ink: oklch(from var(--status-pending-source) var(--l-pending-ink) c h);
+  --status-pending-graphic: oklch(from var(--status-pending-source) var(--l-pending-graphic) c h);
+  --status-pending-tint: oklch(from var(--status-pending-source) var(--l-pending-tint) c h);
+
+  --status-review-ink: oklch(from var(--status-review-source) var(--l-review-ink) c h);
+  --status-review-graphic: oklch(from var(--status-review-source) var(--l-review-graphic) c h);
+  --status-review-tint: oklch(from var(--status-review-source) var(--l-review-tint) c h);
+
+  --status-over-ink: oklch(from var(--status-over-source) var(--l-over-ink) c h);
+  --status-over-graphic: oklch(from var(--status-over-source) var(--l-over-graphic) c h);
+  --status-over-tint: oklch(from var(--status-over-source) var(--l-over-tint) c h);
+
+  /*
+    ---- emphasis: the ordering, stated rather than inherited ----
+
+    settled < pending < review < over.
+
+    Salience must not fall out of whichever hue happened to survive contrast
+    processing — that is how "over target" ended up looking calmer than
+    "settled". Emphasis drives the STRUCTURE of a status: the rule beside it,
+    whether its dot is solid or hollow. So the ordering holds even where the
+    over-target pink is visually softer than the settled green, and settled
+    does not become loud merely because health has high chroma.
+
+    Never font weight alone, and never an escalating alarm convention: no red,
+    no warning triangle, no exclamation mark. Unresolved is not wrong.
+  */
+  --status-settled-emphasis: 1;
+  --status-pending-emphasis: 2;
+  --status-review-emphasis: 3;
+  --status-over-emphasis: 4;
+
+  --status-settled-rule: 0px;
+  --status-pending-rule: 1px;
+  --status-review-rule: 1px;
+  --status-over-rule: 2px;
 
   /*
     ---- legacy names, kept as aliases ----
-    These are read by about seventy call sites. They are aliases rather than
-    definitions so there is exactly one place a signal colour is decided, and
-    so the rename can happen file by file instead of in one unreviewable diff.
-
-    --bar-over is the clearest case of a name that stopped being true: of its
-    thirty-one uses, twenty-nine are TEXT (error messages, negative amounts,
-    the "Clear data" label) and two are graphics. So it aliases the ink, and
-    the bar's own fill reaches for the graphic channel directly.
+    About seventy call sites read these. Aliases rather than definitions, so a
+    colour is still decided in exactly one place and the rename can happen file
+    by file. Note two have changed MEANING, which is the point of the remap:
+    the pending flag is now neutral rather than amber, and "needs a look" is
+    the primary rather than a money/spark blend.
   */
-  --cyan-ink: var(--signal-health-ink);
-  --cyan-tint-bg: var(--signal-health-tint);
-  --amber-ink: var(--signal-money-ink);
-  --amber-tint-bg: var(--signal-money-tint);
-  --attention-base: var(--signal-attention-source);
-  --attention-ink: var(--signal-attention-ink);
-  --attention-tint-bg: var(--signal-attention-tint);
-  --bar-over: var(--signal-spark-ink);
-  --bar-over-strong: color-mix(in oklab, var(--signal-spark-ink) 80%, var(--color-text));
+  --cyan-ink: var(--status-settled-ink);
+  --cyan-tint-bg: var(--status-settled-tint);
+  --amber-ink: var(--status-pending-ink);
+  --amber-tint-bg: var(--status-pending-tint);
+  --attention-ink: var(--status-review-ink);
+  --attention-tint-bg: var(--status-review-tint);
+  --bar-over: var(--status-over-ink);
+  --bar-over-strong: var(--status-over-ink);
 
   /*
     ---- chart grammar: the one bar (see src/components/ui/bar-grammar.ts) ----
-    One solid fill. The four-stop ramp it replaces could not carry four stages
-    at 6-8px tall at arm's length: it read as decoration, and it put magnitude
-    into colour, which is the one thing the bar grammar says never to do. The
-    fill changes colour only at a real state change — passing the target — and
-    that state is carried by the number and the words as well.
+    One solid fill, which changes colour only at a real state change — passing
+    the target — and that state is carried by the number and the words too.
   */
   --bar-track: var(--surface-inset);
   --bar-fill: var(--color-text);
-  --bar-fill-over: var(--signal-spark-graphic);
-  --bar-fill-over-strong: color-mix(in oklab, var(--signal-spark-graphic) 80%, var(--color-text));
+  --bar-fill-over: var(--status-over-graphic);
+  --bar-fill-over-strong: var(--status-over-graphic);
 
   /* ---- stat-tile borders ---- */
   --tile-positive-border: color-mix(in oklab, var(--color-health) 35%, var(--color-surface));

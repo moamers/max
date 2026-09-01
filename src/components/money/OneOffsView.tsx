@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Chip";
+import { StatusPill } from "@/components/ui/StatusPill";
 import type { OneOffs } from "@/lib/queries";
 import { instalmentsStillDue } from "./derive";
 import { formatMoney } from "./format";
@@ -127,7 +128,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                           {item.merchant ?? "—"}
                         </span>
                         {item.pending && <Pill tone="amber" uppercase>pending</Pill>}
-                        {item.needsAttention && <Pill uppercase style={{ color: "var(--attention-ink)", background: "var(--attention-tint-bg)" }}>needs a look</Pill>}
+                        {item.needsAttention && <StatusPill status="review">needs a look</StatusPill>}
                       </div>
                       <span
                         style={{
@@ -135,7 +136,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                           fontSize: 16,
                           fontWeight: 700,
                           letterSpacing: "-0.025em",
-                          color: item.needsAttention ? "var(--attention-ink)" : item.pending ? "var(--amber-ink)" : "var(--text-primary)",
+                          color: item.needsAttention ? "var(--status-review-ink)" : item.pending ? "var(--status-pending-ink)" : "var(--text-primary)",
                         }}
                       >
                         {formatMoney(item.amount)}
@@ -150,7 +151,7 @@ export function OneOffsView({ periodId, monthLabel, oneOffs, spare, highlightId 
                           </span>
                         )}
                         {due && (
-                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--amber-ink)" }}>
+                          <span style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: 11, color: "var(--status-pending-ink)" }}>
                             {due}
                           </span>
                         )}

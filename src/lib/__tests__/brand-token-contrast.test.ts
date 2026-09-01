@@ -47,6 +47,12 @@ function luminance(c: Rgb): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** Perceptual distance in OKLab; ~0.02 is roughly a just-noticeable step. */
+export function deltaE(a: Rgb, b: Rgb): number {
+  const [x, y] = [toOklab(a), toOklab(b)];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
 export function contrast(a: Rgb, b: Rgb): number {
   const la = luminance(a);
   const lb = luminance(b);
@@ -123,6 +129,53 @@ function mixOklab(a: Rgb, b: Rgb, p: number): Rgb {
 const MIXERS = { srgb: mixSrgb, oklab: mixOklab } as const;
 type Space = keyof typeof MIXERS;
 
+/** OKLab as lightness + chroma + hue, which is what `oklch()` addresses. */
+export function toOklch(c: Rgb): { l: number; c: number; h: number } {
+  const [l, a, b] = toOklab(c);
+  return { l, c: Math.hypot(a, b), h: (Math.atan2(b, a) * 180) / Math.PI };
+}
+
+/**
+ * CSS Color 4 gamut mapping: hold lightness and hue, reduce chroma until the
+ * colour fits in sRGB. Clamping the three channels instead — the obvious
+ * shortcut — shifts the hue by up to 4 degrees on a saturated source, which
+ * would quietly undo the entire point of deriving in OKLCH.
+ */
+function fromOklch(l: number, chroma: number, hueDeg: number): Rgb {
+  const h = (hueDeg * Math.PI) / 180;
+  const at = (c: number): number[] => {
+    const lms = apply(LAB_INV, [l, c * Math.cos(h), c * Math.sin(h)]).map((v) => v ** 3);
+    return apply(LMS_INV, lms);
+  };
+  const fits = (c: number) => at(c).every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+
+  let usable = chroma;
+  if (!fits(chroma)) {
+    let lo = 0;
+    let hi = chroma;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) lo = mid;
+      else hi = mid;
+    }
+    usable = lo;
+  }
+  return at(usable).map((v) => Math.min(1, Math.max(0, fromLinear(Math.min(1, Math.max(0, v)))))) as unknown as Rgb;
+}
+
+/**
+ * `oklch(from <colour> <L> c h)` — the relative-colour form every status
+ * channel is built with. `c` and `h` are the keywords meaning "the source's
+ * own chroma and hue", so only lightness moves and the hue is preserved
+ * exactly. Anything but that literal shape is rejected rather than guessed at.
+ */
+function resolveOklch(source: Rgb, lightness: string): Rgb {
+  const pct = /^([0-9.]+)%$/.exec(lightness.trim());
+  if (!pct) throw new Error(`lightness must be a percentage, got ${lightness}`);
+  const { c, h } = toOklch(source);
+  return fromOklch(Number(pct[1]) / 100, c, h);
+}
+
 // --------------------------------------------------------------- css resolving
 
 /** Every `--name: value;` declaration inside one block of the stylesheet. */
@@ -176,6 +229,11 @@ function resolve(value: string, vars: Map<string, string>, seen = new Set<string
     return resolve(next, vars, new Set([...seen, name]));
   }
 
+  const oklchMatch = /^oklch\(\s*from\s+(.+?)\s+(\S+)\s+c\s+h\s*\)$/.exec(v);
+  if (oklchMatch) {
+    return resolveOklch(resolve(oklchMatch[1], vars, seen), resolvePlain(oklchMatch[2], vars));
+  }
+
   const mixMatch = /^color-mix\(\s*in (srgb|oklab)\s*,([\s\S]*)\)$/.exec(v);
   if (mixMatch) {
     const space = mixMatch[1] as Space;
@@ -190,6 +248,15 @@ function resolve(value: string, vars: Map<string, string>, seen = new Set<string
   }
 
   throw new Error(`cannot resolve ${v}`);
+}
+
+/** A token that holds a bare value (a percentage, a length) rather than a colour. */
+function resolvePlain(token: string, vars: Map<string, string>): string {
+  const name = /^var\((--[a-z0-9-]+)\)$/.exec(token);
+  if (!name) return token;
+  const raw = vars.get(name[1]);
+  if (raw === undefined) throw new Error(`undefined token ${name[1]}`);
+  return resolvePlain(raw.trim(), vars);
 }
 
 function resolvePercent(token: string, vars: Map<string, string>): number {
@@ -252,35 +319,40 @@ const PAIRINGS: ReadonlyArray<readonly [string, string, string, number]> = [
   ["accent ink on surface", "--lime-ink", "--surface", 4.5],
   ["CTA label on primary fill", "--lime-ink-on-fill", "--lime-fill", 4.5],
   ["outline against canvas", "--color-outline", "--bg", 3],
-  ["label ink on label tint", "--cyan-ink", "--cyan-tint-bg", 4.5],
-  ["pending ink on pending tint", "--amber-ink", "--amber-tint-bg", 4.5],
-  ["attention ink on its tint", "--attention-ink", "--attention-tint-bg", 4.5],
   ["over-target ink on surface", "--bar-over", "--surface", 4.5],
 
-  // The ink channel: text, so WCAG 1.4.3's 4.5:1.
-  ["health ink on surface", "--signal-health-ink", "--surface", 4.5],
-  ["money ink on surface", "--signal-money-ink", "--surface", 4.5],
-  ["attention ink on surface", "--signal-attention-ink", "--surface", 4.5],
-  ["spark ink on surface", "--signal-spark-ink", "--surface", 4.5],
+  // The chip label is normal --color-text on the status tint, not the status
+  // ink on a near-invisible wash. That is what lets the tint keep the kit's
+  // actual colour instead of being faded until a dark label survives on it.
+  ["label on settled tint", "--text-primary", "--status-settled-tint", 4.5],
+  ["label on pending tint", "--text-primary", "--status-pending-tint", 4.5],
+  ["label on review tint", "--text-primary", "--status-review-tint", 4.5],
+  ["label on over tint", "--text-primary", "--status-over-tint", 4.5],
 
-  // The graphic channel: meaningful non-text, so 1.4.11's 3:1 — and the whole
-  // point of the split is that MORE of the hue survives here, so these must be
-  // checked against both grounds a graphic actually sits on.
-  ["health graphic on track", "--signal-health-graphic", "--bar-track", 3],
-  ["health graphic on surface", "--signal-health-graphic", "--surface", 3],
-  ["money graphic on track", "--signal-money-graphic", "--bar-track", 3],
-  ["money graphic on surface", "--signal-money-graphic", "--surface", 3],
-  ["attention graphic on track", "--signal-attention-graphic", "--bar-track", 3],
-  ["attention graphic on surface", "--signal-attention-graphic", "--surface", 3],
-  ["spark graphic on track", "--signal-spark-graphic", "--bar-track", 3],
-  ["spark graphic on surface", "--signal-spark-graphic", "--surface", 3],
+  // The ink channel: text, so WCAG 1.4.3's 4.5:1, on both grounds.
+  ["settled ink on canvas", "--status-settled-ink", "--bg", 4.5],
+  ["settled ink on surface", "--status-settled-ink", "--surface", 4.5],
+  ["pending ink on canvas", "--status-pending-ink", "--bg", 4.5],
+  ["pending ink on surface", "--status-pending-ink", "--surface", 4.5],
+  ["review ink on canvas", "--status-review-ink", "--bg", 4.5],
+  ["review ink on surface", "--status-review-ink", "--surface", 4.5],
+  ["over ink on canvas", "--status-over-ink", "--bg", 4.5],
+  ["over ink on surface", "--status-over-ink", "--surface", 4.5],
+
+  // The graphic channel: dots, rules and bar fills, so 1.4.11's 3:1.
+  ["settled graphic on track", "--status-settled-graphic", "--bar-track", 3],
+  ["settled graphic on surface", "--status-settled-graphic", "--surface", 3],
+  ["pending graphic on track", "--status-pending-graphic", "--bar-track", 3],
+  ["pending graphic on surface", "--status-pending-graphic", "--surface", 3],
+  ["review graphic on track", "--status-review-graphic", "--bar-track", 3],
+  ["review graphic on surface", "--status-review-graphic", "--surface", 3],
+  ["over graphic on track", "--status-over-graphic", "--bar-track", 3],
+  ["over graphic on surface", "--status-over-graphic", "--surface", 3],
 
   // The one bar.
   ["bar fill on track", "--bar-fill", "--bar-track", 3],
   ["over-target fill on track", "--bar-fill-over", "--bar-track", 3],
-  ["strong over-target fill on track", "--bar-fill-over-strong", "--bar-track", 3],
 ];
-
 describe("brand tokens keep their contrast floor", () => {
   for (const [theme, mode] of COMBOS) {
     const vars = tokensFor(theme, mode);
@@ -315,33 +387,108 @@ describe("brand tokens keep their contrast floor", () => {
     expect(outline).toBeGreaterThanOrEqual(3);
   });
 
-  it("the graphic channel keeps more of the hue than the ink channel", () => {
-    // If a graphic knob is ever set at or below its ink knob, the split has
-    // silently stopped doing anything and the palette goes flat again — which
-    // is exactly the bug this architecture exists to fix, and it would not
-    // fail any contrast assertion above.
+
+
+  const STATUSES = ["settled", "pending", "review", "over"] as const;
+
+  it("every status channel keeps its source's hue", () => {
+    // The whole reason for oklch(from …) over color-mix(…, --color-text).
+    // Mixing toward the ink cleared every ratio and turned the kit's #F2A3B8
+    // into #A97485 — an OKLab ΔE of 0.18, a colour nobody chose. Only
+    // lightness may move; hue must survive to within rounding.
     for (const [theme, mode] of COMBOS) {
       const vars = tokensFor(theme, mode);
-      const ink = Number(vars.get("--k-signal-ink")!.replace("%", ""));
-      for (const channel of ["health", "money", "spark", "attention"] as const) {
-        const graphic = Number(vars.get(`--k-${channel}-graphic`)!.replace("%", ""));
-        expect(graphic, `${channel} in ${theme} ${mode}`).toBeGreaterThanOrEqual(ink);
+      for (const status of STATUSES) {
+        const source = toOklch(resolve(`var(--status-${status}-source)`, vars));
+        // A neutral has no meaningful hue angle to preserve, and pending is
+        // deliberately neutral, so it is exempt from the angle check alone.
+        if (source.c < 0.01) continue;
+        for (const channel of ["ink", "graphic", "tint"] as const) {
+          const derived = toOklch(resolve(`var(--status-${status}-${channel})`, vars));
+          const drift = Math.abs(((derived.h - source.h + 540) % 360) - 180);
+          expect(drift, `${status}-${channel} in ${theme} ${mode}`).toBeLessThan(1);
+        }
       }
     }
   });
 
-  it("light mode is where the split actually pays, so prove it there", () => {
-    // In dark mode every knob is already 100% and the split is a no-op. The
-    // regression to guard is light mode collapsing back to the text floor.
-    for (const theme of ["quiet-voltage", "butter-static"] as const) {
-      const vars = tokensFor(theme, "light");
-      const ink = Number(vars.get("--k-signal-ink")!.replace("%", ""));
-      const spark = Number(vars.get("--k-spark-graphic")!.replace("%", ""));
-      expect(spark).toBeGreaterThan(ink);
+  it("no tint is invisible against the canvas it sits on", () => {
+    // "If the derived tint is perceptually indistinguishable from the canvas,
+    // it is not a tint — it has effectively disappeared." The rejected build
+    // had all four butter-static tints within ΔE 0.006 of each other and
+    // 0.047-0.061 of the canvas; 0.02 is roughly the just-noticeable step.
+    for (const [theme, mode] of COMBOS) {
+      const vars = tokensFor(theme, mode);
+      const canvas = resolve("var(--bg)", vars);
+      for (const status of STATUSES) {
+        const tint = resolve(`var(--status-${status}-tint)`, vars);
+        expect(deltaE(tint, canvas), `${status} tint in ${theme} ${mode}`).toBeGreaterThan(0.03);
+      }
     }
-    // quiet-voltage light needs no compromise on spark at all: the brand pink
-    // clears 3:1 on both grounds untouched.
-    expect(tokensFor("quiet-voltage", "light").get("--k-spark-graphic")).toBe("100%");
+  });
+
+  it("no active status is mistakable for a disabled control", () => {
+    // The failure this replaces: on the butter canvas the status inks landed
+    // within ΔE 0.09 of --text-disabled, so "needs a look" read as switched
+    // off rather than unresolved.
+    for (const [theme, mode] of COMBOS) {
+      const vars = tokensFor(theme, mode);
+      const disabled = resolve("var(--text-disabled)", vars);
+      for (const status of STATUSES) {
+        if (status === "pending") continue; // deliberately neutral, see below
+        const ink = resolve(`var(--status-${status}-ink)`, vars);
+        // 0.10, not higher: on the butter ground a settled green and a
+        // disabled olive are the tightest pair in the whole system (0.115).
+        // Colour alone does not have to carry this — the chip also has a
+        // coloured tint and a solid dot where a disabled control has neither —
+        // but it must be clearly past a just-noticeable step, which the
+        // rejected build's 0.088 was not.
+        expect(deltaE(ink, disabled), `${status} ink in ${theme} ${mode}`).toBeGreaterThan(0.10);
+      }
+    }
+  });
+
+  it("pending is neutral, and the other three are not", () => {
+    for (const [theme, mode] of COMBOS) {
+      const vars = tokensFor(theme, mode);
+      // Neutral means "the page's own ink", not "grey". quiet-voltage's text
+      // is #25213b, a desaturated navy, and that slight cast is the theme —
+      // so this is a relative test: pending must be far less chromatic than
+      // any state that is carrying a hue.
+      const pending = toOklch(resolve("var(--status-pending-source)", vars)).c;
+      const chromatic = (["settled", "review", "over"] as const).map(
+        (status) => toOklch(resolve(`var(--status-${status}-source)`, vars)).c
+      );
+      for (const c of chromatic) expect(c).toBeGreaterThan(0.05);
+      // butter-static dark's ink is #FFF7B7, a cream with real chroma of its
+      // own, so "neutral" here means "the page's ink" rather than grey. The
+      // architectural rule is what matters: pending takes the text colour, and
+      // is the least chromatic of the four.
+      expect(vars.get("--status-pending-source")).toBe("var(--color-text)");
+      expect(pending, `pending in ${theme} ${mode}`).toBeLessThan(Math.min(...chromatic));
+    }
+  });
+
+  it("the four statuses are ordered, and the order is stated not inherited", () => {
+    for (const [theme, mode] of COMBOS) {
+      const vars = tokensFor(theme, mode);
+      const levels = STATUSES.map((s) => Number(vars.get(`--status-${s}-emphasis`)));
+      expect(levels).toEqual([1, 2, 3, 4]);
+      // Rule weight has to rise with emphasis, because that — not chroma — is
+      // what keeps "over target" ahead of "settled" when its pink is softer.
+      const rules = STATUSES.map((s) => parseFloat(vars.get(`--status-${s}-rule`)!));
+      for (let i = 1; i < rules.length; i++) expect(rules[i]).toBeGreaterThanOrEqual(rules[i - 1]);
+      expect(rules.at(-1)).toBeGreaterThan(rules[0]);
+    }
+  });
+
+  it("no status depends on --color-money", () => {
+    // butter-static has no money token at all, which is why the previous
+    // architecture — pending = money, needs-a-look = money mixed with spark —
+    // could never have worked in that theme.
+    const layer = CSS.slice(CSS.indexOf("--status-settled-source"));
+    const statusBlock = layer.slice(0, layer.indexOf("legacy names"));
+    expect(statusBlock).not.toContain("--color-money");
   });
 
   it("the two dark declarations of each theme stay identical", () => {

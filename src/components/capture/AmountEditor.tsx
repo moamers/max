@@ -79,7 +79,7 @@ export function AmountEditor({
               fontSize: 34,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: needsAttention ? "var(--attention-ink)" : pending ? "var(--amber-ink)" : "var(--text-primary)",
+              color: needsAttention ? "var(--status-review-ink)" : pending ? "var(--status-pending-ink)" : "var(--text-primary)",
             }}
           >
             £
@@ -106,7 +106,7 @@ export function AmountEditor({
               fontSize: 34,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: needsAttention ? "var(--attention-ink)" : pending ? "var(--amber-ink)" : "var(--text-primary)",
+              color: needsAttention ? "var(--status-review-ink)" : pending ? "var(--status-pending-ink)" : "var(--text-primary)",
               padding: 0,
             }}
           />
@@ -119,9 +119,9 @@ export function AmountEditor({
           }}
           options={[
             { value: "final", label: "Final" },
-            { value: "pending", label: "Pending", activeColor: "var(--amber-ink)" },
+            { value: "pending", label: "Pending", activeColor: "var(--status-pending-ink)" },
             ...(onNeedsAttentionChange
-              ? [{ value: "attention" as const, label: "Needs a look", activeColor: "var(--attention-ink)", activeBackground: "var(--attention-tint-bg)" }]
+              ? [{ value: "attention" as const, label: "Needs a look", activeColor: "var(--status-review-ink)", activeBackground: "var(--attention-tint-bg)" }]
               : []),
           ]}
         />

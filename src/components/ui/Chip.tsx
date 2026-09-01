@@ -5,8 +5,12 @@ export type ChipTone = "quiet" | "cyan" | "amber";
 
 const TONE_STYLE: Record<ChipTone, { color: string; background: string }> = {
   quiet: { color: "var(--text-secondary)", background: "transparent" },
-  cyan: { color: "var(--cyan-ink)", background: "var(--cyan-tint-bg)" },
-  amber: { color: "var(--amber-ink)", background: "var(--amber-tint-bg)" },
+  // Normal ink on the status tint. The tint now keeps the kit's own colour
+  // rather than being faded until a coloured label survives on it, so the
+  // label is --text-primary and the tint carries the identity. See
+  // StatusPill.tsx for the full treatment.
+  cyan: { color: "var(--text-primary)", background: "var(--status-settled-tint)" },
+  amber: { color: "var(--text-primary)", background: "var(--status-pending-tint)" },
 };
 
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -53,8 +57,8 @@ export type PillTone = "lime" | "cyan" | "amber" | "neutral";
 
 const PILL_TONE_STYLE: Record<PillTone, { color: string; background: string }> = {
   lime: { color: "var(--lime-ink-on-fill)", background: "var(--lime-fill)" },
-  cyan: { color: "var(--cyan-ink)", background: "var(--cyan-tint-bg)" },
-  amber: { color: "var(--amber-ink)", background: "var(--amber-tint-bg)" },
+  cyan: { color: "var(--text-primary)", background: "var(--status-settled-tint)" },
+  amber: { color: "var(--text-primary)", background: "var(--status-pending-tint)" },
   neutral: { color: "var(--text-tertiary)", background: "var(--control-active)" },
 };
 
