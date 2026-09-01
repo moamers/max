@@ -91,6 +91,7 @@ export async function savePeriod(
           // category through the one table that the migration, the CHECK
           // constraint and the tests all read from.
           const { kind, category } = SECTION_MAPPING[item.section];
+          const needsAttention = item.needsAttention ?? false;
           return {
             periodId,
             kind,
@@ -100,8 +101,12 @@ export async function savePeriod(
             note: item.note,
             amount: item.amount.toString(),
             label: item.tag,
-            pending: false,
-            needsAttention: item.needsAttention ?? false,
+            // A yellow row in the source sheet arrives as pending. The two
+            // states are mutually exclusive in the database
+            // (CHECK `transactions_one_state`), so attention wins here as it
+            // does in the parser — belt and braces, because this is the write.
+            pending: needsAttention ? false : item.pending ?? false,
+            needsAttention,
             attentionReason: item.attentionReason ?? null,
             rawImport: item.rawImport ?? null,
           };

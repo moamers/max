@@ -35,7 +35,8 @@ export async function GET(
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${safeFileName(period.label)}"; filename*=UTF-8''${encodedFileName(period.label)}`,
       "Cache-Control": "private, no-store",
-      "X-Max-Export-Limitation": "Recurring groups become one flat bills list",
+      "X-Max-Export-Limitation":
+        "Recurring groups become one flat bills list; pending and needs-a-look share one orange row highlight",
     },
   });
 }

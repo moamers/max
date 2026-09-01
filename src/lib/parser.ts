@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { isYellowFill } from "./cell-fill";
 import {
   detectWorkbookMapping,
   labelFromFileName,
@@ -19,6 +20,12 @@ export interface ParsedLineItem {
   /** Additive reconciliation metadata; does not change the parser's output shape. */
   needsAttention?: boolean;
   attentionReason?: string | null;
+  /**
+   * The source row was highlighted in yellow, which in the founder's sheet means
+   * "this hasn't gone out yet". Mutually exclusive with `needsAttention` — the
+   * database enforces `NOT (pending AND needs_attention)`.
+   */
+  pending?: boolean;
 }
 
 export interface ParsedBudget {
@@ -46,6 +53,8 @@ export interface ParsedPeriod {
 export interface RawGrid {
   sheetName: string;
   rows: (string | number | null)[][];
+  /** One flag per row of `rows`, in the same order. See `sheetRowHighlights`. */
+  highlightedRows: boolean[];
 }
 
 const WEEKLY_SECTIONS: Section[] = ["grocery", "weekend", "transport"];
@@ -81,6 +90,28 @@ export function sheetToGrid(worksheet: ExcelJS.Worksheet): (string | number | nu
     rows.push(values);
   });
   return rows;
+}
+
+/**
+ * Which rows of a worksheet are highlighted, aligned one-for-one with the rows
+ * `sheetToGrid` returns — the same `eachRow({ includeEmpty: true })` walk, so
+ * index i here describes grid row i.
+ *
+ * A row counts as highlighted when *any* of its cells carries a yellow fill: a
+ * person marking a row often colours only the amount, and requiring the whole
+ * row would miss that. What counts as yellow is `isYellowFill`, which declines
+ * anything it cannot resolve (see `cell-fill.ts`).
+ */
+export function sheetRowHighlights(worksheet: ExcelJS.Worksheet): boolean[] {
+  const flags: boolean[] = [];
+  worksheet.eachRow({ includeEmpty: true }, (row) => {
+    let highlighted = false;
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      if (!highlighted && isYellowFill(cell.fill)) highlighted = true;
+    });
+    flags.push(highlighted);
+  });
+  return flags;
 }
 
 function norm(v: string | number | null): string {
@@ -208,6 +239,17 @@ export function itemBlockWidth(grid: (string | number | null)[][]): number {
 }
 
 /**
+ * A row can be both unreadable and highlighted. The database forbids holding
+ * both states at once, so the highlight is kept as words on the reason the user
+ * already has to read, rather than dropped silently (B-8).
+ */
+function withHighlightNote(reason: string, highlighted: boolean): string {
+  return highlighted
+    ? `${reason} It was highlighted in your sheet, so it may not have gone out yet.`
+    : reason;
+}
+
+/**
  * Parses a single pay-period worksheet using label-anchored scanning rather than
  * fixed cell coordinates, since section lengths (bill count, transaction count)
  * vary sheet to sheet.
@@ -215,7 +257,9 @@ export function itemBlockWidth(grid: (string | number | null)[][]): number {
 export function parsePeriodSheet(
   sheetName: string,
   grid: (string | number | null)[][],
-  sheetOrder: number
+  sheetOrder: number,
+  /** One flag per grid row, from `sheetRowHighlights`. Absent means "no fills were read". */
+  highlightedRows: boolean[] = []
 ): ParsedPeriod {
   const lineItems: ParsedLineItem[] = [];
   const budgets: ParsedBudget[] = [];
@@ -229,7 +273,12 @@ export function parsePeriodSheet(
   let currentWeek: number | null = null;
   const weekCounters: Record<Section, number> = { bills: 0, extras: 0, grocery: 0, weekend: 0, transport: 0 };
 
-  for (const fullRow of grid) {
+  for (const [rowIndex, fullRow] of grid.entries()) {
+    // A yellow row means "this hasn't gone out yet" in the founder's sheet.
+    // `needsAttention` outranks it below, because the two cannot both be true
+    // (CHECK `transactions_one_state`) and an unplaceable row needs the user
+    // more than an unsettled one does.
+    const highlighted = highlightedRows[rowIndex] === true;
     const row = fullRow.slice(0, width);
     const nonNull = row.filter((c) => c !== null);
     if (nonNull.length === 0) continue;
@@ -300,7 +349,11 @@ export function parsePeriodSheet(
         tag,
         rawImport: rawImportFor(row),
         needsAttention: true,
-        attentionReason: "I couldn't read where this belonged, so I put it in one-offs.",
+        pending: false,
+        attentionReason: withHighlightNote(
+          "I couldn't read where this belonged, so I put it in one-offs.",
+          highlighted
+        ),
       });
       continue;
     }
@@ -315,7 +368,11 @@ export function parsePeriodSheet(
         tag,
         rawImport: rawImportFor(row),
         needsAttention: true,
-        attentionReason: "I couldn't read the name or where this belonged, so I put it in one-offs.",
+        pending: false,
+        attentionReason: withHighlightNote(
+          "I couldn't read the name or where this belonged, so I put it in one-offs.",
+          highlighted
+        ),
       });
       continue;
     }
@@ -330,6 +387,7 @@ export function parsePeriodSheet(
       rawImport: rawImportFor(row),
       needsAttention: false,
       attentionReason: null,
+      pending: highlighted,
     });
   }
 
@@ -359,18 +417,29 @@ export async function parseWorkbook(
   const sheetNames: string[] = [];
   workbook.eachSheet((worksheet) => {
     sheetNames.push(worksheet.name);
-    rawGrids.push({ sheetName: worksheet.name, rows: sheetToGrid(worksheet) });
+    rawGrids.push({
+      sheetName: worksheet.name,
+      rows: sheetToGrid(worksheet),
+      highlightedRows: sheetRowHighlights(worksheet),
+    });
   });
 
   const mapping = detectWorkbookMapping(sheetNames, fileName);
   const gridFor = (name: string) => rawGrids.find((g) => g.sheetName === name)?.rows ?? [];
+  const highlightsFor = (name: string) =>
+    rawGrids.find((g) => g.sheetName === name)?.highlightedRows ?? [];
 
   if (mapping.strategy === "sheet-is-period") {
     const periods: ParsedPeriod[] = [];
     let sheetOrder = 0;
     for (const plan of mapping.sheets) {
       if (plan.role.kind === "ignore") continue;
-      const parsed = parsePeriodSheet(plan.sheetName, gridFor(plan.sheetName), sheetOrder);
+      const parsed = parsePeriodSheet(
+        plan.sheetName,
+        gridFor(plan.sheetName),
+        sheetOrder,
+        highlightsFor(plan.sheetName)
+      );
       sheetOrder += 1;
       if (parsed.lineItems.length > 0) periods.push(parsed);
     }
@@ -385,7 +454,12 @@ export async function parseWorkbook(
 
   for (const plan of mapping.sheets) {
     if (plan.role.kind === "ignore") continue;
-    const parsed = parsePeriodSheet(plan.sheetName, gridFor(plan.sheetName), 0);
+    const parsed = parsePeriodSheet(
+      plan.sheetName,
+      gridFor(plan.sheetName),
+      0,
+      highlightsFor(plan.sheetName)
+    );
 
     // Income can appear on any sheet; the summary sheet is the usual home.
     if (income === null && parsed.income !== null) {

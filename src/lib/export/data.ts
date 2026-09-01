@@ -38,6 +38,8 @@ export async function periodExportData(
       note: transactions.note,
       amount: transactions.amount,
       label: transactions.label,
+      pending: transactions.pending,
+      needsAttention: transactions.needsAttention,
       id: transactions.id,
     })
       .from(transactions)
@@ -67,6 +69,9 @@ export async function periodExportData(
       note: row.note,
       amount: Number(row.amount),
       tag: row.label,
+      // Carried so the workbook can mark the row; see COLORS.unsettled.
+      pending: row.pending,
+      needsAttention: row.needsAttention,
     }];
   });
   const parsedBudgets = budgetRows.flatMap((row): ParsedBudget[] => {

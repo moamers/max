@@ -18,6 +18,17 @@ const COLORS = {
   panel: "FF000000",
   panelInk: "FFFFFFFF",
   accent: "FF0000FF",
+  /**
+   * One colour for both unsettled states — pending and needs-a-look — because
+   * that is what was asked for, and because a sheet with two near-identical
+   * oranges asks the reader to remember which is which.
+   *
+   * Deliberately well clear of the yellow band `src/lib/cell-fill.ts` reads
+   * back (green is only 53% of red here). A row Ravel wrote orange must not
+   * come back in as a yellow highlight, or "I could not place this" would
+   * silently become "this has not gone out yet" on the next import.
+   */
+  unsettled: "FFED7D31",
 };
 
 export interface PeriodWorkbookInput {
@@ -73,6 +84,15 @@ function setItem(sheet: ExcelJS.Worksheet, row: number, item: ParsedLineItem): v
   sheet.getCell(`C${row}`).numFmt = "#,##0.00";
   // D-10: labels are user-authored and cross this boundary verbatim.
   sheet.getCell(`D${row}`).value = item.tag;
+  // A row Ravel is not certain has happened is marked in the sheet the same way
+  // a person would mark it: the whole row, one colour. The workbook is the
+  // founder's escape hatch, so a state he can see in the app has to be visible
+  // in the file too.
+  if (item.pending === true || item.needsAttention === true) {
+    for (const column of ITEM_COLUMNS) {
+      sheet.getCell(`${column}${row}`).fill = solid(COLORS.unsettled);
+    }
+  }
 }
 
 function itemsForWeek(
