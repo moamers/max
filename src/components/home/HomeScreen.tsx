@@ -4,6 +4,7 @@ import { useState } from "react";
 import { IconButton } from "@/components/ui/IconButton";
 import { ChevronDownIcon, HamburgerIcon } from "@/components/ui/icons";
 import { Menu } from "@/components/menu/Menu";
+import { Arrival } from "./Arrival";
 import { MonthSections } from "./MonthSections";
 import { ChangeMonthSheet } from "./ChangeMonthSheet";
 import { HeroCard, type HeroMode } from "./HeroCard";
@@ -37,6 +38,7 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+      <Arrival />
       <div style={{ flex: 1, overflowY: "auto" }}>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 20px 32px", display: "flex", flexDirection: "column", gap: 22 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px" }}>

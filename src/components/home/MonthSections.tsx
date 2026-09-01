@@ -9,6 +9,7 @@ import { formatGBP } from "@/lib/money";
 import { moneyToneColor, NO_WEEKLY_TARGETS_PROMPT } from "./format";
 import type { OneOffs, RecurringBreakdown, TransactionRow } from "@/lib/queries";
 import type { WeekView } from "./types";
+import { motionToken } from "@/lib/motion";
 
 /**
  * The month, one section at a time.
@@ -85,7 +86,7 @@ export function MonthSections({ periodId, oneOffs, recurring, weeks, weeksSpent,
       return;
     }
     const styles = getComputedStyle(document.documentElement);
-    const ms = (name: string) => parseFloat(styles.getPropertyValue(name)) || 0;
+    const ms = (name: string) => motionToken(name);
     const ease = styles.getPropertyValue("--ease-enter").trim() || "ease-out";
     const move = ms("--motion-standard");
     const stagger = ms("--motion-stagger");
