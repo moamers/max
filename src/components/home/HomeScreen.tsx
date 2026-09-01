@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
 import { ChevronDownIcon, HamburgerIcon } from "@/components/ui/icons";
 import { Menu } from "@/components/menu/Menu";
+import { MonthSections } from "./MonthSections";
 import { ChangeMonthSheet } from "./ChangeMonthSheet";
-import { formatGBP } from "./format";
 import { HeroCard, type HeroMode } from "./HeroCard";
 import { Counterbalance } from "@/components/brand/Counterbalance";
 import type { HomeData } from "./types";
 import type { ModeChoice, ThemeId } from "@/lib/brand";
-import { WeeksCard } from "./WeeksCard";
 import { YearStrip } from "./YearStrip";
 import { RolloverPrompt } from "./RolloverPrompt";
 
@@ -35,7 +32,6 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
   const [heroMode, setHeroMode] = useState<HeroMode>("forecast");
   // Collapsed by default: the home screen answers "where do I stand" first,
   // and a five-week list pushes everything else below the fold.
-  const [weeksOpen, setWeeksOpen] = useState(false);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -67,25 +63,14 @@ export function HomeScreen({ data, brand }: { data: HomeData; brand: { theme: Th
 
           {data.rollover && <RolloverPrompt proposal={data.rollover} />}
 
-          <WeeksCard weeks={data.weeks} periodId={data.selectedPeriodId} summary={data.weeksSummary} open={weeksOpen} onToggle={() => setWeeksOpen((v) => !v)} />
-
-          <Link href={`/recurring?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
-            <Card interactive>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>Recurring</span>
-                <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.recurringTotal)}</span>
-              </div>
-            </Card>
-          </Link>
-
-          <Link href={`/one-offs?period=${data.selectedPeriodId}`} style={{ color: "inherit", textDecoration: "none" }}>
-            <Card interactive>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-                <span style={{ fontSize: "var(--type-body)", fontWeight: 700, letterSpacing: "-0.02em" }}>One-offs</span>
-                <span style={{ fontSize: "var(--type-title)", fontWeight: 700, letterSpacing: "-0.025em" }}>{formatGBP(data.oneOffsTotal)}</span>
-              </div>
-            </Card>
-          </Link>
+          <MonthSections
+            periodId={data.selectedPeriodId}
+            oneOffs={data.oneOffs}
+            recurring={data.recurring}
+            weeks={data.weeks}
+            weeksSpent={data.weeksSummary.spent}
+            weeksBudget={data.weeksSummary.budget}
+          />
 
           <YearStrip year={data.year} />
         </div>

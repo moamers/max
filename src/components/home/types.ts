@@ -1,3 +1,4 @@
+import type { OneOffs, RecurringBreakdown } from "@/lib/queries";
 /**
  * View models the server (src/app/page.tsx) builds from the query layer and
  * hands to the client components below. Kept separate from the query
@@ -76,8 +77,13 @@ export interface HomeData {
   hero: HeroView;
   weeks: WeekView[];
   weeksSummary: WeeksSummaryView;
-  recurringTotal: number;
-  oneOffsTotal: number;
+  /**
+    The rows, not just the totals. Home already ran both queries — it was
+    reading `.total` off each and throwing the items away, then linking to
+    another screen to show them.
+  */
+  recurring: RecurringBreakdown;
+  oneOffs: OneOffs;
   year: YearView;
   yearsByValue: Record<number, YearView>;
   yearBounds: { min: number; max: number };

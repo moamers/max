@@ -40,8 +40,9 @@ const SOURCE = fs.readFileSync(STORE, "utf8");
 function sqlTemplates(source: string): string[] {
   const out: string[] = [];
   const re = /\bsql(?:<[^>]*>)?`/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(source)) !== null) {
+  // The match itself is not needed — only that one occurred, so the scan can
+  // resume from re.lastIndex and walk the template body by hand.
+  while (re.exec(source) !== null) {
     let depth = 0;
     let i = re.lastIndex;
     for (; i < source.length; i++) {

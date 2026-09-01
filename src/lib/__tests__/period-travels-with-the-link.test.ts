@@ -56,8 +56,23 @@ describe("the period travels with the link", () => {
 
   it("finds the navigation it is meant to be checking", () => {
     // A scan that silently matches nothing is worse than no scan at all.
+    //
+    // This used to assert a global count, which is a ratchet: it broke when
+    // home stopped linking out to /recurring and /one-offs and showed them
+    // inline instead — a change that removed navigation without removing any
+    // guarantee. Naming the files says what the scan must actually reach, and
+    // does not have to be re-tuned every time a link moves.
+    const mustBeCovered = ["components/home/MonthSections.tsx", "app/week/[weekNumber]/WeekView.tsx"];
+    for (const suffix of mustBeCovered) {
+      const file = files.find((f) => f.endsWith(suffix));
+      expect(file, `${suffix} is not being scanned`).toBeDefined();
+      expect(
+        navigationLines(fs.readFileSync(file!, "utf8")).length,
+        `no period-scoped navigation found in ${suffix}`
+      ).toBeGreaterThan(0);
+    }
     const total = files.reduce((n, f) => n + navigationLines(fs.readFileSync(f, "utf8")).length, 0);
-    expect(total).toBeGreaterThanOrEqual(6);
+    expect(total).toBeGreaterThanOrEqual(4);
   });
 
   it.each(files.map((f) => [path.relative(ROOT, f), f] as const))(

@@ -14,7 +14,7 @@ import { isToneCompliant } from "@/lib/tone";
  * destination, and that the link is not nested inside the toggle), all of
  * which are visible in the source.
  */
-const WEEKS_CARD = readFileSync(join(process.cwd(), "src/components/home/WeeksCard.tsx"), "utf8");
+const MONTH_SECTIONS = readFileSync(join(process.cwd(), "src/components/home/MonthSections.tsx"), "utf8");
 
 describe("the no-weekly-targets prompt", () => {
   it("passes the tone gate", () => {
@@ -29,29 +29,35 @@ describe("the no-weekly-targets prompt", () => {
   });
 
   it("shows only when the month has no weekly budget at all", () => {
-    expect(WEEKS_CARD).toContain("summary.budget === null && (");
+    expect(MONTH_SECTIONS).toContain("budget === null && (");
   });
 
   it("renders the shared copy rather than a second copy of the sentence", () => {
-    expect(WEEKS_CARD).toContain("{NO_WEEKLY_TARGETS_PROMPT}");
+    expect(MONTH_SECTIONS).toContain("{NO_WEEKLY_TARGETS_PROMPT}");
     // The literal must not be re-typed into the JSX, or the tone gate above
     // stops testing what the user actually reads.
-    expect(WEEKS_CARD).not.toContain(NO_WEEKLY_TARGETS_PROMPT);
+    expect(MONTH_SECTIONS).not.toContain(NO_WEEKLY_TARGETS_PROMPT);
   });
 
   it("links to /goals", () => {
-    const prompt = WEEKS_CARD.slice(WEEKS_CARD.indexOf("summary.budget === null && ("));
+    const prompt = MONTH_SECTIONS.slice(MONTH_SECTIONS.indexOf("budget === null && ("));
     expect(prompt.slice(0, 400)).toContain('href="/goals"');
   });
 
-  it("keeps the link out of the toggle header", () => {
-    // A link inside the role="button" header fires the accordion and the
-    // navigation on one tap. The prompt must sit after the header closes.
-    const header = WEEKS_CARD.indexOf('role="button"');
-    const toggleEnd = WEEKS_CARD.indexOf("</div>\n\n      {", header);
-    const promptAt = WEEKS_CARD.indexOf("summary.budget === null && (");
-    expect(header).toBeGreaterThan(-1);
-    expect(toggleEnd).toBeGreaterThan(-1);
-    expect(promptAt).toBeGreaterThan(toggleEnd);
+  it("keeps the prompt out of any other tappable thing", () => {
+    // Originally this guarded against the link sitting inside the weeks
+    // accordion's role="button" header, where one tap fired both the toggle
+    // and the navigation. The accordion is gone, but the rule outlives it: a
+    // link nested in another interactive element is an accessibility error
+    // whatever the outer element happens to be. So: the prompt's link must
+    // open and close before any week link opens, making them siblings.
+    const promptOpen = MONTH_SECTIONS.indexOf('href="/goals"');
+    const promptClose = MONTH_SECTIONS.indexOf("</Link>", promptOpen);
+    const weekLink = MONTH_SECTIONS.indexOf("`/week/${week.weekNumber}?period=${periodId}`");
+    expect(promptOpen).toBeGreaterThan(-1);
+    expect(promptClose).toBeGreaterThan(-1);
+    expect(weekLink).toBeGreaterThan(-1);
+    expect(promptClose).toBeLessThan(weekLink);
+    expect(MONTH_SECTIONS).not.toContain('role="button"');
   });
 });
