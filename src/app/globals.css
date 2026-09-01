@@ -154,6 +154,22 @@ a {
   }
 }
 
+/*
+  A placeholder is not a value.
+
+  Every money field used to render an unset amount as a literal `0` you had to
+  select and delete before you could type — the founder hit it every time he
+  recorded anything. The zero is now the placeholder: same glyph, same position,
+  same alignment, in the disabled ink so it reads as an example rather than a
+  figure someone entered. `::placeholder` cannot be expressed inline, so it
+  lives here with the tokens it uses. Firefox dims placeholders by default,
+  hence the explicit opacity.
+*/
+.max-money-input::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+
 .max-caret {
   display: inline-flex;
   transition: transform 0.2s ease;

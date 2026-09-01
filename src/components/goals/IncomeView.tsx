@@ -25,7 +25,11 @@ export interface IncomeViewProps {
 
 export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
   const router = useRouter();
-  const [amounts, setAmounts] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, month.amount ?? 0])));
+  // `month.amount` is null when no tier has a figure for that month. It stays
+  // null rather than becoming a zero the user has to delete before typing.
+  const [amounts, setAmounts] = useState<Record<number, number | null>>(() =>
+    Object.fromEntries(months.map((month) => [month.monthIndex, month.amount]))
+  );
   const [sources, setSources] = useState(() => Object.fromEntries(months.map((month) => [month.monthIndex, { source: month.source, setByUser: month.setByUser }])));
   const [dirty, setDirty] = useState<Set<number>>(() => new Set());
   const [saving, setSaving] = useState(false);
@@ -33,7 +37,7 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
   const currentMonth = new Date().getMonth();
   const isCurrentYear = year === new Date().getFullYear();
 
-  function changeMonth(month: IncomeMonthView, amount: number) {
+  function changeMonth(month: IncomeMonthView, amount: number | null) {
     if (month.periodId === null) return;
     setAmounts((current) => ({ ...current, [month.monthIndex]: amount }));
     // A value typed here is a specific period override, regardless of its previous tier.
@@ -49,7 +53,11 @@ export function IncomeView({ year, defaultIncome, months }: IncomeViewProps) {
       for (const monthIndex of dirty) {
         const month = months.find((m) => m.monthIndex === monthIndex);
         if (!month || month.periodId === null) continue;
-        const result = await setIncomeForPeriodAction(month.periodId, amounts[monthIndex]);
+        const amount = amounts[monthIndex];
+        // An emptied row is not a claim that nothing came in that month, and
+        // there is no way to withdraw an override — so it is left as it was.
+        if (amount === null) continue;
+        const result = await setIncomeForPeriodAction(month.periodId, amount);
         if (!result.ok) throw new Error(result.message);
       }
       router.back();

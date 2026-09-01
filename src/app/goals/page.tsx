@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 export default async function GoalsPage() {
   const user = await requireUser();
   const [storedGoals, defaultIncome] = await Promise.all([listGoals(user.id), getDefaultMonthlyIncome(user.id)]);
-  const initialGoals = Object.fromEntries(WEEKLY_CATEGORIES.map((category) => [category, 0])) as Record<WeeklyCategory, number>;
+  // Null, not zero: a category with no goal row is one the user has not set a
+  // target for, which is not the same claim as a target of nothing.
+  const initialGoals = Object.fromEntries(
+    WEEKLY_CATEGORIES.map((category) => [category, null])
+  ) as Record<WeeklyCategory, number | null>;
   for (const goal of storedGoals) initialGoals[goal.category] = goal.weeklyAmount;
 
   return <GoalsView initialGoals={initialGoals} initialDefaultIncome={defaultIncome} />;

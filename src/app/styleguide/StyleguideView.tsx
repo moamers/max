@@ -60,7 +60,7 @@ export function StyleguideView({ brand }: { brand: { theme: ThemeId; mode: ModeC
   const [txnState, setTxnState] = useState<"final" | "pending">("final");
   const [weeksOpen, setWeeksOpen] = useState(true);
   const [catOpen, setCatOpen] = useState<string | null>("everyday");
-  const [amount, setAmount] = useState(190);
+  const [amount, setAmount] = useState<number | null>(190);
   const [scrimVisible, setScrimVisible] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);

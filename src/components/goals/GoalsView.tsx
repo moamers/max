@@ -9,27 +9,30 @@ import { setDefaultIncomeAction, setGoalAction } from "@/app/goals/actions";
 import { formatGBP, weeklyGoalTotal } from "./logic";
 
 export interface GoalsViewProps {
-  initialGoals: Record<WeeklyCategory, number>;
+  /** `null` for a category with no goal set — see NumericField on why that is not zero. */
+  initialGoals: Record<WeeklyCategory, number | null>;
   initialDefaultIncome: number | null;
 }
 
 export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps) {
   const router = useRouter();
   const [goals, setGoals] = useState(initialGoals);
-  const [income, setIncome] = useState(initialDefaultIncome ?? 0);
+  const [income, setIncome] = useState(initialDefaultIncome);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const total = weeklyGoalTotal(WEEKLY_CATEGORIES.map((category) => goals[category]));
+  // A target nobody has set contributes nothing to the weekly total. That is
+  // arithmetic on what is known, not a claim that the target is zero.
+  const total = weeklyGoalTotal(WEEKLY_CATEGORIES.map((category) => goals[category] ?? 0));
 
   // Typing changes nothing but what is on screen. The screen has a Done
   // button, so that is where the writing happens — a field that saves itself
   // while you are still deciding is both surprising and, when every keystroke
   // reached the database, the thing that took this page down.
-  function changeGoal(category: WeeklyCategory, amount: number) {
+  function changeGoal(category: WeeklyCategory, amount: number | null) {
     setGoals((current) => ({ ...current, [category]: amount }));
   }
 
-  function changeIncome(amount: number) {
+  function changeIncome(amount: number | null) {
     setIncome(amount);
   }
 
@@ -40,12 +43,15 @@ export function GoalsView({ initialGoals, initialDefaultIncome }: GoalsViewProps
       // Sequential on purpose: four parallel writes from a phone is the burst
       // this screen is recovering from.
       for (const category of WEEKLY_CATEGORIES) {
-        if (goals[category] !== initialGoals[category]) {
-          const result = await setGoalAction(category, goals[category]);
-          if (!result.ok) throw new Error(result.message);
-        }
+        const amount = goals[category];
+        // An emptied field is silence, not a figure — there is no way to
+        // withdraw a target here, so nothing is written and what is stored
+        // stands. Typing 0 is how you say zero, and that does get written.
+        if (amount === null || amount === initialGoals[category]) continue;
+        const result = await setGoalAction(category, amount);
+        if (!result.ok) throw new Error(result.message);
       }
-      if (income !== (initialDefaultIncome ?? 0)) {
+      if (income !== null && income !== initialDefaultIncome) {
         const result = await setDefaultIncomeAction(income);
         if (!result.ok) throw new Error(result.message);
       }

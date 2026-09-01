@@ -50,7 +50,11 @@ export function AmountEditor({
   // slider and a parent update can't race a stale mirror, and there is no
   // synchronous setState during render to cascade.
   const [draft, setDraft] = useState<string | null>(null);
-  const text = draft ?? formatAmount(amount);
+  // An unset amount shows the `0` as a placeholder rather than as text you have
+  // to delete first. Nothing is lost by treating 0 as empty here: the add form
+  // will not save an amount of zero (`validateAddDraft`), so a zero in this
+  // field is always an amount nobody has typed yet.
+  const text = draft ?? (amount === 0 ? "" : formatAmount(amount));
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focused through a ref rather than the `autoFocus` attribute so the scroll
@@ -82,8 +86,10 @@ export function AmountEditor({
           </span>
           <input
             ref={inputRef}
+            className="max-money-input"
             inputMode="decimal"
             value={text}
+            placeholder="0"
             aria-label="Amount"
             onFocus={() => setDraft(formatAmount(amount))}
             onChange={(e) => setDraft(e.target.value.replace(/[^0-9.]/g, ""))}
