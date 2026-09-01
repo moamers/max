@@ -1,0 +1,1455 @@
+<!doctype html>
+<html lang="en" data-theme="quiet-voltage" data-mode="light" data-rate="1">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#F5F3FC">
+<title>Ravel — motion prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Non-blocking. A stylesheet in the critical path delays first paint and
+     the first tap; the fallback stacks below carry the layout until it lands. -->
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Libre+Franklin:wght@400;500;600;700&display=swap">
+
+<style>
+/* ═════════════════════════════════════════════════════════════════════
+   RAVEL · MOTION PROTOTYPE
+   Vanilla + Web Animations API. No dependencies.
+
+   Three signature moments
+     · THE TAPE      — any figure opens its evidence beneath it
+     · THE LANDING   — the add commits and travels to its row
+     · THE ARRIVAL   — the Counterbalance assembles, and the app with it
+   The headline change
+     · THE FOLD      — scope change with shared-element continuity.
+                       Replaces peer cross-fade. This is the thing that
+                       used to cut and rebuild.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* ── theme tokens (from the Ravel brand kit; verbatim) ─────────────── */
+:root[data-theme="quiet-voltage"][data-mode="light"]{
+  --color-canvas:#F5F3FC; --color-surface:#FFFFFF; --color-text:#25213B;
+  --color-primary:#6757E5; --color-health:#0DAE83; --color-money:#E99900; --color-spark:#E8456C;
+}
+:root[data-theme="quiet-voltage"][data-mode="dark"]{
+  --color-canvas:#121426; --color-surface:#20233D; --color-text:#FBFAFF;
+  --color-primary:#8F7CFF; --color-health:#45E0B7; --color-money:#FFC247; --color-spark:#FF5C7C;
+}
+:root[data-theme="butter-static"][data-mode="light"]{
+  --color-canvas:#FFF3A6; --color-surface:#FFF9D9; --color-text:#17151C;
+  --color-primary:#A99BF3; --color-health:#B9F35C; --color-spark:#F2A3B8; --color-outline:#17151C;
+}
+:root[data-theme="butter-static"][data-mode="dark"]{
+  --color-canvas:#17131F; --color-surface:#252032; --color-text:#FFF7B7;
+  --color-primary:#B8A9FF; --color-health:#C2F970; --color-spark:#FF9DB8; --color-outline:#F7EFC5;
+}
+
+/* Everything below derives from those seven tokens. No literal hexes in
+   the app itself, so the theme switch another agent is wiring will land. */
+:root{
+  --ink:var(--color-text);
+  --ink2:color-mix(in oklab, var(--color-text) 66%, var(--color-canvas));
+  --ink3:color-mix(in oklab, var(--color-text) 46%, var(--color-canvas));
+  --rule:color-mix(in oklab, var(--color-text) 13%, var(--color-surface));
+  --track:color-mix(in oklab, var(--color-text) 13%, var(--color-canvas));
+  --sunk:color-mix(in oklab, var(--color-text) 5%, var(--color-canvas));
+  --primary-soft:color-mix(in oklab, var(--color-primary) 13%, var(--color-surface));
+  --spark-soft:color-mix(in oklab, var(--color-spark) 17%, var(--color-surface));
+  --health-soft:color-mix(in oklab, var(--color-health) 17%, var(--color-surface));
+  /* butter-static supplies an outline token meant to carry contrast on its
+     pale accents; quiet-voltage does not, and falls back to surface. */
+  --on-primary:var(--color-outline, var(--color-surface));
+  --scrim:color-mix(in oklab, var(--color-text) 46%, transparent);
+  --shadow-1:0 1px 2px color-mix(in oklab, var(--color-text) 8%, transparent);
+  --shadow-2:0 2px 6px color-mix(in oklab, var(--color-text) 7%, transparent),
+             0 18px 42px -18px color-mix(in oklab, var(--color-text) 34%, transparent);
+
+  /* ── duration scale · five steps, nothing between ───────────────── */
+  --d-tap:90ms;      /* press / release          */
+  --d-tick:140ms;    /* in-place state change    */
+  --d-move:220ms;    /* moves within a screen    */
+  --d-travel:320ms;  /* crosses a boundary       */
+  --d-settle:480ms;  /* a bar fill resolving     */
+  --stride:30ms;     /* stagger stride, max 4    */
+
+  /* ── easing set ─────────────────────────────────────────────────── */
+  --e-standard:cubic-bezier(.2,0,0,1);
+  --e-enter:cubic-bezier(.05,.7,.1,1);
+  --e-exit:cubic-bezier(.3,0,.8,.15);
+  --e-settle:cubic-bezier(.34,1.2,.64,1); /* geometry only, never a fill */
+}
+/* 0.25× — the same scale, slowed. One place, so nothing drifts. */
+:root[data-rate="4"]{
+  --d-tap:360ms; --d-tick:560ms; --d-move:880ms; --d-travel:1280ms; --d-settle:1920ms; --stride:120ms;
+}
+/* reduced motion: every duration clamps to tap, and JS switches to the
+   stated degradation for each moment. Declared after rate so it inherits it. */
+:root[data-rm="1"]{
+  --d-tick:var(--d-tap); --d-move:var(--d-tap); --d-travel:var(--d-tap);
+  --d-settle:var(--d-tap); --stride:0ms;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; background:var(--sunk); color:var(--ink);
+  font:400 16px/1.5 "Libre Franklin",system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  display:flex; flex-direction:column; align-items:center; overflow:hidden;
+}
+
+/* ── the judging strip ─────────────────────────────────────────────── */
+#ctl{
+  flex:0 0 auto; width:100%; display:flex; gap:5px; justify-content:center; align-items:center;
+  padding:6px 7px; background:var(--color-surface);
+  border-bottom:1px solid var(--rule); flex-wrap:wrap;
+}
+#ctl button{
+  appearance:none; border:1px solid var(--rule); background:transparent; color:var(--ink2);
+  font:600 10px/1 "Libre Franklin",sans-serif; letter-spacing:.01em; white-space:nowrap;
+  padding:6px 9px; border-radius:99px; cursor:pointer;
+  transition:background var(--d-tick) var(--e-standard), color var(--d-tick) var(--e-standard),
+             border-color var(--d-tick) var(--e-standard);
+}
+#ctl button[aria-pressed="true"]{background:var(--color-primary);color:var(--on-primary);border-color:transparent}
+#ctl button:active{transform:scale(.97)}
+#ctl .sep{width:1px;height:18px;background:var(--rule);margin:0 2px}
+
+/* ── the phone ─────────────────────────────────────────────────────── */
+#dev{
+  position:relative; flex:1 1 auto; width:min(392px,100vw);
+  max-height:100%; overflow:hidden; background:var(--color-canvas);
+  display:flex; flex-direction:column; isolation:isolate;
+}
+@media (min-width:520px) and (min-height:640px){
+  body{padding:0 0 14px}
+  #dev{
+    flex:0 1 812px; margin-top:14px; border-radius:38px;
+    border:1px solid var(--rule); box-shadow:var(--shadow-2);
+  }
+}
+
+/* ── app chrome ────────────────────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100%;min-height:0}
+.appHead{
+  flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+  padding:18px 18px 12px;
+}
+.brand{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.brand .word{
+  font:600 18px/1 "Libre Franklin",sans-serif; letter-spacing:.005em; color:var(--ink);
+}
+.appHead .when{font:500 10.5px/1 "Libre Franklin",sans-serif;letter-spacing:.09em;color:var(--ink3);text-transform:uppercase}
+
+.scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 16px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+.stage{position:relative}
+.view{display:block}
+.view.leaving{position:absolute;top:0;left:0;right:0;pointer-events:none}
+
+/* ── hero ──────────────────────────────────────────────────────────── */
+.hero{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-bottom:2px}
+.kick{font:600 11.5px/1.3 "Libre Franklin",sans-serif;letter-spacing:.015em;color:var(--ink3)}
+.figline{
+  margin:2px 0 0; font-family:Newsreader,Georgia,serif; font-weight:300;
+  font-size:47px; line-height:1.03; letter-spacing:-.022em;
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:0;
+}
+.figline em{font-style:normal;font-family:"Libre Franklin",sans-serif;font-size:15px;font-weight:600;color:var(--ink2);letter-spacing:0;margin-left:8px}
+.figline .qual{font-size:22px;font-weight:400;color:var(--ink2);margin-right:9px}
+.sub{font-size:12.5px;color:var(--ink2);margin-top:3px}
+.say{font-size:13.5px;line-height:1.45;color:var(--ink);margin-top:10px;max-width:27ch}
+
+/* every figure that can be opened */
+.num{
+  position:relative; display:inline-block; font-variant-numeric:tabular-nums;
+  cursor:pointer; touch-action:manipulation;
+}
+.num .ul{
+  position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px;
+  background:var(--color-primary); transform:scaleX(0); transform-origin:left center;
+  opacity:1; pointer-events:none;
+}
+:root[data-rm="1"] .num .ul{transform:scaleX(1);opacity:0}
+.num.open .ul{transform:scaleX(1)}
+:root[data-rm="1"] .num.open .ul{opacity:1}
+
+/* ── the tape ──────────────────────────────────────────────────────── */
+.tape{overflow:hidden;height:0;background:transparent}
+.tapeIn{
+  margin:12px 0 2px; background:var(--color-surface); border:1px solid var(--rule);
+  border-radius:14px; padding:4px 13px 6px;
+}
+.tr{
+  display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+  padding:8px 0; font-size:12.5px; color:var(--ink2);
+}
+.tr + .tr{border-top:1px solid var(--rule)}
+.tr .v{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:500;white-space:nowrap}
+.tr.tot{border-top:1px solid var(--rule)}
+.tr.tot span{font-weight:600;color:var(--ink)}
+.tr.faint,.tr.faint .v{color:var(--ink3);font-weight:400}
+.tr .note{font-size:11.5px;color:var(--ink3)}
+
+/* ── category rows ─────────────────────────────────────────────────── */
+.catlist{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.cat{
+  background:var(--color-surface); border:1px solid var(--rule); border-radius:16px;
+  padding:13px 14px 14px; box-shadow:var(--shadow-1);
+}
+.cat .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cat .nm{font-size:14.5px;font-weight:600;letter-spacing:-.005em}
+.cat .amt{font-family:Newsreader,Georgia,serif;font-weight:400;font-size:17px;letter-spacing:-.01em}
+.cat .of{font-size:11px;color:var(--ink3);font-weight:400;margin-left:6px}
+.trk{height:6px;border-radius:99px;background:var(--track);margin-top:11px;overflow:hidden}
+.fl{
+  height:100%; width:100%; background:var(--ink);
+  transform-origin:left center; transform:scaleX(0); will-change:transform;
+  transition:background var(--d-tick) var(--e-standard);
+}
+.fl.over{background:var(--color-spark)}
+.cat .foot{margin-top:8px;font-size:11.5px;color:var(--ink3);display:flex;justify-content:space-between;gap:8px}
+.cat .foot .past{color:var(--color-spark);font-weight:600}
+
+.flagrow{display:flex;gap:7px;margin-top:18px;flex-wrap:wrap;padding-bottom:6px}
+.flag{
+  padding:6px 11px;border-radius:99px;font-size:11px;font-weight:600;
+  background:var(--spark-soft);
+  /* the signal hue, pushed toward ink so it stays legible on a pale theme */
+  color:color-mix(in oklab, var(--color-spark) 72%, var(--color-text));
+}
+.flag.calm{background:var(--health-soft);color:color-mix(in oklab, var(--color-health) 72%, var(--color-text))}
+
+/* ── month ─────────────────────────────────────────────────────────── */
+.mrow{display:flex;gap:10px;overflow-x:auto;margin:20px -16px 0;padding:2px 16px 8px;scrollbar-width:none}
+.mrow::-webkit-scrollbar{display:none}
+.mcard{
+  flex:0 0 168px; background:var(--color-surface); border:1px solid var(--rule);
+  border-radius:16px; padding:14px 13px 15px; display:flex; flex-direction:column; gap:4px;
+  box-shadow:var(--shadow-1);
+}
+.mcard .lbl{font-size:11.5px;font-weight:600;color:var(--ink3)}
+.mcard .big{font-family:Newsreader,Georgia,serif;font-weight:300;font-size:27px;letter-spacing:-.02em;line-height:1.1}
+.mcard .sm{font-size:11px;color:var(--ink2)}
+.mcard .go{margin-top:9px;font-size:11.5px;font-weight:600;color:var(--color-primary)}
+
+.rows{
+  display:flex;flex-direction:column;margin-top:20px;background:var(--color-surface);
+  border:1px solid var(--rule);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-1);
+}
+.wk{padding:12px 14px}
+.wk + .wk{border-top:1px solid var(--rule)}
+.wk .line{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.wk .l{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.wk .r{font-family:Newsreader,Georgia,serif;font-weight:400;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.wk .r .tail{font-family:"Libre Franklin",sans-serif;font-size:11px;font-weight:500;color:var(--ink2);margin-left:4px}
+.wk.now .l{color:var(--ink);font-weight:600}
+.drill{
+  appearance:none;border:0;background:transparent;padding:0;margin:0;cursor:pointer;
+  color:var(--color-primary);font:600 11.5px/1 "Libre Franklin",sans-serif;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.drill .chev{font-size:13px;line-height:1}
+
+/* ── nav pill ──────────────────────────────────────────────────────── */
+.pillWrap{flex:0 0 auto;padding:8px 0 max(14px,env(safe-area-inset-bottom));display:flex;justify-content:center;position:relative;z-index:20}
+.pill{
+  position:relative; display:flex; padding:5px; border-radius:99px;
+  background:color-mix(in oklab, var(--color-surface) 82%, transparent);
+  border:1px solid var(--rule); box-shadow:var(--shadow-1);
+  backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);
+}
+.ind{
+  position:absolute; left:5px; top:5px; width:88px; bottom:5px; border-radius:99px;
+  background:var(--color-primary); will-change:transform; z-index:0;
+}
+.pill button{
+  position:relative; z-index:1; appearance:none; border:0; background:transparent;
+  width:88px; padding:10px 0; border-radius:99px; cursor:pointer;
+  font:600 12px/1 "Libre Franklin",sans-serif; color:var(--ink3);
+  transition:color var(--d-tick) var(--e-standard);
+}
+.pill button[aria-current="true"]{color:var(--on-primary)}
+.pill button:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}
+
+/* ── FAB ───────────────────────────────────────────────────────────── */
+.fab{
+  position:absolute; right:18px; bottom:78px; z-index:25;
+  width:52px; height:52px; border-radius:99px; border:0; cursor:pointer;
+  background:var(--color-primary); color:var(--on-primary);
+  box-shadow:var(--shadow-2); display:grid; place-items:center;
+  font-size:26px; line-height:1; font-weight:400; padding-bottom:3px;
+}
+
+/* ── sheet ─────────────────────────────────────────────────────────── */
+#scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;z-index:40;pointer-events:none}
+#scrim.on{pointer-events:auto}
+#sheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:45;
+  background:var(--color-surface); border-radius:24px 24px 0 0;
+  box-shadow:var(--shadow-2); padding:8px 18px max(18px,env(safe-area-inset-bottom));
+  transform:translateY(101%); will-change:transform; touch-action:none;
+}
+#sheet[hidden]{display:none}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--rule);margin:4px auto 12px}
+.sheetHead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.sheetHead h2{margin:0;font:600 15px/1.2 "Libre Franklin",sans-serif}
+.sheetHead .x{appearance:none;border:0;background:transparent;color:var(--ink3);font-size:13px;font-weight:600;cursor:pointer}
+.amount{
+  font-family:Newsreader,Georgia,serif;font-weight:300;font-size:42px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums; padding:6px 0 2px; color:var(--ink); min-height:52px;
+}
+.chips{display:flex;gap:7px;margin:8px 0 12px;flex-wrap:wrap}
+.chip{
+  appearance:none;border:1px solid var(--rule);background:transparent;color:var(--ink2);
+  font:600 12px/1 "Libre Franklin",sans-serif;padding:9px 13px;border-radius:99px;cursor:pointer;
+  transition:background var(--d-tick) var(--e-standard),color var(--d-tick) var(--e-standard),border-color var(--d-tick) var(--e-standard);
+}
+.chip[aria-pressed="true"]{background:var(--color-primary);color:var(--on-primary);border-color:transparent}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pad button{
+  appearance:none;border:0;background:var(--sunk);color:var(--ink);
+  font:500 19px/1 "Libre Franklin",sans-serif;padding:13px 0;border-radius:12px;cursor:pointer;
+  font-variant-numeric:tabular-nums;
+}
+.commit{
+  width:100%;margin-top:10px;appearance:none;border:0;border-radius:14px;cursor:pointer;
+  background:var(--color-primary);color:var(--on-primary);
+  font:600 14px/1 "Libre Franklin",sans-serif;padding:15px 0;
+}
+.commit[disabled]{opacity:.4;cursor:default}
+
+/* pressed states — scale under a finger, colour only under reduced motion */
+.press{transition:transform var(--d-tap) var(--e-standard)}
+.press:active{transform:scale(.975)}
+.cat.press:active{transform:scale(.99)}
+:root[data-rm="1"] .press:active{transform:none;opacity:.7}
+
+/* ── the flight layer ──────────────────────────────────────────────── */
+#fly{position:absolute;inset:0;z-index:70;pointer-events:none;overflow:hidden}
+.gwrap{position:absolute;will-change:transform}
+.gy{will-change:transform}
+.ghost{position:absolute;left:0;white-space:nowrap;will-change:transform,opacity;transform-origin:left center}
+.landchip{
+  position:absolute;left:0;top:0;transform-origin:center;white-space:nowrap;
+  background:var(--color-primary);color:var(--on-primary);
+  font:600 14px/1 "Libre Franklin",sans-serif;font-variant-numeric:tabular-nums;
+  padding:8px 12px;border-radius:99px;box-shadow:var(--shadow-2);
+}
+
+/* ── the mark ──────────────────────────────────────────────────────── */
+.mark{display:block;overflow:visible}
+.mark .rot{transform-box:view-box;transform-origin:50% 50%}
+.mark .ha,.mark .hb{transform-box:view-box;transform-origin:50% 50%}
+.markBig{position:absolute;will-change:transform;transform-origin:center}
+
+@media (prefers-reduced-motion:reduce){
+  :root:not([data-rm="0"]){
+    --d-tick:var(--d-tap);--d-move:var(--d-tap);--d-travel:var(--d-tap);
+    --d-settle:var(--d-tap);--stride:0ms;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="ctl">
+  <button id="bSlow"  aria-pressed="false">0.25&times;</button>
+  <button id="bRm"    aria-pressed="false">reduce motion</button>
+  <span class="sep"></span>
+  <button id="bMode"  aria-pressed="false">dark</button>
+  <button id="bTheme" aria-pressed="false">butter</button>
+  <span class="sep"></span>
+  <button id="bOpen">replay</button>
+</div>
+
+<div id="dev">
+  <div id="app">
+    <header class="appHead">
+      <span class="brand" id="brand" role="button" tabindex="0" aria-label="Ravel — replay the arrival">
+        <span id="headMark"></span><span class="word">Ravel</span>
+      </span>
+      <span class="when">Thu 27 Aug</span>
+    </header>
+
+    <main class="scroll" id="scroll">
+      <div class="stage" id="stage"></div>
+    </main>
+
+    <div class="pillWrap">
+      <nav class="pill" id="pill" aria-label="Scope">
+        <span class="ind" id="ind"></span>
+        <button data-i="0" aria-current="true">Week</button>
+        <button data-i="1">Month</button>
+        <button data-i="2">Year</button>
+      </nav>
+    </div>
+  </div>
+
+  <button class="fab press" id="fab" aria-label="Add something">+</button>
+
+  <div id="scrim"></div>
+
+  <div id="sheet" hidden aria-label="Add something">
+    <div class="grab"></div>
+    <div class="sheetHead">
+      <h2>Add something</h2>
+      <button class="x" id="sheetX">Close</button>
+    </div>
+    <div class="amount" id="amt">&pound;0.00</div>
+    <div class="chips" id="catChips"></div>
+    <div class="pad" id="pad"></div>
+    <button class="commit press" id="commit">Add it</button>
+  </div>
+
+  <div id="fly"></div>
+</div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════
+   0 · plumbing
+   ═══════════════════════════════════════════════════════════════════ */
+var root  = document.documentElement;
+var dev   = document.getElementById("dev");
+var fly   = document.getElementById("fly");
+var stage = document.getElementById("stage");
+var scroll= document.getElementById("scroll");
+
+var E = {
+  standard:"cubic-bezier(.2,0,0,1)",
+  enter:"cubic-bezier(.05,.7,.1,1)",
+  exit:"cubic-bezier(.3,0,.8,.15)",
+  settle:"cubic-bezier(.34,1.2,.64,1)"
+};
+/* read the live token, so 0.25x and reduced-motion apply everywhere at once */
+function D(name){
+  var v = getComputedStyle(root).getPropertyValue("--d-" + name).trim();
+  return parseFloat(v) || 0;
+}
+function stride(){ return parseFloat(getComputedStyle(root).getPropertyValue("--stride")) || 0; }
+function RM(){ return root.dataset.rm === "1"; }
+function step(i){ return Math.min(i, 3) * stride(); }   /* stride 30ms, max 4 items */
+
+/* every running animation is registered, so any input can finish the lot
+   to its end state on the next frame. Nothing in this app queues. */
+var live = [], cleanups = [];
+function A(el, frames, opts){
+  if (!el) return null;
+  var a = el.animate(frames, opts);
+  live.push(a);
+  a.finished.then(function(){ var i = live.indexOf(a); if (i > -1) live.splice(i,1); }, function(){});
+  return a;
+}
+function finishAll(){
+  var l = live.slice(); live.length = 0;
+  l.forEach(function(a){ try { a.finish(); } catch(e){} });
+  var c = cleanups.slice(); cleanups.length = 0;
+  c.forEach(function(f){ try { f(); } catch(e){} });
+}
+function onDone(anims, fn){
+  var longest = null, best = -1;
+  anims.filter(Boolean).forEach(function(a){
+    var t = a.effect.getComputedTiming();
+    var d = (t.delay||0) + (t.activeDuration||0);
+    if (d > best){ best = d; longest = a; }
+  });
+  cleanups.push(fn);
+  if (!longest){ fn(); var i = cleanups.indexOf(fn); if (i>-1) cleanups.splice(i,1); return; }
+  longest.finished.then(function(){
+    var i = cleanups.indexOf(fn);
+    if (i > -1){ cleanups.splice(i,1); fn(); }
+  }, function(){});
+}
+function haptic(ms){ try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e){} }
+
+/* frame-relative geometry — #fly is inset 0 on #dev */
+function R(el){
+  var r = el.getBoundingClientRect(), d = dev.getBoundingClientRect();
+  return { l:r.left-d.left, t:r.top-d.top, w:r.width, h:r.height,
+           cx:r.left-d.left+r.width/2, cy:r.top-d.top+r.height/2 };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   1 · the money. Every figure on screen is derived, and every figure
+       is traceable to lines that actually sum. Nothing is a string.
+   ═══════════════════════════════════════════════════════════════════ */
+var money = function(n){
+  return "£" + Math.abs(n).toLocaleString("en-GB",{minimumFractionDigits:2, maximumFractionDigits:2});
+};
+var about = function(n){
+  return "£" + (Math.round(n/10)*10).toLocaleString("en-GB");
+};
+/* a budget the user typed as a whole number is shown as they typed it —
+   labels are the user's own words, and so are their round numbers */
+var gbp = function(n){
+  return n % 1 === 0 ? "£" + n.toLocaleString("en-GB") : money(n);
+};
+
+var S = {
+  scope: 0,
+  weekBudget: 545,
+  billsThisWeek: 53.64,
+  cats: [
+    { id:"everyday",  name:"Everyday",  budget:260, spent:210.45, tx:[
+      ["Sainsbury's · 24 Aug",58.20],["Pret · 25 Aug",6.85],["Tesco Metro · 26 Aug",41.30],
+      ["Boots · 27 Aug",12.99],["Sainsbury's · 27 Aug",62.44],["Coffee · 27 Aug",3.40],
+      ["Corner shop · 27 Aug",25.27]]},
+    { id:"weekend",   name:"Weekend",   budget:190, spent:29.21, tx:[
+      ["The Crown · 24 Aug",18.40],["Cinema · 25 Aug",10.81]]},
+    { id:"transport", name:"Transport", budget:95,  spent:6.02, tx:[
+      ["TfL · 25 Aug",2.90],["TfL · 27 Aug",3.12]]}
+  ],
+  priorWeeks: [
+    { label:"Week 1 · 3–9 Aug",   spent:612.44, split:[341.20,128.60,18.40,124.24] },
+    { label:"Week 2 · 10–16 Aug", spent:549.10, split:[298.55,96.40,22.30,131.85] },
+    { label:"Week 3 · 17–23 Aug", spent:719.14, split:[402.19,214.60,29.10,73.25] }
+  ],
+  monthIncome: 9547,
+  recurring: 3767.70,
+  recurringLines: [["Rent",1850],["Nursery",980],["Council tax",198],["Energy",142.60],
+                   ["Broadband",38],["Phone",24],["8 more bills",535.10]],
+  oneOffs: [["Flights deposit",340],["Bike service",98.50],["Birthday gift",134.50]],
+  priorMonths: [["January–April",4484.47],["May",1402.11],["June",1688.40],["July",1204.77]],
+  yearEarned: 28643.82
+};
+var catSpent   = function(){ return S.cats.reduce(function(a,c){ return a+c.spent; },0); };
+var weekSpent  = function(){ return +(S.billsThisWeek + catSpent()).toFixed(2); };
+var weekLeft   = function(){ return +(S.weekBudget - weekSpent()).toFixed(2); };
+var oneOffTot  = function(){ return S.oneOffs.reduce(function(a,x){ return a+x[1]; },0); };
+var weeksTotal = function(){ return +(S.priorWeeks.reduce(function(a,w){ return a+w.spent; },0) + weekSpent()).toFixed(2); };
+var monthSpare = function(){ return +(S.monthIncome - S.recurring - oneOffTot() - weeksTotal()).toFixed(2); };
+var yearKept   = function(){ return +(S.priorMonths.reduce(function(a,m){ return a+m[1]; },0) + monthSpare()).toFixed(2); };
+/* seeds: weekLeft 245.68 · monthSpare 3026.30 ("about £3,030") · yearKept 11806.05 */
+
+/* ═══════════════════════════════════════════════════════════════════
+   2 · the Counterbalance mark
+       Two halves. The green is the exact 180° rotation of the violet
+       about (90,90); the coral is their true clip intersection, so it
+       exists ONLY while they overlap. That is not an effect — it is the
+       geometry, and it is what makes the arrival honest.
+   ═══════════════════════════════════════════════════════════════════ */
+var DA = "M24 53C24 38 36 27 50 27C68 25 87 29 104 28C118 27 124 39 118 52L96 108C90 123 73 129 57 122L44 116C31 110 24 96 24 81Z";
+var DB = "M156 127C156 142 144 153 130 153C112 155 93 151 76 152C62 153 56 141 62 128L84 72C90 57 107 51 123 58L136 64C149 70 156 84 156 99Z";
+var markSeq = 0;
+function markSVG(px){
+  var id = "cb" + (++markSeq);
+  return '<svg class="mark" width="' + px + '" height="' + px + '" viewBox="0 0 180 180" ' +
+    'role="img" aria-label="Ravel"><g class="rot">' +
+    '<defs><clipPath id="' + id + '"><path class="clipA" d="' + DA + '"/></clipPath></defs>' +
+    '<path class="ha" fill="var(--color-primary)" d="' + DA + '"/>' +
+    '<path class="hb" fill="var(--color-health)" d="' + DB + '"/>' +
+    '<path class="hb spark" fill="var(--color-spark)" clip-path="url(#' + id + ')" d="' + DB + '"/>' +
+    '</g></svg>';
+}
+/* the halves separate along the axis they share, and the whole assembly
+   rotates into rest. p = 1 apart, p = 0 at rest (the kit's geometry). */
+var AXIS = [0.87, 0.49];
+function setMark(svg, p, amp, deg){
+  var d  = (amp === undefined ? 62 : amp) * p;
+  var ax = "translate(" + (-AXIS[0]*d).toFixed(2) + "px," + (-AXIS[1]*d).toFixed(2) + "px)";
+  var bx = "translate(" + ( AXIS[0]*d).toFixed(2) + "px," + ( AXIS[1]*d).toFixed(2) + "px)";
+  svg.querySelector(".ha").style.transform = ax;
+  svg.querySelector(".clipA").style.transform = ax;
+  [].forEach.call(svg.querySelectorAll(".hb"), function(n){ n.style.transform = bx; });
+  svg.querySelector(".rot").style.transform = "rotate(" + ((deg === undefined ? -17 : deg) * p).toFixed(2) + "deg)";
+}
+/* Newton-solved cubic-bezier, so a rAF-driven mark uses the same curve
+   the CSS tokens do. */
+function bez(x1,y1,x2,y2){
+  var cx=3*x1, bx=3*(x2-x1)-cx, ax=1-cx-bx, cy=3*y1, by=3*(y2-y1)-cy, ay=1-cy-by;
+  function fx(t){ return ((ax*t+bx)*t+cx)*t; }
+  function dx(t){ return (3*ax*t+2*bx)*t+cx; }
+  return function(x){
+    var t=x, i, e, d;
+    for (i=0;i<6;i++){ e=fx(t)-x; if (Math.abs(e)<1e-5) break; d=dx(t); if (Math.abs(d)<1e-6) break; t-=e/d; }
+    t = t<0?0:t>1?1:t;
+    return ((ay*t+by)*t+cy)*t;
+  };
+}
+var easeEnter = bez(.05,.7,.1,1), easeStd = bez(.2,0,0,1);
+
+var headMarkHost = document.getElementById("headMark");
+headMarkHost.innerHTML = markSVG(26);
+var headMark = headMarkHost.querySelector("svg");
+setMark(headMark, 0);
+
+function driveMark(svg, from, to, dur, ease, amp, deg){
+  var t0 = performance.now(), raf;
+  (function tick(now){
+    var raw = Math.min(1, (now - t0) / dur);
+    setMark(svg, from + (to - from) * ease(raw), amp, deg);
+    if (raw < 1) raf = requestAnimationFrame(tick);
+  })(t0);
+  cleanups.push(function(){ cancelAnimationFrame(raf); setMark(svg, to, amp, deg); });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3 · views
+   ═══════════════════════════════════════════════════════════════════ */
+function num(key, hero, tape, text, cls){
+  return '<span class="num' + (cls ? " " + cls : "") + '"' +
+         (key ? ' data-key="' + key + '"' : "") +
+         (hero ? ' data-hero="1"' : "") +
+         (tape ? ' data-tape="' + tape + '"' : "") +
+         ' role="button" tabindex="0">' + text + '<i class="ul"></i></span>';
+}
+function tape(id){ return '<div class="tape" data-tapepanel="' + id + '"><div class="tapeIn"></div></div>'; }
+function tr(l, v, cls){
+  return '<div class="tr' + (cls ? " " + cls : "") + '" data-strow="1"><span>' + l +
+         '</span><span class="v">' + v + '</span></div>';
+}
+
+/* — evidence for every figure. Each block sums to the figure it opens. — */
+var TAPES = {
+  "week-left": function(){
+    var h = tr("You set for this week", gbp(S.weekBudget), "faint");
+    h += tr("Bills settled · 4", "−" + money(S.billsThisWeek));
+    S.cats.forEach(function(c){ h += tr(c.name, "−" + money(c.spent)); });
+    h += tr("Left", money(weekLeft()), "tot");
+    return h;
+  },
+  "month-spare": function(){
+    var h = tr("Income this month", gbp(S.monthIncome), "faint");
+    h += tr("Recurring · 14 bills", "−" + money(S.recurring));
+    h += tr("One-offs · 3 things", "−" + money(oneOffTot()));
+    h += tr("Weeks so far · 4 weeks", "−" + money(weeksTotal()));
+    h += tr("Spare, exactly", money(monthSpare()), "tot");
+    h += '<div class="tr faint"><span class="note">The headline rounds to the nearest ten, which is why it says about.</span><span class="v"></span></div>';
+    return h;
+  },
+  "year-kept": function(){
+    var h = "";
+    S.priorMonths.forEach(function(m){ h += tr(m[0], "+" + money(m[1])); });
+    h += tr("August · still running", "+" + money(monthSpare()));
+    h += tr("Kept", "+" + money(yearKept()), "tot");
+    h += tr("of earned", money(S.yearEarned), "faint");
+    return h;
+  },
+  "recurring": function(){
+    var h = "";
+    S.recurringLines.forEach(function(l){ h += tr(l[0], money(l[1])); });
+    h += tr("Recurring", money(S.recurring), "tot");
+    return h;
+  },
+  "oneoffs": function(){
+    var h = "";
+    S.oneOffs.forEach(function(l){ h += tr(l[0], money(l[1])); });
+    h += tr("One-offs", money(oneOffTot()), "tot");
+    return h;
+  },
+  "weeks": function(){
+    var h = "";
+    S.priorWeeks.forEach(function(w){ h += tr(w.label, money(w.spent)); });
+    h += tr("Week 4 · 24–30 Aug", money(weekSpent()));
+    h += tr("Weeks so far", money(weeksTotal()), "tot");
+    return h;
+  }
+};
+S.cats.forEach(function(c){
+  TAPES["cat-" + c.id] = function(){
+    var h = "";
+    c.tx.forEach(function(t){ h += tr(t[0], money(t[1])); });
+    h += tr(c.name, money(c.spent), "tot");
+    h += tr("You set", gbp(c.budget), "faint");
+    return h;
+  };
+});
+S.priorWeeks.forEach(function(w, i){
+  TAPES["pw-" + i] = function(){
+    var names = ["Everyday","Weekend","Transport","Bills settled"], h = "";
+    w.split.forEach(function(v, j){ h += tr(names[j], money(v)); });
+    h += tr("Spent", money(w.spent), "tot");
+    return h;
+  };
+});
+S.priorMonths.forEach(function(m, i){
+  TAPES["pm-" + i] = function(){
+    var earned = (i === 0 ? 14321.76 : 3580.44);
+    return tr("Earned", money(earned), "faint") +
+           tr("Out", "−" + money(+(earned - m[1]).toFixed(2))) +
+           tr("Kept", "+" + money(m[1]), "tot");
+  };
+});
+
+function catBlock(c){
+  var over = c.spent > c.budget;
+  return '<article class="cat press" data-conv="1" data-cat="' + c.id + '">' +
+    '<div class="top"><span class="nm">' + c.name + '</span>' +
+    '<span>' + num("", false, "cat-" + c.id, money(c.spent), "amt") +
+    '<span class="of">of ' + gbp(c.budget) + '</span></span></div>' +
+    '<div class="trk"><div class="fl' + (over ? " over" : "") + '" data-fill="' + c.id + '" ' +
+      'style="transform:scaleX(' + Math.min(1, c.spent / c.budget).toFixed(4) + ')"></div></div>' +
+    '<div class="foot" data-foot="' + c.id + '">' + catFoot(c) + '</div>' +
+    tape("cat-" + c.id) +
+  '</article>';
+}
+function catFoot(c){
+  return c.spent > c.budget
+    ? '<span class="past">' + money(c.spent - c.budget) + " past the " + gbp(c.budget) + " you set</span>"
+    : "<span>" + money(c.budget - c.spent) + " still there</span><span>tap the figure for the receipts</span>";
+}
+
+function viewWeek(){
+  return '<section class="view" data-scope="0">' +
+    '<div class="hero">' +
+      '<span class="kick" data-hx="1">This week · 24–30 Aug</span>' +
+      '<h1 class="figline">' + num("fig-week", true, "week-left", money(weekLeft())) +
+        '<em data-hx="1">left</em></h1>' +
+      '<span class="sub" data-hx="1">of ' + gbp(S.weekBudget) + ' · 3 days to go</span>' +
+      '<span class="say" data-hx="1">You’ve got room for the weekend.</span>' +
+      tape("week-left") +
+    '</div>' +
+    '<div class="catlist">' + S.cats.map(catBlock).join("") + '</div>' +
+    '<div class="flagrow" data-conv="1">' +
+      '<span class="flag">1 needs a look</span>' +
+      '<span class="flag calm">4 bills settled</span>' +
+    '</div>' +
+  '</section>';
+}
+
+function viewMonth(){
+  var wkRows = S.priorWeeks.map(function(w, i){
+    return '<div class="wk" data-conv="1"><div class="line">' +
+      '<span class="l">' + w.label + '</span>' +
+      '<span class="r">' + num("", false, "pw-" + i, money(w.spent)) + '</span>' +
+    '</div>' + tape("pw-" + i) + '</div>';
+  }).join("");
+  wkRows += '<div class="wk now" data-conv="1"><div class="line">' +
+      '<span class="l">Week 4 · 24–30 Aug ' +
+        '<button class="drill" data-drill="0">open<span class="chev">›</span></button></span>' +
+      '<span class="r">' + num("fig-week", false, "week-left", money(weekLeft())) +
+        '<span class="tail">left</span></span>' +
+    '</div>' + tape("week-left") + '</div>';
+
+  return '<section class="view" data-scope="1">' +
+    '<div class="hero">' +
+      '<span class="kick" data-hx="1">August · 3–30 Aug</span>' +
+      '<h1 class="figline" style="font-size:39px">' +
+        '<span class="qual" data-hx="1">about</span>' +
+        num("fig-aug", true, "month-spare", about(monthSpare())) +
+        '<em data-hx="1">spare</em></h1>' +
+      '<span class="sub" data-hx="1">' + money(weeksTotal() + S.recurring + oneOffTot()) +
+        ' of ' + gbp(S.monthIncome) + ' income used</span>' +
+      tape("month-spare") +
+    '</div>' +
+    '<div class="mrow">' +
+      '<div class="mcard press" data-conv="1"><span class="lbl">One-offs</span>' +
+        '<span class="big">' + num("", false, "oneoffs", money(oneOffTot())) + '</span>' +
+        '<span class="sm">3 things</span><span class="go">Add one →</span></div>' +
+      '<div class="mcard press" data-conv="1"><span class="lbl">Recurring</span>' +
+        '<span class="big">' + num("", false, "recurring", money(S.recurring)) + '</span>' +
+        '<span class="sm">14 bills</span><span class="go">See them →</span></div>' +
+      '<div class="mcard press" data-conv="1"><span class="lbl">Weeks</span>' +
+        '<span class="big">' + num("", false, "weeks", money(weeksTotal())) + '</span>' +
+        '<span class="sm">4 weeks</span><span class="go">Totals →</span></div>' +
+    '</div>' +
+    tape("oneoffs") + tape("recurring") + tape("weeks") +
+    '<div class="rows">' + wkRows + '</div>' +
+  '</section>';
+}
+
+function viewYear(){
+  var rows = S.priorMonths.map(function(m, i){
+    return '<div class="wk" data-conv="1"><div class="line">' +
+      '<span class="l">' + m[0] + '</span>' +
+      '<span class="r">+' + num("", false, "pm-" + i, money(m[1])) + '</span>' +
+    '</div>' + tape("pm-" + i) + '</div>';
+  }).join("");
+  rows += '<div class="wk now" data-conv="1"><div class="line">' +
+      '<span class="l">August ' +
+        '<button class="drill" data-drill="1">open<span class="chev">›</span></button></span>' +
+      '<span class="r"><span class="tail" style="margin:0 4px 0 0">about</span>+' +
+        num("fig-aug", false, "month-spare", about(monthSpare())) + '</span>' +
+    '</div>' + tape("month-spare") + '</div>';
+
+  return '<section class="view" data-scope="2">' +
+    '<div class="hero">' +
+      '<span class="kick" data-hx="1">2026 · net position</span>' +
+      '<h1 class="figline">+' + num("fig-year", true, "year-kept", money(yearKept())) +
+        '<em data-hx="1">kept</em></h1>' +
+      '<span class="sub" data-hx="1">of ' + money(S.yearEarned) + ' earned</span>' +
+      '<span class="say" data-hx="1">Eight months in, and every one of them finished ahead.</span>' +
+      tape("year-kept") +
+    '</div>' +
+    '<div class="rows">' + rows + '</div>' +
+  '</section>';
+}
+
+var VIEWS = [viewWeek, viewMonth, viewYear];
+function build(i){
+  var d = document.createElement("div");
+  d.innerHTML = VIEWS[i]();
+  return d.firstElementChild;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4 · THE TAPE
+       The figure never moves. The panel takes its height instantly and
+       everything below is inverse-translated back to where it was, then
+       released — a FLIP for a layout change, so nothing animates height.
+   ═══════════════════════════════════════════════════════════════════ */
+function belowOf(el, stop){
+  var out = [], n = el, s;
+  while (n && n !== stop){
+    s = n.nextElementSibling;
+    while (s){ out.push(s); s = s.nextElementSibling; }
+    n = n.parentElement;
+  }
+  return out;
+}
+var openTapes = [];
+
+function toggleTape(figure){
+  finishAll();
+  var id    = figure.dataset.tape;
+  var view  = figure.closest(".view") || figure.closest("#app");
+  var host  = figure.closest(".cat, .mcard, .hero, .wk");
+  var panel = (host && host.querySelector('[data-tapepanel="' + id + '"]'))
+           || view.querySelector('[data-tapepanel="' + id + '"]');
+  if (!panel) return;
+  if (panel.dataset.open === "1") return closeTape(panel);
+
+  panel.dataset.open = "1";
+  figure.classList.add("open");
+  openTapes.push(panel);
+  var inner = panel.firstElementChild;
+  inner.innerHTML = TAPES[id] ? TAPES[id]() : "";
+
+  panel.style.height = "auto";
+  var H = panel.offsetHeight;              /* one forced layout, outside any rAF */
+  panel.style.height = H + "px";           /* set, never animated */
+
+  var movers = belowOf(panel, view.parentElement);
+  haptic(8);
+
+  if (RM()){
+    /* stated degradation: it is simply there, at full height, and it fades. */
+    A(inner, [{opacity:0},{opacity:1}], {duration:D("tap"), easing:E.standard});
+    return;
+  }
+  var anims = [];
+  anims.push(A(inner, [{transform:"translateY(" + (-H) + "px)"},{transform:"translateY(0)"}],
+                {duration:D("travel"), easing:E.standard}));
+  movers.forEach(function(m){
+    anims.push(A(m, [{transform:"translateY(" + (-H) + "px)"},{transform:"translateY(0)"}],
+                 {duration:D("travel"), easing:E.standard}));
+  });
+  [].forEach.call(inner.querySelectorAll("[data-strow]"), function(r, i){
+    anims.push(A(r, [{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"none"}],
+                 {duration:D("move"), easing:E.enter, delay:step(i), fill:"backwards"}));
+  });
+}
+
+function closeTape(panel, instant){
+  var view  = panel.closest(".view") || panel.closest("#app");
+  var H     = panel.offsetHeight;
+  var inner = panel.firstElementChild;
+  var fig   = (panel.closest(".cat, .mcard, .hero, .wk") || view)
+                .querySelector('[data-tape="' + panel.dataset.tapepanel + '"]');
+  if (fig) fig.classList.remove("open");
+  panel.dataset.open = "";
+  var k = openTapes.indexOf(panel); if (k > -1) openTapes.splice(k, 1);
+
+  function collapse(){ panel.style.height = "0px"; inner.innerHTML = ""; }
+  if (instant || RM()){ collapse(); return; }
+
+  var movers = belowOf(panel, view.parentElement), anims = [];
+  /* exit is one step down, and leaving is never choreographed */
+  anims.push(A(inner,  [{transform:"none"},{transform:"translateY(" + (-H) + "px)"}],
+               {duration:D("move"), easing:E.standard, fill:"forwards"}));
+  A(inner, [{opacity:1},{opacity:0}], {duration:D("tick"), easing:E.exit, fill:"forwards"});
+  movers.forEach(function(m){
+    anims.push(A(m, [{transform:"none"},{transform:"translateY(" + (-H) + "px)"}],
+                 {duration:D("move"), easing:E.standard, fill:"forwards"}));
+  });
+  onDone(anims, function(){
+    anims.forEach(function(a){ try{ a.cancel(); }catch(e){} });
+    collapse();
+  });
+}
+function closeAllTapes(instant){
+  openTapes.slice().forEach(function(p){ closeTape(p, instant); });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5 · THE FOLD — scope change with shared-element continuity
+       The headline you were reading does not vanish. It travels to the
+       line it becomes, while the detail folds into the figure it came
+       from and the new scope unfolds around where it landed.
+   ═══════════════════════════════════════════════════════════════════ */
+var COPY = ["font-family","font-size","font-weight","font-style","letter-spacing",
+            "line-height","color","font-variant-numeric","-webkit-font-smoothing"];
+
+function ghostOf(el, rect){
+  var c = el.cloneNode(true);
+  var ul = c.querySelector(".ul"); if (ul) ul.remove();
+  var cs = getComputedStyle(el);
+  COPY.forEach(function(p){ c.style.setProperty(p, cs.getPropertyValue(p)); });
+  c.className = "ghost";
+  c.style.width  = rect.w + "px";
+  c.style.height = rect.h + "px";
+  c.style.marginTop = (-rect.h / 2) + "px";
+  c.style.top = "0";
+  return c;
+}
+
+/* the shared figure. Two congruent ghosts crossing on one arc: the old
+   one scaling to the new size as it fades, the new one arriving at its
+   true size. The VALUE never tweens — only the glyphs cross. */
+function morph(from, to){
+  var k  = from.rect.h / to.rect.h;
+  var dx = to.rect.l - from.rect.l;
+  var dy = to.rect.cy - from.rect.cy;
+
+  var wrap = document.createElement("div");
+  wrap.className = "gwrap";
+  wrap.style.left = from.rect.l + "px";
+  wrap.style.top  = from.rect.cy + "px";
+  var y = document.createElement("div");
+  y.className = "gy";
+  wrap.appendChild(y);
+
+  var gOld = ghostOf(from.el, from.rect);
+  var gNew = ghostOf(to.el, to.rect);
+  y.appendChild(gOld); y.appendChild(gNew);
+  fly.appendChild(wrap);
+
+  from.el.style.visibility = "hidden";
+  to.el.style.visibility   = "hidden";
+
+  var dur = D("travel"), anims = [];
+  /* X on standard, Y on enter — two curves on two axes bend the path into
+     an arc with no path maths and no dependency. */
+  anims.push(A(wrap, [{transform:"translateX(0)"},{transform:"translateX(" + dx + "px)"}],
+               {duration:dur, easing:E.standard, fill:"forwards"}));
+  anims.push(A(y,    [{transform:"translateY(0)"},{transform:"translateY(" + dy + "px)"}],
+               {duration:dur, easing:E.enter, fill:"forwards"}));
+  anims.push(A(gOld, [{transform:"scale(1)", opacity:1},
+                      {transform:"scale(" + (1/k).toFixed(4) + ")", opacity:0, offset:.62},
+                      {transform:"scale(" + (1/k).toFixed(4) + ")", opacity:0}],
+               {duration:dur, easing:E.standard, fill:"forwards"}));
+  anims.push(A(gNew, [{transform:"scale(" + k.toFixed(4) + ")", opacity:0},
+                      {transform:"scale(" + k.toFixed(4) + ")", opacity:0, offset:.24},
+                      {transform:"scale(1)", opacity:1}],
+               {duration:dur, easing:E.standard, fill:"forwards"}));
+  onDone(anims, function(){
+    to.el.style.visibility = "";
+    wrap.remove();
+  });
+  return anims;
+}
+
+var folding = false;
+function go(to, opts){
+  opts = opts || {};
+  /* No animation gates a navigation. A fold already in flight is finished to
+     its end state first — it is never a reason to ignore the tap. */
+  finishAll();
+  if (to === S.scope) return;
+  closeAllTapes(true);
+  scroll.scrollTop = 0;
+
+  var outView = stage.firstElementChild;
+  if (!outView) return;
+  var dir = to > S.scope ? 1 : -1;                     /* +1 = pulling back */
+
+  /* FIRST — measure everything that could travel */
+  var firstKeys = {}, firstConv = [];
+  [].forEach.call(outView.querySelectorAll("[data-key]"), function(el){
+    if (!firstKeys[el.dataset.key]) firstKeys[el.dataset.key] = { el:el, rect:R(el) };
+  });
+  [].forEach.call(outView.querySelectorAll("[data-conv]"), function(el){ firstConv.push({ el:el, rect:R(el) }); });
+  var outHero = outView.querySelector("[data-hero]");
+  var outHeroRect = outHero ? R(outHero) : null;
+
+  /* freeze the outgoing view so the incoming one can take the flow */
+  outView.classList.add("leaving");
+  var inView = build(to);
+  stage.appendChild(inView);
+
+  /* LAST */
+  var lastKeys = {}, lastConv = [];
+  [].forEach.call(inView.querySelectorAll("[data-key]"), function(el){
+    if (!lastKeys[el.dataset.key]) lastKeys[el.dataset.key] = { el:el, rect:R(el) };
+  });
+  [].forEach.call(inView.querySelectorAll("[data-conv]"), function(el){ lastConv.push({ el:el, rect:R(el) }); });
+  var inHero = inView.querySelector("[data-hero]");
+
+  /* the pair: an exact key match if the same figure exists in both scopes,
+     otherwise headline to headline. */
+  var pair = null, key;
+  for (key in lastKeys){ if (firstKeys[key]) { pair = { from:firstKeys[key], to:lastKeys[key] }; break; } }
+  if (!pair && outHero && inHero) pair = { from:{ el:outHero, rect:outHeroRect }, to:{ el:inHero, rect:R(inHero) } };
+
+  /* each view's anchor is where the shared figure lives IN THAT VIEW, which
+     is what makes back the exact inverse of forward */
+  var aOut = pair ? pair.from.rect : outHeroRect;
+  var aIn  = pair ? pair.to.rect   : (inHero ? R(inHero) : aOut);
+
+  S.scope = to;
+  syncPill(to);
+  haptic(8);
+  folding = true;
+
+  var anims = [];
+  try {
+  if (RM()){
+    /* stated degradation: no travel, no fold. Cross-fade in place at 90ms,
+       and the figure that carries over flashes so the eye still finds it. */
+    anims.push(A(outView, [{opacity:1},{opacity:0}], {duration:D("tap"), easing:E.standard, fill:"forwards"}));
+    anims.push(A(inView,  [{opacity:0},{opacity:1}], {duration:D("tap"), easing:E.standard}));
+    if (pair) A(pair.to.el, [{opacity:.45},{opacity:1}], {duration:D("tap"), easing:E.standard, delay:D("tap")});
+  } else {
+    if (pair) anims = anims.concat(morph(pair.from, pair.to));
+
+    /* out: the detail folds toward the figure it belongs to */
+    firstConv.forEach(function(o, i){
+      var dx = (aOut.cx - o.rect.cx) * 0.42, dy = (aOut.cy - o.rect.cy) * 0.42;
+      anims.push(A(o.el, [
+        { transform:"none", opacity:1 },
+        { transform:"translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) scale(" + (dir > 0 ? .93 : 1.06) + ")", opacity:0 }
+      ], { duration:D("move"), easing:E.exit, delay:step(i), fill:"forwards" }));
+    });
+    /* out: the headline's words leave in place — period identity never slides */
+    [].forEach.call(outView.querySelectorAll("[data-hx]"), function(n){
+      anims.push(A(n, [{opacity:1},{opacity:0}], {duration:D("tick"), easing:E.exit, fill:"forwards"}));
+    });
+
+    /* in: the new scope unfolds out of where the figure landed */
+    lastConv.forEach(function(o, i){
+      var dx = (aIn.cx - o.rect.cx) * 0.42, dy = (aIn.cy - o.rect.cy) * 0.42;
+      anims.push(A(o.el, [
+        { transform:"translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) scale(" + (dir > 0 ? 1.06 : .93) + ")", opacity:0 },
+        { transform:"none", opacity:1 }
+      ], { duration:D("move"), easing:E.enter, delay:D("tick") + step(i), fill:"backwards" }));
+    });
+    [].forEach.call(inView.querySelectorAll("[data-hx]"), function(n){
+      anims.push(A(n, [{opacity:0, transform:"translateY(5px)"},{opacity:1, transform:"none"}],
+                   {duration:D("move"), easing:E.enter, delay:D("tick"), fill:"backwards"}));
+    });
+
+    /* the mark answers the scope change with the same gesture it arrives on,
+       at a fraction of the amplitude — and returns to the kit's geometry */
+    driveMark(headMark, 0, 0, D("travel"), function(t){ return Math.sin(t * Math.PI) * easeStd(1 - t); }, 13, -5);
+  }
+  } catch (err) {
+    /* A choreography bug must never leave the user looking at two screens.
+       Land on the end state and let the console carry the fault. */
+    if (window.console) console.error("fold", err);
+    anims.forEach(function(a){ try { a.cancel(); } catch(e){} });
+    anims.length = 0;
+    [].forEach.call(fly.querySelectorAll(".gwrap"), function(n){ n.remove(); });
+  }
+
+  onDone(anims, function(){
+    anims.forEach(function(a){ try { a.cancel(); } catch(e){} });
+    if (outView.parentNode) outView.remove();
+    [].forEach.call(inView.querySelectorAll("[data-key]"), function(el){ el.style.visibility = ""; });
+    folding = false;
+  });
+  if (!anims.length){ folding = false; }
+}
+
+/* ── the pill: an indicator that slides, and stretches into the move ── */
+var pill = document.getElementById("pill");
+var ind  = document.getElementById("ind");
+function indX(i){ return i * 88; }
+function syncPill(to){
+  var btns = pill.querySelectorAll("button");
+  var from = 0;
+  [].forEach.call(btns, function(b){
+    if (b.getAttribute("aria-current") === "true") from = +b.dataset.i;
+    b.removeAttribute("aria-current");
+  });
+  btns[to].setAttribute("aria-current", "true");
+  var x0 = indX(from), x1 = indX(to);
+  if (RM() || x0 === x1){ ind.style.transform = "translateX(" + x1 + "px)"; return; }
+  ind.style.transform = "translateX(" + x1 + "px)";
+  A(ind, [
+    { transform:"translateX(" + x0 + "px) scaleX(1)" },
+    { transform:"translateX(" + ((x0 + x1) / 2) + "px) scaleX(1.14)", offset:.5 },
+    { transform:"translateX(" + x1 + "px) scaleX(1)" }
+  ], { duration:D("travel"), easing:E.standard });
+}
+ind.style.transform = "translateX(0px)";
+
+pill.addEventListener("click", function(e){
+  var b = e.target.closest("button"); if (!b) return;
+  go(+b.dataset.i);
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   6 · THE LANDING
+   ═══════════════════════════════════════════════════════════════════ */
+var sheet  = document.getElementById("sheet");
+var scrim  = document.getElementById("scrim");
+var amtEl  = document.getElementById("amt");
+var padEl  = document.getElementById("pad");
+var chipsEl= document.getElementById("catChips");
+var commitBtn = document.getElementById("commit");
+var entry = "", target = "weekend", sheetOpen = false;
+
+chipsEl.innerHTML = S.cats.map(function(c){
+  return '<button class="chip" data-cat="' + c.id + '"' +
+         (c.id === target ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>' + c.name + '</button>';
+}).join("");
+padEl.innerHTML = ["1","2","3","4","5","6","7","8","9",".","0","⌫"].map(function(k){
+  return '<button class="press" data-k="' + k + '">' + k + '</button>';
+}).join("");
+
+function entryValue(){ return Math.round((parseFloat(entry) || 0) * 100) / 100; }
+function paintEntry(){
+  amtEl.textContent = entry === "" ? "£0.00" : "£" + entry;
+  commitBtn.disabled = !(entryValue() > 0);
+}
+paintEntry();
+
+padEl.addEventListener("click", function(e){
+  var b = e.target.closest("button"); if (!b) return;
+  var k = b.dataset.k;
+  if (k === "⌫") entry = entry.slice(0, -1);
+  else if (k === "."){ if (entry.indexOf(".") < 0 && entry !== "") entry += "."; }
+  else { if (/\.\d\d$/.test(entry)) return; entry += k; }
+  paintEntry();
+});
+chipsEl.addEventListener("click", function(e){
+  var b = e.target.closest("button"); if (!b) return;
+  target = b.dataset.cat;
+  [].forEach.call(chipsEl.children, function(c){ c.setAttribute("aria-pressed", String(c === b)); });
+});
+
+function openSheet(){
+  finishAll();
+  sheet.hidden = false;
+  sheetOpen = true;
+  scrim.classList.add("on");
+  entry = ""; paintEntry();
+  scrim.style.opacity = "1";
+  sheet.style.transform = "translateY(0)";
+  if (RM()) return;
+  A(scrim, [{opacity:0},{opacity:1}], {duration:D("move"), easing:E.standard});
+  A(sheet, [{transform:"translateY(101%)"},{transform:"translateY(0)"}],
+     {duration:D("travel"), easing:E.enter});
+  /* the app takes a step back — that is the sheet's weight */
+  A(document.getElementById("app"), [{transform:"none"},{transform:"scale(.985)"}],
+     {duration:D("travel"), easing:E.standard, fill:"forwards"});
+}
+function closeSheet(instant){
+  if (!sheetOpen) return;
+  sheetOpen = false;
+  scrim.classList.remove("on");
+  var app = document.getElementById("app");
+  function done(){ sheet.hidden = true; sheet.style.transform = "translateY(101%)"; }
+  if (instant || RM()){ scrim.style.opacity = "0"; app.style.transform = ""; done(); return; }
+  scrim.style.opacity = "0";
+  A(scrim, [{opacity:1},{opacity:0}], {duration:D("tick"), easing:E.exit});
+  app.style.transform = "";
+  A(app, [{transform:"scale(.985)"},{transform:"none"}], {duration:D("move"), easing:E.standard});
+  var a = A(sheet, [{transform:"translateY(0)"},{transform:"translateY(101%)"}],
+             {duration:D("move"), easing:E.exit, fill:"forwards"});
+  onDone([a], function(){ try{ a.cancel(); }catch(e){} done(); });
+}
+
+document.getElementById("fab").addEventListener("click", function(){ openSheet(); });
+document.getElementById("sheetX").addEventListener("click", function(){ closeSheet(); });
+scrim.addEventListener("click", function(){ closeSheet(); });
+
+/* a finger has no easing: 1:1 while it is down, curves only on release */
+(function sheetDrag(){
+  var y0 = null, t0 = 0, dy = 0, last = 0, v = 0;
+  sheet.addEventListener("pointerdown", function(e){
+    if (e.target.closest(".pad, .chips, .commit")) return;
+    y0 = e.clientY; t0 = performance.now(); last = y0; dy = 0; v = 0;
+    sheet.setPointerCapture(e.pointerId);
+  });
+  sheet.addEventListener("pointermove", function(e){
+    if (y0 === null) return;
+    var now = performance.now();
+    v = (e.clientY - last) / Math.max(1, now - t0);
+    last = e.clientY; t0 = now;
+    dy = Math.max(0, e.clientY - y0);
+    sheet.style.transform = "translateY(" + dy + "px)";       /* no transition */
+  });
+  function up(){
+    if (y0 === null) return;
+    y0 = null;
+    var h = sheet.offsetHeight;
+    if (dy > h * 0.25 || v > 0.4){ sheet.style.transform = "translateY(" + dy + "px)"; closeSheet(); }
+    else {
+      sheet.style.transform = "translateY(0)";
+      if (!RM()) A(sheet, [{transform:"translateY(" + dy + "px)"},{transform:"translateY(0)"}],
+                    {duration:D("move"), easing:E.standard});
+    }
+  }
+  sheet.addEventListener("pointerup", up);
+  sheet.addEventListener("pointercancel", up);
+})();
+
+commitBtn.addEventListener("click", function(){
+  var v = entryValue();
+  if (!(v > 0)) return;
+  if (S.scope !== 0){ go(0); requestAnimationFrame(function(){ setTimeout(function(){ land(v, target); }, D("travel")); }); }
+  else land(v, target);
+});
+
+function land(value, catId){
+  var cat = S.cats.filter(function(c){ return c.id === catId; })[0];
+  var chipRect = R(amtEl);
+  var row = stage.querySelector('.cat[data-cat="' + catId + '"]');
+  if (!row){ closeSheet(true); return; }
+  var amtSpan = row.querySelector(".amt");
+  var fill    = row.querySelector("[data-fill]");
+  var foot    = row.querySelector("[data-foot]");
+  var p0 = Math.min(1, cat.spent / cat.budget);
+
+  /* the write goes now, once, on commit — never on a keystroke */
+  var newSpent = +(cat.spent + value).toFixed(2);
+  var p1 = Math.min(1, newSpent / cat.budget);
+  var over = newSpent > cat.budget;
+
+  function applyFigures(){
+    cat.spent = newSpent;
+    amtSpan.firstChild.nodeValue = money(newSpent);       /* re-states, never tweens */
+    foot.innerHTML = catFoot(cat);
+    var hero = stage.querySelector('[data-key="fig-week"]');
+    if (hero) hero.firstChild.nodeValue = money(weekLeft());
+    entry = ""; paintEntry();
+  }
+
+  if (RM()){
+    /* stated degradation: no flight. It is done, and the row it happened
+       to is the thing that draws the eye. */
+    closeSheet(true);
+    applyFigures();
+    fill.style.transform = "scaleX(" + p1.toFixed(4) + ")";
+    fill.classList.toggle("over", over);
+    A(row, [{opacity:.6},{opacity:1}], {duration:D("tap"), easing:E.standard});
+    haptic(18);
+    return;
+  }
+
+  var target2 = R(amtSpan);
+  var chip = document.createElement("div");
+  chip.className = "landchip";
+  chip.textContent = "£" + value.toFixed(2);
+  chip.style.visibility = "hidden";
+  fly.appendChild(chip);
+  var cw = chip.offsetWidth, ch = chip.offsetHeight;
+  chip.style.visibility = "";
+  chip.style.left = (chipRect.l) + "px";
+  chip.style.top  = (chipRect.cy - ch/2) + "px";
+
+  var wrap = document.createElement("div");
+  wrap.className = "gwrap";
+  wrap.style.left = "0px"; wrap.style.top = "0px";
+  var yEl = document.createElement("div");
+  yEl.className = "gy";
+  fly.appendChild(wrap); wrap.appendChild(yEl); yEl.appendChild(chip);
+  chip.style.position = "absolute";
+
+  var dx = target2.cx - (chipRect.l + cw/2);
+  var dy = target2.cy - chipRect.cy;
+
+  closeSheet();                                          /* 0–move, e-exit */
+  var anims = [];
+  /* the chip does not recede with the form: it lifts out at full opacity */
+  anims.push(A(chip, [{transform:"scale(1)"},{transform:"scale(.72)"}],
+                {duration:D("move"), easing:E.standard, fill:"forwards"}));
+  /* 90 → 410: the arc */
+  anims.push(A(wrap, [{transform:"translateX(0)"},{transform:"translateX(" + dx + "px)"}],
+                {duration:D("travel"), easing:E.standard, delay:D("tap"), fill:"forwards"}));
+  anims.push(A(yEl,  [{transform:"translateY(0)"},{transform:"translateY(" + dy + "px)"}],
+                {duration:D("travel"), easing:E.enter, delay:D("tap"), fill:"forwards"}));
+
+  var landAt = D("tap") + D("travel");
+  var a2 = A(chip, [{opacity:1, transform:"scale(.72)"},{opacity:0, transform:"scale(0)"}],
+              {duration:D("tick"), easing:E.exit, delay:landAt, fill:"forwards"});
+  anims.push(a2);
+
+  var t1 = setTimeout(function(){
+    haptic(18);                                          /* on the consequence */
+    applyFigures();
+    fill.style.transform = "scaleX(" + p1.toFixed(4) + ")";
+    A(fill, [{transform:"scaleX(" + p0.toFixed(4) + ")"},{transform:"scaleX(" + p1.toFixed(4) + ")"}],
+       {duration:D("settle"), easing:E.enter});           /* decelerating, no overshoot */
+    if (over){
+      /* the colour changes at the END of the settle, as a cross-fade.
+         Never during, never a pulse. Motion does not editorialise. */
+      var t2 = setTimeout(function(){ fill.classList.add("over"); }, D("settle"));
+      cleanups.push(function(){ clearTimeout(t2); fill.classList.add("over"); });
+    }
+  }, landAt);
+  cleanups.push(function(){
+    clearTimeout(t1);
+    if (cat.spent !== newSpent){
+      applyFigures();
+      fill.style.transform = "scaleX(" + p1.toFixed(4) + ")";
+      fill.classList.toggle("over", over);
+    }
+  });
+  onDone(anims, function(){ wrap.remove(); });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7 · THE ARRIVAL — the third signature
+       The two halves of the Counterbalance come in from opposite sides
+       of the axis they share and settle into balance. The coral sliver
+       is not drawn: it is the intersection, so it appears because they
+       met. The mark then takes its place in the header and the app
+       assembles behind it. Nothing blocks; the first touch ends it.
+   ═══════════════════════════════════════════════════════════════════ */
+function arrival(){
+  finishAll();
+  closeAllTapes(true);
+  var host = document.createElement("div");
+  host.className = "markBig";
+  host.innerHTML = markSVG(96);
+  var svg = host.querySelector("svg");
+  fly.appendChild(host);
+
+  var hm = R(headMarkHost), dr = { w: dev.clientWidth, h: dev.clientHeight };
+  var size = 96, k = 26 / size;
+  var restL = hm.l + (hm.w - size * k) / 2 - (size - size * k) / 2;
+  var restT = hm.t + (hm.h - size * k) / 2 - (size - size * k) / 2;
+  host.style.left = restL + "px";
+  host.style.top  = restT + "px";
+
+  var startX = (dr.w - size) / 2 - restL;
+  var startY = (dr.h * 0.34 - size / 2) - restT;
+
+  headMark.style.opacity = "0";
+  var word = document.querySelector(".brand .word");
+  var view = stage.firstElementChild;
+  var kids = [].slice.call(view.querySelectorAll("[data-hx],[data-conv],[data-hero]"));
+  /* the chrome arrives too — a nav bar sitting there while the screen is
+     blank is the tell that this is a splash screen bolted on top */
+  var chrome = [document.querySelector(".appHead .when"),
+                document.querySelector(".pillWrap"),
+                document.getElementById("fab")].filter(Boolean);
+
+  if (RM()){
+    /* stated degradation: the mark is simply present, at rest, and the
+       screen fades up. Same content, same taps. */
+    host.remove();
+    headMark.style.opacity = "";
+    setMark(headMark, 0);
+    A(view, [{opacity:0},{opacity:1}], {duration:D("tap"), easing:E.standard});
+    A(word, [{opacity:0},{opacity:1}], {duration:D("tap"), easing:E.standard});
+    chrome.forEach(function(n){ A(n, [{opacity:0},{opacity:1}], {duration:D("tap"), easing:E.standard}); });
+    return;
+  }
+
+  setMark(svg, 1);
+  host.style.transform = "translate(" + startX + "px," + startY + "px) scale(1)";
+  word.style.opacity = "0";
+  kids.forEach(function(n){ n.style.opacity = "0"; });
+  chrome.forEach(function(n){ n.style.opacity = "0"; });
+
+  var anims = [];
+  /* 1 · the halves converge and the assembly rotates into rest */
+  driveMark(svg, 1, 0, D("travel"), easeEnter);
+  anims.push(A(host, [{opacity:0},{opacity:1}], {duration:D("tick"), easing:E.standard}));
+
+  /* 2 · it takes its place. travel, standard — it crosses a boundary. */
+  anims.push(A(host, [
+      { transform:"translate(" + startX + "px," + startY + "px) scale(1)" },
+      { transform:"translate(0,0) scale(" + k + ")" }
+    ], { duration:D("travel"), easing:E.standard, delay:D("travel"), fill:"forwards" }));
+
+  /* 3 · the app assembles behind it — first paint stagger, stride 30, max 4 */
+  anims.push(A(word, [{opacity:0, transform:"translateX(-4px)"},{opacity:1, transform:"none"}],
+                {duration:D("move"), easing:E.enter, delay:D("travel") + D("tick"), fill:"forwards"}));
+  kids.forEach(function(n, i){
+    anims.push(A(n, [{opacity:0, transform:"translateY(8px)"},{opacity:1, transform:"none"}],
+                  {duration:D("move"), easing:E.enter, delay:D("travel") + D("tick") + step(i), fill:"forwards"}));
+  });
+  chrome.forEach(function(n, i){
+    anims.push(A(n, [{opacity:0, transform:"translateY(10px)"},{opacity:1, transform:"none"}],
+                  {duration:D("move"), easing:E.enter, delay:D("travel") + D("tick") + step(i), fill:"forwards"}));
+  });
+
+  onDone(anims, function(){
+    anims.forEach(function(a){ try{ a.cancel(); }catch(e){} });
+    host.remove();
+    headMark.style.opacity = "";
+    setMark(headMark, 0);
+    word.style.opacity = "";
+    kids.forEach(function(n){ n.style.opacity = ""; n.style.transform = ""; });
+    chrome.forEach(function(n){ n.style.opacity = ""; n.style.transform = ""; });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8 · wiring
+   ═══════════════════════════════════════════════════════════════════ */
+stage.appendChild(build(0));
+
+stage.addEventListener("click", function(e){
+  var drill = e.target.closest("[data-drill]");
+  if (drill){ go(+drill.dataset.drill); return; }
+  var fig = e.target.closest("[data-tape]");
+  if (fig){ toggleTape(fig); return; }
+});
+stage.addEventListener("keydown", function(e){
+  if (e.key !== "Enter" && e.key !== " ") return;
+  var fig = e.target.closest("[data-tape]");
+  if (fig){ e.preventDefault(); toggleTape(fig); }
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape"){ if (sheetOpen) closeSheet(); else closeAllTapes(); }
+});
+
+var brand = document.getElementById("brand");
+brand.addEventListener("click", arrival);
+document.getElementById("bOpen").addEventListener("click", arrival);
+
+/* controls */
+function toggle(btn, on){ btn.setAttribute("aria-pressed", String(on)); }
+var bSlow = document.getElementById("bSlow");
+bSlow.addEventListener("click", function(){
+  var on = root.dataset.rate !== "4";
+  root.dataset.rate = on ? "4" : "1";
+  toggle(bSlow, on);
+});
+var bRm = document.getElementById("bRm");
+var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+root.dataset.rm = mq.matches ? "1" : "0";
+toggle(bRm, mq.matches);
+bRm.addEventListener("click", function(){
+  var on = root.dataset.rm !== "1";
+  root.dataset.rm = on ? "1" : "0";
+  toggle(bRm, on);
+});
+var bMode = document.getElementById("bMode");
+bMode.addEventListener("click", function(){
+  var on = root.dataset.mode !== "dark";
+  root.dataset.mode = on ? "dark" : "light";
+  toggle(bMode, on);
+});
+var bTheme = document.getElementById("bTheme");
+bTheme.addEventListener("click", function(){
+  var on = root.dataset.theme !== "butter-static";
+  root.dataset.theme = on ? "butter-static" : "quiet-voltage";
+  toggle(bTheme, on);
+});
+
+/* any input finishes whatever is in flight, to its end state, next frame */
+dev.addEventListener("pointerdown", function(e){
+  if (folding || live.length) {
+    if (!e.target.closest("#sheet")) finishAll();
+  }
+}, true);
+
+/* The arrival runs once, on open, and nothing else in this app ever moves
+   on its own. It waits for the webfont so the figures do not reflow under
+   it — but never for longer than one tick, because a brand moment may not
+   hold up the first paint. */
+Promise.race([
+  (document.fonts && document.fonts.ready) || Promise.resolve(),
+  new Promise(function(r){ setTimeout(r, 150); })
+]).then(function(){ requestAnimationFrame(arrival); });
+</script>
+</body>
+</html>
