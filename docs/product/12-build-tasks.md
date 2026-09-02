@@ -30,6 +30,39 @@ out of order means writing something twice.
 | 3 | **Tasks A + F — nav pill and `/settings`** | **Codex** | Bounded, fully specified, and the natural place to bring Codex back in. Lands on D's final structure, so its clearance padding is measured against the real thing. |
 | 4 | **Task E — motion** | Claude | Animates the finished structure. Last of the UI work by necessity: animating something that is about to be restructured is work thrown away. |
 
+### Where step 4 actually stands (2026-09-02)
+
+Three of the four signature moments are built and verified in a browser:
+
+| Moment | State |
+|---|---|
+| **The Arrival** — the mark assembling on app open | ✅ built |
+| **The Tape** — a figure opening its own evidence beneath it | ✅ built |
+| **The Landing** — an added amount travelling to its row | ✅ built, not yet photographed in flight |
+| **The Fold** — Week ↔ Month ↔ Year | ❌ **not built** |
+
+**The Fold is the gap that matters, and it is why the app does not yet feel
+like the prototype.** The other three fire occasionally — once on open, on a
+tap, on an add. The Fold fired on *every* navigation, so it was most of what
+the prototype's fluidity actually was.
+
+It is also the hardest. The prototype was a single page: all three scopes lived
+in one DOM, so a figure could physically travel between them. This app has
+three server-rendered routes, and the outgoing screen is gone before the
+incoming one exists, so nothing morphs across that by accident.
+
+**Start here:** `node_modules/next/dist/docs/01-app/02-guides/view-transitions.md`.
+Next.js 16 ships view transitions, and if `view-transition-name` gives
+shared-element continuity across these routes it is far less code than a
+hand-rolled FLIP. `flyAmountToItsRow()` in `src/lib/motion.ts` is prior art for
+the fallback — it already flies a node across a route change.
+
+**The rule that must not be got wrong:** morph only where the figure is
+literally the same value. Week ↔ Month share the current week's figure, Month ↔
+Year share the month's spare figure, and **Week ↔ Year share nothing** —
+cross-dissolving £245.68 into £11,806.05 is double vision, not a transition.
+Where the figures differ, hand off hard.
+
 **A and F are now one task, not two.** A leaves a hamburger in `HomeScreen` and
 F removes it; shipped separately there is a window where home has two routes to
 the same place. They were only split because Codex was mid-run.
