@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { periodHome, settingsHome, weekHome, yearHome } from "@/lib/routes";
+import { foldDirection } from "./scope-fold";
 
 /**
  * The floating bottom navigation pill — Task A.
@@ -138,6 +139,16 @@ export function BottomNav({ active, periodId, weekNumber }: BottomNavProps) {
               key={item.key}
               href={item.href}
               className="max-nav__item"
+              /*
+                Tags the navigation with the direction it travels, which is what
+                turns a route change into a fold. Widening out to a longer span
+                and narrowing back are mirror images, so "back" retraces rather
+                than playing a second, unrelated animation. Settings is a layer
+                rather than a scope and gets no direction — see scope-fold.ts.
+              */
+              {...(foldDirection(active, item.key)
+                ? { transitionTypes: [foldDirection(active, item.key) as string] }
+                : {})}
               aria-current={current ? "page" : undefined}
               style={{
                 flex: "1 1 0",

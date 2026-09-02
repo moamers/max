@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { ScopeFold } from "@/components/nav/ScopeFold";
 import { Newsreader, Libre_Franklin } from "next/font/google";
 import {
   APP_DESCRIPTION,
@@ -73,7 +74,25 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <main className="flex-1">{children}</main>
+        {/*
+          THE FOLD lives here, not on each scope screen.
+
+          A <ViewTransition> pairs an outgoing element with an incoming one, and
+          the pairing is by position in the React tree. Week, Month and Year are
+          three different components in three different routes, so a wrapper
+          placed inside each of them gives React three unrelated transitions and
+          nothing to pair — which is exactly what happened: the fold never fired.
+          One instance in the layout persists across the route change, so there
+          is a single element on both sides of it.
+
+          It stays inert for every navigation that is not a scope change: the
+          animation is keyed off the transition type the nav link supplies, and
+          `default="none"` means an untyped navigation (to Settings, to Add, to
+          a transaction) animates nothing.
+        */}
+        <ScopeFold>
+          <main className="flex-1">{children}</main>
+        </ScopeFold>
       </body>
     </html>
   );

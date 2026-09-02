@@ -48,3 +48,39 @@ check that means anything here.
 place, and restored byte-identically against a recorded `sha256sum` — with the
 restore *verified*, not assumed. A dev server left running while the file is
 restored is a dev server pointed at production: stop it first.
+
+## The Fold: what was tried, and where it stopped
+
+Scope changes (Week ↔ Month ↔ Year) cross a route boundary, so nothing can
+morph across them by accident. The obvious route is React's `<ViewTransition>`,
+which Next 16 documents as working in the App Router with no configuration.
+
+**It does not fire here.** Measured on Next 16.3.0 / React 19.2.8: navigating
+between scopes calls `document.startViewTransition` **zero** times. That is the
+check to run first — hook the method, count the calls — because it separates
+"the animation is wrong" from "no transition is happening", and every CSS
+question is downstream of it.
+
+Ruled out, so nobody repeats them:
+
+- The browser supports it: `document.startViewTransition` is a function.
+- The API is present: both `ViewTransition` and `addTransitionType` are
+  exported by the React that Next bundles, on stable and experimental.
+- Next forwards the prop: `Link`'s `transitionTypes` reaches
+  `addTransitionType` in `app-router-instance.js`.
+- Placement was wrong once and is now right: a `<ViewTransition>` pairs by
+  position in the React tree, so one wrapper per route gave React three
+  unrelated transitions and nothing to pair. It belongs in the root layout.
+  Fixing that changed nothing, which is how we know it is not the cause.
+
+Remaining suspect: the renderer. Next's compiled stable `react-dom` has 10
+references to `startViewTransition` against 19 in `react-dom-experimental`,
+which points at the component being a passthrough on the stable channel. No
+supported flag for switching channels appears in `config-schema` or
+`config-shared`.
+
+**The fallback, if the native path stays shut:** a hand-rolled FLIP.
+`flyAmountToItsRow()` in `src/lib/motion.ts` already flies a node across a
+route change in this app and is the working precedent. `foldDirection()`, the
+`::view-transition-*` keyframes and the nav's link tagging all survive that
+change — only `ScopeFold.tsx` is replaced.
