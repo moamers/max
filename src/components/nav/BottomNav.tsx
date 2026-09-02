@@ -1,6 +1,6 @@
 import { periodHome, settingsHome, weekHome, yearHome } from "@/lib/routes";
 import { FoldLink } from "./FoldLink";
-import { PILL_HEIGHT, PILL_INSET, PILL_MAX_WIDTH } from "./nav-geometry";
+import { PILL_HEIGHT, PILL_MAX_WIDTH, PILL_TOP_GAP, navBottomGap } from "./nav-geometry";
 import { foldDirection } from "./scope-fold";
 
 /**
@@ -58,16 +58,18 @@ export type NavDestination = "week" | "month" | "year" | "settings";
  * `extra` is the breathing room that screen already wanted at its bottom — it
  * is added to the pill's own footprint rather than replacing it.
  *
- * `env(safe-area-inset-bottom, 0px)` is the home indicator's height on phones
- * that have one and 0 everywhere else, so one expression is correct in both
- * cases. The `0px` fallback is not decoration: an `env()` reference with no
- * fallback whose variable is undefined makes the whole declaration invalid at
- * computed-value time, which here would drop the shorthand and take the
- * horizontal padding with it. It sits inside the `calc()` so the inset is
- * counted once, in the one expression every caller derives from.
+ * The gap below the bar comes from `navBottomGap()` so that it is one
+ * expression in one file: the bar's own padding and every screen's clearance
+ * are the same distance by construction, not by two numbers agreeing.
+ *
+ * That gap does NOT simply add `env(safe-area-inset-bottom)` any more. It used
+ * to, and on a real phone the inset resolved to 0 — `env()` insets are only
+ * populated for a page that opts in with `viewport-fit=cover` — so the bar sat
+ * 15px off the bottom of the screen, on top of the home indicator. See
+ * `nav-geometry.ts` for the measurement and the floor that replaced it.
  */
 export function navClearance(extra = 0): string {
-  return `calc(${PILL_HEIGHT + PILL_INSET * 2 + extra}px + env(safe-area-inset-bottom, 0px))`;
+  return `calc(${navBottomGap()} + ${PILL_HEIGHT + PILL_TOP_GAP + extra}px)`;
 }
 
 export interface BottomNavProps {
@@ -110,7 +112,7 @@ export function BottomNav({ active, periodId, weekNumber }: BottomNavProps) {
         zIndex: 5,
         display: "flex",
         justifyContent: "center",
-        padding: `0 16px calc(${PILL_INSET}px + env(safe-area-inset-bottom, 0px))`,
+        padding: `0 16px ${navBottomGap()}`,
         // The bar is the only thing here that should catch a press; the strip
         // of page either side of it must stay scrollable and tappable.
         pointerEvents: "none",

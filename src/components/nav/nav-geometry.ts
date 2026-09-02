@@ -16,27 +16,56 @@
 export const PILL_HEIGHT = 56;
 
 /**
- * Gap below the pill (above the home indicator) and above it (over content).
+ * The floor under the pill when the platform reports no safe-area inset.
  *
- * Was 14. Raised on the founder's read of it on a real phone: at 14 the bar
- * sits close enough to the bottom edge that on a device with no home
- * indicator it looks like it is falling off the screen rather than floating
- * over it.
+ * MEASURED, not chosen. From a screenshot of the app on a 440x956 phone at
+ * DPR 3: the pill's bottom edge sat 45 device pixels — 15 CSS px — off the
+ * physical bottom of the screen, sitting on top of the home indicator. The
+ * old value was 14px plus `env(safe-area-inset-bottom)`, and the inset was
+ * contributing exactly nothing.
+ *
+ * It contributes nothing because the app never asks for it: `env()` insets
+ * resolve to 0 unless the page opts in with `viewport-fit=cover`, which this
+ * app does not, because doing so also pushes every screen's TOP under the
+ * status bar and that is a change with its own blast radius. So the floor has
+ * to be a real number rather than a nudge on top of a zero.
+ *
+ * 32 is the gesture area a phone keeps for itself — iOS reserves 34 for the
+ * home indicator, Android around 24 for the gesture bar — and the 12 above it
+ * is clear air, so the bar floats over that region instead of sitting in it.
  */
-export const PILL_INSET = 22;
+export const PILL_GESTURE_FLOOR = 32;
+/** Clear air between the gesture area and the bar. */
+export const PILL_GESTURE_AIR = 12;
+/** Air between the content above and the bar. */
+export const PILL_TOP_GAP = 14;
+
+/**
+ * How far the bar's lower edge sits above the bottom of the screen.
+ *
+ * `max()` rather than a sum, so the bar lands in the same visual place whether
+ * or not the platform reports an inset: 44px where it reports none, 46px on an
+ * iPhone that reports 34. A page that opts into `viewport-fit=cover` later
+ * gets the real number with nothing here to change.
+ *
+ * The `0px` fallback in `env()` is not decoration: an `env()` reference with
+ * no fallback whose variable is undefined makes the whole declaration invalid
+ * at computed-value time, which would drop the property entirely.
+ */
+export function navBottomGap(): string {
+  return `calc(max(env(safe-area-inset-bottom, 0px), ${PILL_GESTURE_FLOOR}px) + ${PILL_GESTURE_AIR}px)`;
+}
 
 /** Enough for four words at `--type-label` without crowding on a 393px frame. */
 export const PILL_MAX_WIDTH = 420;
 
 /**
- * How far up the screen the bar actually paints: the gap beneath it, the bar,
- * and enough beyond for its shadow.
+ * A fallback for the strip the bar paints into, in px, for the one caller that
+ * needs a number before it can measure: the fold, when no bar is on screen.
  *
- * NOT the same as `navClearance()`, which also reserves the gap ABOVE the bar
- * so content does not crowd it. That extra gap is space the page may still
- * paint into — it is only clearance — so masking it out of the fold's
- * photograph would erase a strip of real content for no reason. This is the
- * narrower number: the strip the pill genuinely covers, which is the only
- * strip the outgoing screen must not be drawn over.
+ * The real answer is `getBoundingClientRect()` on the bar itself — the gap
+ * below it is a CSS `max()` over a platform value and cannot be computed in
+ * JavaScript. This is what to assume when there is nothing to measure.
  */
-export const NAV_PAINTED_HEIGHT = PILL_INSET + PILL_HEIGHT + 12;
+export const NAV_PAINTED_HEIGHT_FALLBACK =
+  PILL_GESTURE_FLOOR + PILL_GESTURE_AIR + PILL_HEIGHT + 12;

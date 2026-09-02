@@ -1,7 +1,7 @@
 "use client";
 
 import { easingToken, motionToken, prefersReducedMotion } from "@/lib/motion";
-import { NAV_PAINTED_HEIGHT } from "./nav-geometry";
+import { NAV_PAINTED_HEIGHT_FALLBACK } from "./nav-geometry";
 import { FOLD_BODY, FOLD_CHROME, FOLD_SCREEN, foldScales, type FoldDirection } from "./scope-fold";
 
 /**
@@ -143,7 +143,19 @@ export function captureFold(direction: FoldDirection | null): void {
     scope screens are `inset: 0` and the week screen is not.
   */
   const bottomGap = Math.max(0, window.innerHeight - rect.bottom);
-  const opaqueFrom = Math.max(0, NAV_PAINTED_HEIGHT - bottomGap);
+  /*
+    Measured off the live bar, not computed. How far the bar sits above the
+    bottom of the screen is a CSS `max()` over a platform value that
+    JavaScript cannot evaluate — and the last time this was a constant, the
+    constant and the stylesheet disagreed. The element knows where it is; ask
+    it. The 12px is its shadow, which the rect does not include.
+  */
+  const bar = document.querySelector(`[${FOLD_CHROME}] > *`) ?? document.querySelector(`[${FOLD_CHROME}]`);
+  const painted =
+    bar instanceof HTMLElement && bar.getBoundingClientRect().height > 0
+      ? window.innerHeight - bar.getBoundingClientRect().top + 12
+      : NAV_PAINTED_HEIGHT_FALLBACK;
+  const opaqueFrom = Math.max(0, painted - bottomGap);
   const mask = `linear-gradient(to top, transparent 0, transparent ${opaqueFrom}px, #000 ${opaqueFrom + 14}px)`;
 
   Object.assign(ghost.style, {
