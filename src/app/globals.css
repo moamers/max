@@ -249,9 +249,17 @@ a {
 .max-nav__bar {
   background: var(--nav-glass);
   border: 1px solid var(--hairline-3);
-  box-shadow: var(--shadow-card);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  /*
+    Two shadows: the card shadow that lifts the bar off the page, and a 1px
+    inset highlight along its top edge. The highlight is what makes it read as
+    glass over a stretch of empty page, where there is nothing behind it to
+    blur and the translucency alone is invisible.
+  */
+  box-shadow:
+    var(--shadow-card),
+    inset 0 1px 0 var(--nav-glass-edge);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  backdrop-filter: blur(24px) saturate(200%);
 }
 
 /*

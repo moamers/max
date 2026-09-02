@@ -1,6 +1,7 @@
 "use client";
 
 import { easingToken, motionToken, prefersReducedMotion } from "@/lib/motion";
+import { NAV_PAINTED_HEIGHT } from "./nav-geometry";
 import { FOLD_BODY, FOLD_CHROME, FOLD_SCREEN, foldScales, type FoldDirection } from "./scope-fold";
 
 /**
@@ -121,6 +122,30 @@ export function captureFold(direction: FoldDirection | null): void {
   ghost.setAttribute("aria-hidden", "true");
   ghost.setAttribute("inert", "");
 
+  /*
+    Cut the pill's strip out of the photograph.
+
+    The pill is chrome that persists, so the outgoing screen must not pass in
+    front of it — and it was. Every screen root is `position: fixed`, which in
+    Chrome makes it a stacking context, so the pill's `z-index: 5` is sealed
+    inside its own screen and cannot rise above a photograph sitting on
+    `document.body`. The pill therefore spent the whole 140ms exit under a
+    fading veil, which is what "the navigation hides and then comes back" is.
+
+    Masking is the cheap half of the fix and the honest one: what it removes
+    is the strip the pill is already covering, so nothing legible is lost. It
+    is deliberately the pill's PAINTED height and not `navClearance()` — the
+    clearance also reserves the gap above the bar, and masking that would
+    erase a band of real content the pill never hides. The 14px ramp makes the
+    cut a fade rather than an edge.
+
+    Measured from the VIEWPORT bottom, not the ghost's own: three of the four
+    scope screens are `inset: 0` and the week screen is not.
+  */
+  const bottomGap = Math.max(0, window.innerHeight - rect.bottom);
+  const opaqueFrom = Math.max(0, NAV_PAINTED_HEIGHT - bottomGap);
+  const mask = `linear-gradient(to top, transparent 0, transparent ${opaqueFrom}px, #000 ${opaqueFrom + 14}px)`;
+
   Object.assign(ghost.style, {
     // Pinned to where the real screen was, measured rather than assumed —
     // three of the four scope screens are `fixed; inset: 0` and the week
@@ -135,6 +160,8 @@ export function captureFold(direction: FoldDirection | null): void {
     zIndex: "4",
     pointerEvents: "none",
     transformOrigin: "50% 50%",
+    maskImage: mask,
+    webkitMaskImage: mask,
   } satisfies Partial<CSSStyleDeclaration>);
 
   document.body.appendChild(ghost);

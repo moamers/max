@@ -109,8 +109,8 @@
   --l-settled-ink: 53.0%;
   --l-settled-graphic: 61.5%;
   --l-settled-tint: 94.6%;
-  --l-pending-ink: 26.5%;
-  --l-pending-graphic: 26.5%;
+  --l-pending-ink: 46.0%;
+  --l-pending-graphic: 58.0%;
   --l-pending-tint: 92.4%;
   --l-review-ink: 55.5%;
   --l-review-graphic: 55.5%;
@@ -147,8 +147,8 @@
     --l-settled-ink: 81.5%;
     --l-settled-graphic: 81.5%;
     --l-settled-tint: 22.9%;
-    --l-pending-ink: 98.8%;
-    --l-pending-graphic: 98.8%;
+    --l-pending-ink: 84.0%;
+    --l-pending-graphic: 80.0%;
     --l-pending-tint: 25.9%;
     --l-review-ink: 66.5%;
     --l-review-graphic: 66.5%;
@@ -184,8 +184,8 @@
   --l-settled-ink: 81.5%;
   --l-settled-graphic: 81.5%;
   --l-settled-tint: 22.9%;
-  --l-pending-ink: 98.8%;
-  --l-pending-graphic: 98.8%;
+  --l-pending-ink: 84.0%;
+  --l-pending-graphic: 80.0%;
   --l-pending-tint: 25.9%;
   --l-review-ink: 66.5%;
   --l-review-graphic: 66.5%;
@@ -225,8 +225,8 @@
   --l-settled-ink: 52.8%;
   --l-settled-graphic: 60.0%;
   --l-settled-tint: 93.4%;
-  --l-pending-ink: 20.2%;
-  --l-pending-graphic: 20.2%;
+  --l-pending-ink: 34.0%;
+  --l-pending-graphic: 42.0%;
   --l-pending-tint: 91.2%;
   --l-review-ink: 54.8%;
   --l-review-graphic: 62.3%;
@@ -262,8 +262,8 @@
     --l-settled-ink: 91.8%;
     --l-settled-graphic: 91.8%;
     --l-settled-tint: 22.8%;
-    --l-pending-ink: 96.8%;
-    --l-pending-graphic: 96.8%;
+    --l-pending-ink: 86.0%;
+    --l-pending-graphic: 82.0%;
     --l-pending-tint: 25.8%;
     --l-review-ink: 78.0%;
     --l-review-graphic: 78.0%;
@@ -299,8 +299,8 @@
   --l-settled-ink: 91.8%;
   --l-settled-graphic: 91.8%;
   --l-settled-tint: 22.8%;
-  --l-pending-ink: 96.8%;
-  --l-pending-graphic: 96.8%;
+  --l-pending-ink: 86.0%;
+  --l-pending-graphic: 82.0%;
   --l-pending-tint: 25.8%;
   --l-review-ink: 78.0%;
   --l-review-graphic: 78.0%;
@@ -392,18 +392,24 @@
     colour wheel rather than clustered:
 
       settled   -> health    resolved
-      pending   -> the ink   in progress, no judgement, deliberately neutral
+      pending   -> money     in progress, waiting on the world, not on you
       review    -> primary   there is something here for you to place
       over      -> spark     the most attention, but never an alarm
 
-    money goes back to being a finance-domain colour rather than a status one.
+    Pending was the ink for a while, on the argument that "waiting" is not a
+    judgement and so should not be a colour. Shipped, it was worse than that
+    argument: derived from the text colour it came out as the brand violet, so
+    a pending row read as *emphasised* rather than *unresolved*, and on the
+    home screen it was indistinguishable from the primary accent. Reversed at
+    the founder's call. Amber is what "in progress" has meant on every ledger
+    ever printed, and it is the one hue the other three do not use.
 
     Naming: "review", not "attention". The state means "I could not place
     this", not "you did something wrong", and the token name is where that
     distinction starts.
   */
   --status-settled-source: var(--color-health);
-  --status-pending-source: var(--color-text);
+  --status-pending-source: var(--color-money);
   --status-review-source: var(--color-primary);
   --status-over-source: var(--color-spark);
 
@@ -485,6 +491,27 @@
   */
   --bar-track: var(--surface-inset);
   --bar-fill: var(--color-text);
+
+  /*
+    ---- the approach ramp ----
+    The fill is one colour until the last stretch of the TRACK, where it turns
+    toward the over-target colour it will become if you pass the target. Two
+    colours, one ramp, painted in track coordinates — so where the warning
+    shows up is a fact about your budget, not about how long your bar is.
+
+    `--bar-ramp-start` is where the second colour begins to appear: before it,
+    the bar is flat. 72% is late enough that a normal month never sees it and
+    early enough that the change is legible before the target rather than at
+    the moment it is missed.
+
+    This is the second time this has been built. The first was a four-stop
+    ramp across the whole track, reversed on review because at 3-12px tall
+    four stops read as decoration and because colour was carrying magnitude.
+    Reinstated at the founder's call in the narrower form he asked for. The
+    grammar it still obeys: length never carries the overspend, and past the
+    target the WHOLE fill is the over colour rather than a longer bar.
+  */
+  --bar-ramp-start: 72%;
   --bar-fill-over: var(--status-over-graphic);
   --bar-fill-over-strong: var(--status-over-graphic);
 
@@ -543,5 +570,13 @@
     where the fallback for browsers that cannot blur is defined.
   */
   --nav-glass: color-mix(in oklab, var(--surface) 82%, transparent);
+
+  /*
+    The lit top edge. Glass reads as glass because light catches its rim, not
+    because it is transparent — over an empty stretch of page there is nothing
+    behind it to blur, and 82% of the surface on top of the surface is simply
+    paint. This is the one cue that survives that case.
+  */
+  --nav-glass-edge: color-mix(in oklab, var(--color-surface) 62%, transparent);
 
 }

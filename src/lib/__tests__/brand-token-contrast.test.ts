@@ -448,24 +448,33 @@ describe("brand tokens keep their contrast floor", () => {
     }
   });
 
-  it("pending is neutral, and the other three are not", () => {
+  it("the four statuses are four different colours", () => {
+    // Pending was the ink for a while, on the argument that "waiting" is not a
+    // judgement and so should not be a colour. Shipped, that came out as the
+    // brand violet: a pending row read as emphasised rather than unresolved,
+    // and next to the primary accent it was not a status at all. Reversed at
+    // the founder's call — so the property worth pinning is no longer "pending
+    // is the least chromatic", it is that no two states look alike.
     for (const [theme, mode] of COMBOS) {
       const vars = tokensFor(theme, mode);
-      // Neutral means "the page's own ink", not "grey". quiet-voltage's text
-      // is #25213b, a desaturated navy, and that slight cast is the theme —
-      // so this is a relative test: pending must be far less chromatic than
-      // any state that is carrying a hue.
-      const pending = toOklch(resolve("var(--status-pending-source)", vars)).c;
-      const chromatic = (["settled", "review", "over"] as const).map(
-        (status) => toOklch(resolve(`var(--status-${status}-source)`, vars)).c
+      const sources = STATUSES.map(
+        (status) => [status, resolve(`var(--status-${status}-source)`, vars)] as const
       );
-      for (const c of chromatic) expect(c).toBeGreaterThan(0.05);
-      // butter-static dark's ink is #FFF7B7, a cream with real chroma of its
-      // own, so "neutral" here means "the page's ink" rather than grey. The
-      // architectural rule is what matters: pending takes the text colour, and
-      // is the least chromatic of the four.
-      expect(vars.get("--status-pending-source")).toBe("var(--color-text)");
-      expect(pending, `pending in ${theme} ${mode}`).toBeLessThan(Math.min(...chromatic));
+      for (const [status, hex] of sources) {
+        // A status with no chroma cannot be told from the page's own ink.
+        expect(toOklch(hex).c, `${status} in ${theme} ${mode}`).toBeGreaterThan(0.05);
+      }
+      for (let i = 0; i < sources.length; i += 1) {
+        for (let j = i + 1; j < sources.length; j += 1) {
+          const [a, ah] = sources[i];
+          const [b, bh] = sources[j];
+          // 0.08 is four times a just-noticeable step. The tightest real pair
+          // is butter-static's pending and over: that kit has no amber of its
+          // own, so money is mixed from health and spark and lands partway
+          // between two states it has to stay clear of.
+          expect(deltaE(ah, bh), `${a} vs ${b} in ${theme} ${mode}`).toBeGreaterThan(0.08);
+        }
+      }
     }
   });
 
@@ -482,13 +491,19 @@ describe("brand tokens keep their contrast floor", () => {
     }
   });
 
-  it("no status depends on --color-money", () => {
-    // butter-static has no money token at all, which is why the previous
-    // architecture — pending = money, needs-a-look = money mixed with spark —
-    // could never have worked in that theme.
-    const layer = CSS.slice(CSS.indexOf("--status-settled-source"));
-    const statusBlock = layer.slice(0, layer.indexOf("legacy names"));
-    expect(statusBlock).not.toContain("--color-money");
+  it("butter-static's derived money is a real colour, not a blend of two states", () => {
+    // butter-static ships no amber, so --color-money is mixed from health and
+    // spark. That is exactly the risk: a colour built out of two other states
+    // starts life halfway between them. Pending now depends on it, so the mix
+    // has to stay clear of both parents — checked here rather than assumed,
+    // because a change to either parent would quietly close the gap.
+    for (const mode of ["light", "dark"] as const) {
+      const vars = tokensFor("butter-static", mode);
+      const money = resolve("var(--color-money)", vars);
+      for (const parent of ["--color-health", "--color-spark"] as const) {
+        expect(deltaE(money, resolve(`var(${parent})`, vars)), `money vs ${parent} in ${mode}`).toBeGreaterThan(0.08);
+      }
+    }
   });
 
   it("the two dark declarations of each theme stay identical", () => {

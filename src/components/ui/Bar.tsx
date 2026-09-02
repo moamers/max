@@ -1,4 +1,4 @@
-import { computeBarReading } from "./bar-grammar";
+import { computeBarReading, rampBackgroundSizePct } from "./bar-grammar";
 
 export type BarSize = "week" | "category" | "total";
 
@@ -35,12 +35,25 @@ export function Bar({ spend, budget, size = "category", strong = false, classNam
   // Both fills are the GRAPHIC channel, not the ink one: a bar is a meaningful
   // non-text graphic, so its floor is 3:1 rather than the 4.5:1 text needs, and
   // it keeps far more of the hue. See the signal channels in brand-tokens.css.
-  const fill =
-    tone === "over"
-      ? strong
-        ? "var(--bar-fill-over-strong)"
-        : "var(--bar-fill-over)"
-      : "var(--bar-fill)";
+  const over = strong ? "var(--bar-fill-over-strong)" : "var(--bar-fill-over)";
+
+  /*
+    Past the target the whole fill is the over colour — no ramp, because the
+    state has changed and a gradient would suggest it is still on its way.
+
+    Up to the target the fill carries the approach ramp: flat until
+    `--bar-ramp-start` of the TRACK, then turning toward the over colour by
+    100%. Painting it in track coordinates is the whole point — a gradient
+    sized to the fill would put the warning colour at the tip of every bar,
+    including a bar at 10%, which would say "nearly there" to someone who has
+    spent almost nothing.
+
+    The trick is `background-size`: the gradient is drawn at the width the
+    TRACK would be, and the fill clips it. `widthPct` can be 0 here, which is
+    why the ramp is skipped rather than dividing by it.
+  */
+  const ramping = tone === "spend" && widthPct > 0;
+  const rampWidth = rampBackgroundSizePct(widthPct);
 
   return (
     <div
@@ -58,7 +71,13 @@ export function Bar({ spend, budget, size = "category", strong = false, classNam
         style={{
           height: "100%",
           width: `${widthPct}%`,
-          background: fill,
+          background: ramping
+            ? `linear-gradient(90deg, var(--bar-fill) 0%, var(--bar-fill) var(--bar-ramp-start), ${over} 100%)`
+            : tone === "over"
+              ? over
+              : "var(--bar-fill)",
+          backgroundSize: `${rampWidth}% 100%`,
+          backgroundRepeat: "no-repeat",
           borderRadius: "var(--radius-pill)",
           transition: `width var(--motion-deliberate) var(--ease-standard), background-color var(--motion-quick) var(--ease-standard)`,
         }}

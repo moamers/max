@@ -9,21 +9,30 @@
  *    the magnitude of the overspend is carried by the number, never by
  *    bar length (there is no headroom beyond 100%, no notch)
  *
- * HISTORY. For a while the fill was a four-stop ramp (health -> money ->
- * attention -> spark) painted across the track, a deviation from the handoff
- * made at the founder's request so that the colour at any point meant "this
- * much of the budget". It has been reversed, on review, for two reasons:
+ * HISTORY, in two rounds, because this has been argued twice.
  *
- *   1. At 3-12px tall, at arm's length, four stops do not read as four stages.
- *      They read as a gradient, which is decoration.
- *   2. It made colour encode magnitude. That is the one thing this file says
- *      never to do — magnitude lives in the number.
+ * Round one: the fill was a four-stop ramp (health -> money -> attention ->
+ * spark) across the whole track, so the colour at any point meant "this much
+ * of the budget". Reversed on review — at 3-12px tall four stops read as
+ * decoration rather than four stages, and it put magnitude into colour, which
+ * is the one thing this grammar forbids.
  *
- * What the ramp got right is kept: the bar stays quiet. It is one solid fill
- * that changes colour ONLY at a real state change (passing the target), and
- * that state is carried by the number and the words too, never by colour
- * alone. This app is for people who feel judged by money apps, so a bar that
- * reddens on the way to a limit would be the product working against itself.
+ * Round two: the founder asked for it back, narrower — two colours, with the
+ * warning appearing only close to the right end. That is what ships now, and
+ * it is a different proposition from round one. It is not four stages, it is
+ * one; the bar is flat for the first 72% of the TRACK and only then turns
+ * toward the colour it will become if the target is passed. Where the warning
+ * appears is a fact about the budget, not about the bar's length, because the
+ * ramp is painted in track coordinates and the fill clips it.
+ *
+ * What did NOT change, and must not: length never carries the overspend.
+ * Past the target the whole fill goes over-colour at 100% width, and the
+ * magnitude lives in the number. This app is for people who feel judged by
+ * money apps, so the ramp is a heads-up near the line, not an escalating
+ * alarm from the first pound spent.
+ *
+ * `tone` below is still binary — spend or over — because the ramp is a
+ * rendering concern, not a state. Approaching a limit is not a state change.
  *
  * This mirrors the prototype's own `bar(spend, budget)` method exactly
  * (docs/design/handoff/Max App v1.dc.html, ~line 947):
@@ -56,4 +65,23 @@ export function computeBarReading(spend: number, budget: number): BarReading {
   }
   const widthPct = Math.min(pct, 100);
   return { widthPct, tone: pct > 100 ? "over" : "spend" };
+}
+
+/**
+ * How wide the ramp has to be painted so that it spans the TRACK rather than
+ * the fill.
+ *
+ * `background-size` is a percentage of the element it is on — the fill — so a
+ * gradient left at 100% would compress into whatever the fill happens to be,
+ * putting the warning colour at the tip of every bar including one at 10%.
+ * Scaling it by track/fill puts the ramp back in track coordinates: the
+ * warning appears at the same place on the budget every time, and a short fill
+ * simply does not reach it.
+ *
+ * Returns 100 for an empty bar. Nothing is painted there, and it keeps the
+ * division out of the caller.
+ */
+export function rampBackgroundSizePct(widthPct: number): number {
+  if (!(widthPct > 0)) return 100;
+  return (100 / widthPct) * 100;
 }

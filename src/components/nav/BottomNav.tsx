@@ -1,5 +1,6 @@
 import { periodHome, settingsHome, weekHome, yearHome } from "@/lib/routes";
 import { FoldLink } from "./FoldLink";
+import { PILL_HEIGHT, PILL_INSET, PILL_MAX_WIDTH } from "./nav-geometry";
 import { foldDirection } from "./scope-fold";
 
 /**
@@ -49,16 +50,6 @@ import { foldDirection } from "./scope-fold";
 
 export type NavDestination = "week" | "month" | "year" | "settings";
 
-/**
- * The pill's geometry, in one place, because three scrolling regions and one
- * FAB have to measure against it. A number that lives in two files is a number
- * that will disagree with itself.
- */
-const PILL_HEIGHT = 56;
-/** Gap below the pill (above the home indicator) and above it (over content). */
-const PILL_INSET = 14;
-/** Enough for four words at `--type-label` without crowding on a 393px frame. */
-const PILL_MAX_WIDTH = 420;
 
 /**
  * The room a scrolling region or a fixed control must leave beneath it so the

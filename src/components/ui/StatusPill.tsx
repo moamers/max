@@ -43,8 +43,24 @@ export function StatusPill({ status, children, style, ...rest }: StatusPillProps
         borderRadius: "var(--radius-pill)",
         background: `var(--status-${status}-tint)`,
         color: "var(--text-primary)",
-        // The rule is the structural half of the ordering: 0, 1, 1, 2px.
-        borderLeft: `var(--status-${status}-rule) solid var(--status-${status}-graphic)`,
+        /*
+          The rule is the structural half of the ordering: 0, 1, 1, 2px. It is
+          a RING, not a left border.
+
+          A left border was the first attempt and it looked like a rendering
+          fault. On `border-radius: var(--radius-pill)` a one-sided border
+          follows the curve all the way round to where the adjacent borders
+          would meet it — with no top or bottom border to meet, it tapers to
+          nothing at both ends, so a 1px rule draws as a thin crescent hanging
+          off the left of the pill. Nothing in the code says "crescent"; it is
+          just what a border-radius does to a border that has no neighbours.
+
+          An inset shadow has no such join to make: it traces the whole shape
+          at an even weight, which is what "a heavier rule means more
+          emphasis" was meant to look like. Zero-width renders nothing, so
+          settled stays unringed.
+        */
+        boxShadow: `inset 0 0 0 var(--status-${status}-rule) var(--status-${status}-graphic)`,
         fontSize: "var(--type-caption)",
         fontWeight: 600,
         lineHeight: 1.2,
