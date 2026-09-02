@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { periodHome, settingsHome, weekHome, yearHome } from "@/lib/routes";
+import { FoldLink } from "./FoldLink";
 import { foldDirection } from "./scope-fold";
 
 /**
@@ -39,6 +39,12 @@ import { foldDirection } from "./scope-fold";
  * persistent chrome that re-renders on every navigation, and animating it each
  * time would be a flicker on every tap. Nothing here gates a tap either — the
  * link navigates on press and the transition is decoration that runs alongside.
+ *
+ * That is also what `data-fold-chrome` on the bar means. A scope change folds
+ * the screen under it, and the pill is the one thing that persists across the
+ * fold rather than taking part in it: it is cut out of the outgoing screen's
+ * photograph so it never appears twice, and it sits outside every
+ * `[data-fold-body]` so no transform ever reaches it. See `fold-runtime.ts`.
  */
 
 export type NavDestination = "week" | "month" | "year" | "settings";
@@ -101,6 +107,7 @@ export function BottomNav({ active, periodId, weekNumber }: BottomNavProps) {
   return (
     <nav
       aria-label="Sections"
+      data-fold-chrome=""
       style={{
         position: "fixed",
         left: 0,
@@ -135,20 +142,18 @@ export function BottomNav({ active, periodId, weekNumber }: BottomNavProps) {
         {items.map((item) => {
           const current = item.key === active;
           return (
-            <Link
+            <FoldLink
               key={item.key}
               href={item.href}
               className="max-nav__item"
               /*
-                Tags the navigation with the direction it travels, which is what
-                turns a route change into a fold. Widening out to a longer span
-                and narrowing back are mirror images, so "back" retraces rather
-                than playing a second, unrelated animation. Settings is a layer
-                rather than a scope and gets no direction — see scope-fold.ts.
+                The direction this item travels, which is what turns a route
+                change into a fold. Widening out to a longer span and narrowing
+                back are mirror images, so "back" retraces rather than playing a
+                second, unrelated animation. Settings is a layer rather than a
+                scope and gets no direction — see scope-fold.ts.
               */
-              {...(foldDirection(active, item.key)
-                ? { transitionTypes: [foldDirection(active, item.key) as string] }
-                : {})}
+              direction={foldDirection(active, item.key)}
               aria-current={current ? "page" : undefined}
               style={{
                 flex: "1 1 0",
@@ -173,7 +178,7 @@ export function BottomNav({ active, periodId, weekNumber }: BottomNavProps) {
               }}
             >
               {item.label}
-            </Link>
+            </FoldLink>
           );
         })}
       </div>

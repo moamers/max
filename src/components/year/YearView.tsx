@@ -186,8 +186,8 @@ export function YearView({ data, availableYears, periodId, weekNumber }: YearVie
   const netColor = moneyColor(data.netPosition);
 
   return (
-    <div style={{ position: "fixed", inset: 0, maxWidth: 480, margin: "0 auto", background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
-      <header style={{ padding: "14px 20px 6px", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
+    <div data-fold-screen="" style={{ position: "fixed", inset: 0, maxWidth: 480, margin: "0 auto", background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+      <header data-fold-body="" style={{ padding: "14px 20px 6px", display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
         <button type="button" onClick={() => router.back()} aria-label="Back" style={{ width: 38, height: 38, borderRadius: "var(--radius-pill)", border: 0, background: "var(--surface)", color: "var(--text-secondary)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <BackArrowIcon />
         </button>
@@ -201,7 +201,7 @@ export function YearView({ data, availableYears, periodId, weekNumber }: YearVie
 
       {/* Clearance goes on this scroller, not on the page: the frame around it
           is fixed, so page padding would sit outside what actually scrolls. */}
-      <main style={{ flex: 1, overflowY: "auto", padding: `18px 20px ${navClearance(40)}`, display: "flex", flexDirection: "column", gap: 30 }}>
+      <main data-fold-body="" style={{ flex: 1, overflowY: "auto", padding: `18px 20px ${navClearance(40)}`, display: "flex", flexDirection: "column", gap: 30 }}>
         {data.periodCount === 0 ? (
           <div style={{ minHeight: "55vh", display: "grid", placeItems: "center", textAlign: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>

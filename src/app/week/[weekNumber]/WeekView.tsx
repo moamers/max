@@ -79,9 +79,10 @@ export function WeekView({
   const meta = metaFor(week.spent, week.goal);
 
   return (
-    <div style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
+    <div data-fold-screen="" style={{ position: "relative", minHeight: "100dvh", background: "var(--bg)", maxWidth: 480, margin: "0 auto" }}>
       <Sheet variant="full" onBack={() => router.replace(sheetParent(periodId))}>
         <div
+          data-fold-body=""
           style={{
             flex: 1,
             overflowY: "auto",

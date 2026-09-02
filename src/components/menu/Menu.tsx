@@ -62,8 +62,8 @@ export function SettingsScreen({ periodCount, brand, periodId, weekNumber }: Set
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
-      <div style={{ flex: 1, overflowY: "auto" }}>
+    <div data-fold-screen="" style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+      <div data-fold-body="" style={{ flex: 1, overflowY: "auto" }}>
         <div
           style={{
             maxWidth: 480,

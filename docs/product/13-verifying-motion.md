@@ -49,7 +49,25 @@ place, and restored byte-identically against a recorded `sha256sum` — with the
 restore *verified*, not assumed. A dev server left running while the file is
 restored is a dev server pointed at production: stop it first.
 
-## The Fold: what was tried, and where it stopped
+## Two things about the harness that cost an hour each
+
+- **Serve the dev server over `localhost`, not `127.0.0.1`.** Next 16 blocks
+  cross-origin access to dev resources, and it does not consider those two the
+  same origin. The symptom is not an error: the page renders perfectly,
+  server-side, and never hydrates. No React fibers on any element, every link a
+  full page load, and every client-side moment silently absent. Check
+  `Object.keys(el).filter(k => k.startsWith('__react'))` before believing
+  anything about interactivity.
+- **Headless Chromium is at
+  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.** There is no
+  `chromium` on the path.
+
+To slow a moment down for the camera, use CDP's
+`Animation.setPlaybackRate` — it replays the real animation, at its real
+durations, more slowly. Rewriting the app's own timings photographs something
+other than what ships.
+
+## The Fold: how it works, and how it was verified
 
 Scope changes (Week ↔ Month ↔ Year) cross a route boundary, so nothing can
 morph across them by accident. The obvious route is React's `<ViewTransition>`,
@@ -68,10 +86,10 @@ Ruled out, so nobody repeats them:
   exported by the React that Next bundles, on stable and experimental.
 - Next forwards the prop: `Link`'s `transitionTypes` reaches
   `addTransitionType` in `app-router-instance.js`.
-- Placement was wrong once and is now right: a `<ViewTransition>` pairs by
-  position in the React tree, so one wrapper per route gave React three
-  unrelated transitions and nothing to pair. It belongs in the root layout.
-  Fixing that changed nothing, which is how we know it is not the cause.
+- Placement was wrong once: a `ViewTransition` pairs by position in the React
+  tree, so one wrapper per route gave React three unrelated transitions and
+  nothing to pair. Moving it to the root layout fixed that and changed nothing,
+  which is how we know it is not the cause.
 
 Remaining suspect: the renderer. Next's compiled stable `react-dom` has 10
 references to `startViewTransition` against 19 in `react-dom-experimental`,
@@ -79,8 +97,53 @@ which points at the component being a passthrough on the stable channel. No
 supported flag for switching channels appears in `config-schema` or
 `config-shared`.
 
-**The fallback, if the native path stays shut:** a hand-rolled FLIP.
-`flyAmountToItsRow()` in `src/lib/motion.ts` already flies a node across a
-route change in this app and is the working precedent. `foldDirection()`, the
-`::view-transition-*` keyframes and the nav's link tagging all survive that
-change — only `ScopeFold.tsx` is replaced.
+**So it is hand-rolled**, in `src/components/nav/fold-runtime.ts`. A route
+change destroys the outgoing screen before the incoming one exists, so the
+answer is to photograph it before letting go: `FoldLink` clones the live screen
+on the press and lays the copy over the top; `ScopeFold` — one instance in the
+root layout, the only component that survives a route change — plays that copy
+off when the pathname changes and folds the new screen's body in behind it.
+
+### What was measured
+
+Sampled every animation frame from inside the page (a CDP round trip is ~50ms
+and the whole fold is 360ms, so polling from outside sees four points at best):
+
+```
+   10ms  path=/      ghost opacity 1                  ← photograph taken on the press
+  130ms  path=/year  ghost opacity 1   body opacity 0 ← navigation lands, fold starts
+  190ms  path=/year  ghost 0.862 scale 0.9952
+  240ms  path=/year  ghost 0.459 scale 0.9810
+  273ms  path=/year  ghost gone        body opacity 0.42
+  590ms  path=/year                    body opacity 1
+```
+
+Seven frames part-way through, per fold, in real time — not one, and not a
+third of a millisecond. Month → Year scales the photograph **down** to 0.965;
+Year → Month scales it **up** to 1/0.965. Week ↔ Month ↔ Year all fold;
+Settings folds neither way and strands nothing; browser back is a plain cut,
+because there is no press for it to have photographed.
+
+Photographed at 1/12 speed: `fold-out-mid`, `fold-in-mid`, `fold-week-mid`.
+
+### Two bugs the photographs caught that the tests could not
+
+1. **The photograph was blank.** `playFold` folds in every `[data-fold-body]`
+   in the document — and a clone of the screen contains one of its own, so the
+   copy was being animated as the *arriving* screen and sat at opacity 0 for
+   the whole of its own exit. The fold ran perfectly and photographed an empty
+   room. `captureFold` now strips the attribute from the copy.
+2. **The photograph moved.** `cloneNode` copies classes, so the week screen's
+   `.max-sheet--full` restarted `sheetUp` on the copy and slid the still image
+   up from below while it faded. Killed with `animation: none !important` on
+   the ghost subtree in `globals.css`.
+
+### The one thing this cannot animate
+
+The nav pill. It is persistent chrome and must not scale or fade, so the fold
+lands on `[data-fold-body]` — marked per screen — rather than on the screen
+root. Two reasons, and the second is the sharp one: a transform on an ancestor
+of the pill would scale it, *and* re-anchor it, because a `position: fixed`
+descendant of a transformed element is positioned against that element instead
+of the viewport. `the-fold.test.ts` pins that the pill sits outside every
+`[data-fold-body]` on all four screens.

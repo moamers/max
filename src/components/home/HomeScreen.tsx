@@ -45,9 +45,12 @@ export function HomeScreen({ data }: { data: HomeData }) {
   const navWeek = data.weeks.find((week) => week.isLive)?.weekNumber ?? 1;
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
+    /* `data-fold-screen` / `data-fold-body`: what a scope change photographs on
+       the way out, and what folds on the way in. The body is the scroller and
+       not this frame, so the nav pill inside it never scales — fold-runtime.ts. */
+    <div data-fold-screen="" style={{ position: "fixed", inset: 0, background: "var(--bg)", color: "var(--text-primary)", display: "flex", flexDirection: "column" }}>
       <Arrival />
-      <div style={{ flex: 1, overflowY: "auto" }}>
+      <div data-fold-body="" style={{ flex: 1, overflowY: "auto" }}>
         {/* Clearance belongs on the scroller, not the page: this screen is a
             fixed frame with an inner scrolling region, so page padding would
             sit outside the thing that actually scrolls. */}

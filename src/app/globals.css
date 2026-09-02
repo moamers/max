@@ -392,74 +392,44 @@ a {
   ---------------------------------------------------------------------------
   THE FOLD — a scope change, animated across a route boundary
   ---------------------------------------------------------------------------
-
   Week, Month and Year are three widths of the same lens. Moving between them
   widens out or narrows in, and the animation says which.
 
-  What does NOT happen here, deliberately: no headline morphs into another
-  headline. Week shows what is left of a week, Month what a month has spare,
-  Year what a year has kept — three different questions with three different
-  answers. Cross-dissolving one number into another reads as double vision, not
+  There is no CSS here, and that is the finding rather than an omission. This
+  block used to hold `::view-transition-*` rules, and they never ran once: on
+  Next 16.3.0 / React 19.2.8 a scope change calls `document.startViewTransition`
+  ZERO times, so no pseudo-element the browser would style ever exists. The
+  fold is hand-rolled in `src/components/nav/fold-runtime.ts`, which records
+  what was measured and ruled out.
+
+  Its two keyframes live in JavaScript for one reason: they are a pair of
+  reciprocal scales, and writing `1 / 0.965` is what makes the fold out and the
+  fold in exact inverses of each other instead of two numbers that have to be
+  kept in step by hand. Everything else it uses — durations, easings, the
+  reduced-motion clamp — is read from the tokens above through `motionToken()`.
+
+  What does NOT happen, deliberately: no headline morphs into another headline.
+  Week shows what is left of a week, Month what a month has spare, Year what a
+  year has kept — three different questions with three different answers.
+  Cross-dissolving one number into another reads as double vision, not
   continuity, and the prototype's Week-to-Year transition did exactly that
   (recorded as a defect in Task E). Continuity is carried by the chrome that
   genuinely persists — the pill, and the period on screen — while the bodies
-  hand off.
-
-  Out finishes before in starts. The old screen leaves over --motion-quick; the
-  new one arrives over --motion-standard, delayed by the whole of the exit. No
-  frame paints both.
+  hand off. Out finishes before in starts; no frame paints both.
 */
-::view-transition-group(.fold-out),
-::view-transition-group(.fold-in) {
-  animation-duration: var(--motion-standard);
-}
-
-::view-transition-old(.fold-out),
-::view-transition-old(.fold-in) {
-  animation: fold-leaving var(--motion-quick) var(--ease-exit) both;
-}
-
-::view-transition-new(.fold-out) {
-  animation: fold-out-arriving var(--motion-standard) var(--ease-enter) var(--motion-quick) both;
-}
-
-::view-transition-new(.fold-in) {
-  animation: fold-in-arriving var(--motion-standard) var(--ease-enter) var(--motion-quick) both;
-}
-
-/* The detail folds toward the figure it belonged to, rather than sliding off. */
-@keyframes fold-leaving {
-  to {
-    opacity: 0;
-    transform: scale(0.965);
-  }
-}
-
-/* Widening out: the new, longer span opens up from slightly within. */
-@keyframes fold-out-arriving {
-  from {
-    opacity: 0;
-    transform: scale(1.035);
-  }
-}
-
-/* Narrowing in: the shorter span comes forward out of the one that held it. */
-@keyframes fold-in-arriving {
-  from {
-    opacity: 0;
-    transform: scale(0.965);
-  }
-}
 
 /*
-  Reduced motion is handled by the token scale — every --motion-* clamps to 1ms
-  — but a view transition also runs a default cross-fade on the root, which the
-  tokens cannot reach. Switch that off too, so the scope change becomes a cut.
+  A photograph does not move.
+
+  `cloneNode` copies classes, so every CSS animation on the outgoing screen
+  restarts from zero on the copy: the week screen's `.max-sheet--full` would
+  slide its own photograph up from below while that photograph fades out.
+  Removing the animation leaves each element at its base style, which for all
+  of these is the settled state — `sheetUp` and `scrimFade` both end where the
+  un-animated element already is.
 */
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
-  }
+[data-fold-ghost],
+[data-fold-ghost] * {
+  animation: none !important;
+  transition: none !important;
 }
